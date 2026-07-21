@@ -8,3 +8,11 @@ const FIREBASE_CONFIG = {
 };
 
 const TMDB_API_KEY = "8853001c1ed652ff848422f2f11cfa41";
+
+// ─────────────────────────────────────────────────────────────
+// GITHUB — pentru trigger scraper de pe telefon (optional)
+// Creaza token la: github.com/settings/tokens
+// Scope necesar: workflow (doar atat)
+// ─────────────────────────────────────────────────────────────
+const GITHUB_TOKEN = "";                    // ghp_...
+const GITHUB_REPO  = "mihnea13/blutracker"; // USERNAME/repo
