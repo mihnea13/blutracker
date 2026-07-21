@@ -1,11 +1,12 @@
 {
-  "lastUpdated": "2026-07-21T09:48:01.754394Z",
+  "lastUpdated": "2026-07-21T10:46:39.959417Z",
   "movies": [
     {
       "title": "Alien",
       "blurayComId": "19887",
       "posterUrl": "https://images.static-bluray.com/products/20/1952_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -15,6 +16,7 @@
       "blurayComId": "577989",
       "posterUrl": "https://images.static-bluray.com/products/20/48139_3_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -24,6 +26,7 @@
       "blurayComId": "19890",
       "posterUrl": "https://images.static-bluray.com/products/20/1955_4_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -33,6 +36,7 @@
       "blurayComId": "1680691",
       "posterUrl": "https://images.static-bluray.com/products/20/140507_5_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -42,6 +46,7 @@
       "blurayComId": "19888",
       "posterUrl": "https://images.static-bluray.com/products/20/1953_6_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -51,6 +56,7 @@
       "blurayComId": "1258916",
       "posterUrl": "https://images.static-bluray.com/products/20/96547_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -59,7 +65,10 @@
       "title": "American Gangster",
       "blurayComId": "18714",
       "posterUrl": "https://images.static-bluray.com/products/20/779_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-04-18"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -68,7 +77,10 @@
       "title": "American History X",
       "blurayComId": "19474",
       "posterUrl": "https://images.static-bluray.com/products/20/1539_3_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-03-02"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -78,6 +90,7 @@
       "blurayComId": "64298",
       "posterUrl": "https://images.static-bluray.com/products/20/7741_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -86,7 +99,10 @@
       "title": "Angel Heart",
       "blurayComId": "20410",
       "posterUrl": "https://images.static-bluray.com/products/20/2475_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-08-31"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -95,7 +111,10 @@
       "title": "Apocalypse Now",
       "blurayComId": "21871",
       "posterUrl": "https://images.static-bluray.com/products/20/3936_6_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-06-01"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -105,6 +124,7 @@
       "blurayComId": "128491",
       "posterUrl": "https://images.static-bluray.com/products/20/12170_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -113,7 +133,10 @@
       "title": "The Babadook",
       "blurayComId": "327369",
       "posterUrl": "https://images.static-bluray.com/products/20/29834_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-10-28"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -122,7 +145,10 @@
       "title": "Babylon",
       "blurayComId": "1223550",
       "posterUrl": "https://images.static-bluray.com/products/20/93262_8_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-06-15"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -131,7 +157,10 @@
       "title": "The Batman",
       "blurayComId": "786253",
       "posterUrl": "https://images.static-bluray.com/products/20/62778_9_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-03-18"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -140,7 +169,10 @@
       "title": "Ben-Hur",
       "blurayComId": "18643",
       "posterUrl": "https://images.static-bluray.com/products/20/708_2_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-08-23"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -150,6 +182,7 @@
       "blurayComId": "1258915",
       "posterUrl": "https://images.static-bluray.com/products/20/96546_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -159,6 +192,7 @@
       "blurayComId": "347430",
       "posterUrl": "https://images.static-bluray.com/products/20/32712_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -167,7 +201,10 @@
       "title": "Black Swan",
       "blurayComId": "25691",
       "posterUrl": "https://images.static-bluray.com/products/20/4449_2_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-10-12"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -177,6 +214,7 @@
       "blurayComId": "18435",
       "posterUrl": "https://images.static-bluray.com/products/20/500_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -186,6 +224,7 @@
       "blurayComId": "17942",
       "posterUrl": "https://images.static-bluray.com/products/20/7_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -194,7 +233,10 @@
       "title": "Chinatown",
       "blurayComId": "20192",
       "posterUrl": "https://images.static-bluray.com/products/20/2257_4_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-04-17"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -203,25 +245,32 @@
       "title": "Cinema Paradiso",
       "blurayComId": "25740",
       "posterUrl": "https://images.static-bluray.com/products/20/4457_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-05-23"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
-      "userComment": ""
+      "userComment": "#watchfeatures\n#commentary_Towatch"
     },
     {
       "title": "A Clockwork Orange",
       "blurayComId": "18400",
       "posterUrl": "https://images.static-bluray.com/products/20/465_1_small.jpg",
-      "watchDates": [],
-      "hasFeatures": false,
+      "watchDates": [
+        "2026-02-08"
+      ],
+      "watchedCount": 1,
+      "hasFeatures": true,
       "featuresWatched": false,
-      "userComment": ""
+      "userComment": "#features_Towatch #commentary_Towatch"
     },
     {
       "title": "Code Geass: Lelouch of the Rebellion",
       "blurayComId": "139239",
       "posterUrl": "https://images.static-bluray.com/products/20/13193_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -231,6 +280,7 @@
       "blurayComId": "1801182",
       "posterUrl": "https://images.static-bluray.com/products/20/151849_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -239,7 +289,10 @@
       "title": "Cold Light of Day",
       "blurayComId": "330598",
       "posterUrl": "https://images.static-bluray.com/products/20/30140_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-07-07"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -248,7 +301,10 @@
       "title": "The Conversation",
       "blurayComId": "31742",
       "posterUrl": "https://images.static-bluray.com/products/20/5546_3_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-10-03"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -257,7 +313,10 @@
       "title": "Dark City",
       "blurayComId": "18690",
       "posterUrl": "https://images.static-bluray.com/products/20/755_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-09-16"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -267,6 +326,7 @@
       "blurayComId": "22860",
       "posterUrl": "https://images.static-bluray.com/products/20/4307_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -275,7 +335,10 @@
       "title": "The Departed",
       "blurayComId": "18247",
       "posterUrl": "https://images.static-bluray.com/products/20/312_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-09-28"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -284,7 +347,10 @@
       "title": "Dogville",
       "blurayComId": "97945",
       "posterUrl": "https://images.static-bluray.com/products/20/8990_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-02-01"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -294,6 +360,7 @@
       "blurayComId": "22260",
       "posterUrl": "https://images.static-bluray.com/products/20/4250_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -303,6 +370,7 @@
       "blurayComId": "128498",
       "posterUrl": "https://images.static-bluray.com/products/20/12177_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -311,7 +379,10 @@
       "title": "The Fighter",
       "blurayComId": "27804",
       "posterUrl": "https://images.static-bluray.com/products/20/4808_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-01-17"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -321,6 +392,7 @@
       "blurayComId": "19689",
       "posterUrl": "https://images.static-bluray.com/products/20/1754_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -329,7 +401,10 @@
       "title": "Gattaca",
       "blurayComId": "18059",
       "posterUrl": "https://images.static-bluray.com/products/20/124_2_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-04-05"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -339,6 +414,7 @@
       "blurayComId": "161633",
       "posterUrl": "https://images.static-bluray.com/products/20/16239_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -347,7 +423,10 @@
       "title": "The Girl with the Dragon Tattoo",
       "blurayComId": "59480",
       "posterUrl": "https://images.static-bluray.com/products/20/7382_2_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-02-01"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -357,6 +436,7 @@
       "blurayComId": "19813",
       "posterUrl": "https://images.static-bluray.com/products/20/1878_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -365,7 +445,10 @@
       "title": "Graveyard of Honor",
       "blurayComId": "484146",
       "posterUrl": "https://images.static-bluray.com/products/20/41937_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-05-26"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -374,7 +457,10 @@
       "title": "The Hateful Eight",
       "blurayComId": "355379",
       "posterUrl": "https://images.static-bluray.com/products/20/33432_3_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-07-18"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -384,6 +470,7 @@
       "blurayComId": "20179",
       "posterUrl": "https://images.static-bluray.com/products/20/2244_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -393,6 +480,7 @@
       "blurayComId": "146811",
       "posterUrl": "https://images.static-bluray.com/products/20/14416_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -402,6 +490,7 @@
       "blurayComId": "1284362",
       "posterUrl": "https://images.static-bluray.com/products/20/99314_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -411,6 +500,7 @@
       "blurayComId": "1218290",
       "posterUrl": "https://images.static-bluray.com/products/20/92773_4_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -420,6 +510,7 @@
       "blurayComId": "29387",
       "posterUrl": "https://images.static-bluray.com/products/20/5202_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -429,6 +520,7 @@
       "blurayComId": "328915",
       "posterUrl": "https://images.static-bluray.com/products/20/29952_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -437,7 +529,10 @@
       "title": "Interstellar",
       "blurayComId": "206156",
       "posterUrl": "https://images.static-bluray.com/products/20/20634_3_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-08-17"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -447,6 +542,7 @@
       "blurayComId": "164810",
       "posterUrl": "https://images.static-bluray.com/products/20/16609_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -456,6 +552,7 @@
       "blurayComId": "1258914",
       "posterUrl": "https://images.static-bluray.com/products/20/96545_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -464,7 +561,10 @@
       "title": "It: Chapter Two",
       "blurayComId": "795499",
       "posterUrl": "https://images.static-bluray.com/products/20/63513_3_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-03-08"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -474,6 +574,7 @@
       "blurayComId": "1233084",
       "posterUrl": "https://images.static-bluray.com/products/20/94100_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -482,7 +583,10 @@
       "title": "The Killing of a Sacred Deer",
       "blurayComId": "727487",
       "posterUrl": "https://images.static-bluray.com/products/20/59559_3_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-07-25"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -491,7 +595,10 @@
       "title": "King of New York",
       "blurayComId": "18431",
       "posterUrl": "https://images.static-bluray.com/products/20/496_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-06-24"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -500,7 +607,10 @@
       "title": "La La Land",
       "blurayComId": "458490",
       "posterUrl": "https://images.static-bluray.com/products/20/39624_6_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-03-09"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -510,6 +620,7 @@
       "blurayComId": "29002",
       "posterUrl": "https://images.static-bluray.com/products/20/5121_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -519,6 +630,7 @@
       "blurayComId": "18109",
       "posterUrl": "https://images.static-bluray.com/products/20/174_4_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -527,7 +639,10 @@
       "title": "Light Sleeper",
       "blurayComId": "333407",
       "posterUrl": "https://images.static-bluray.com/products/20/30613_2_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-03-01"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -537,6 +652,7 @@
       "blurayComId": "137492",
       "posterUrl": "https://images.static-bluray.com/products/20/12986_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -546,6 +662,7 @@
       "blurayComId": "19752",
       "posterUrl": "https://images.static-bluray.com/products/20/1817_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -555,6 +672,7 @@
       "blurayComId": "21989",
       "posterUrl": "https://images.static-bluray.com/products/20/4054_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -564,6 +682,7 @@
       "blurayComId": "18304",
       "posterUrl": "https://images.static-bluray.com/products/20/369_6_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -573,6 +692,7 @@
       "blurayComId": "107716",
       "posterUrl": "https://images.static-bluray.com/products/20/10162_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -582,6 +702,7 @@
       "blurayComId": "234155",
       "posterUrl": "https://images.static-bluray.com/products/20/21313_5_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -591,6 +712,7 @@
       "blurayComId": "2094466",
       "posterUrl": "https://images.static-bluray.com/products/20/180024_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -600,6 +722,7 @@
       "blurayComId": "27157",
       "posterUrl": "https://images.static-bluray.com/products/20/4612_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -608,7 +731,10 @@
       "title": "Memento",
       "blurayComId": "18043",
       "posterUrl": "https://images.static-bluray.com/products/20/108_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-11-02"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -618,6 +744,7 @@
       "blurayComId": "28415",
       "posterUrl": "https://images.static-bluray.com/products/20/4963_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -627,6 +754,7 @@
       "blurayComId": "330845",
       "posterUrl": "https://images.static-bluray.com/products/20/30197_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -635,7 +763,10 @@
       "title": "Network",
       "blurayComId": "23828",
       "posterUrl": "https://images.static-bluray.com/products/20/4387_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-02-15"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -645,6 +776,7 @@
       "blurayComId": "196574",
       "posterUrl": "https://images.static-bluray.com/products/20/20000_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -654,6 +786,7 @@
       "blurayComId": "1632869",
       "posterUrl": "https://images.static-bluray.com/products/20/135780_4_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -663,6 +796,7 @@
       "blurayComId": "1444224",
       "posterUrl": "https://images.static-bluray.com/products/20/115618_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -671,7 +805,10 @@
       "title": "Oldboy",
       "blurayComId": "18412",
       "posterUrl": "https://images.static-bluray.com/products/20/477_3_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-07-30"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -680,7 +817,10 @@
       "title": "Once Upon a Time in Hollywood",
       "blurayComId": "811512",
       "posterUrl": "https://images.static-bluray.com/products/20/64988_6_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-04-07"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -690,6 +830,7 @@
       "blurayComId": "27638",
       "posterUrl": "https://images.static-bluray.com/products/20/4786_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -698,7 +839,10 @@
       "title": "Pale Rider",
       "blurayComId": "18751",
       "posterUrl": "https://images.static-bluray.com/products/20/816_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-07-29"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -708,6 +852,7 @@
       "blurayComId": "28471",
       "posterUrl": "https://images.static-bluray.com/products/20/4988_3_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -717,6 +862,7 @@
       "blurayComId": "18275",
       "posterUrl": "https://images.static-bluray.com/products/20/340_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -725,7 +871,10 @@
       "title": "Requiem for a Dream",
       "blurayComId": "18234",
       "posterUrl": "https://images.static-bluray.com/products/20/299_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-04-21"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -734,7 +883,10 @@
       "title": "RocknRolla",
       "blurayComId": "19391",
       "posterUrl": "https://images.static-bluray.com/products/20/1456_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-04-26"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -744,6 +896,7 @@
       "blurayComId": "97935",
       "posterUrl": "https://images.static-bluray.com/products/20/8985_8_small.jpg",
       "watchDates": [],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -752,7 +905,10 @@
       "title": "The Sacred Spirit",
       "blurayComId": "1566660",
       "posterUrl": "https://images.static-bluray.com/products/20/128954_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-05-19"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -762,6 +918,7 @@
       "blurayComId": "33044",
       "posterUrl": "https://images.static-bluray.com/products/20/5751_4_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -771,6 +928,7 @@
       "blurayComId": "1199856",
       "posterUrl": "https://images.static-bluray.com/products/20/90983_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -780,6 +938,7 @@
       "blurayComId": "20832",
       "posterUrl": "https://images.static-bluray.com/products/20/2897_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -789,6 +948,7 @@
       "blurayComId": "359002",
       "posterUrl": "https://images.static-bluray.com/products/20/33670_3_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -797,7 +957,10 @@
       "title": "Session 9",
       "blurayComId": "112424",
       "posterUrl": "https://images.static-bluray.com/products/20/10870_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-12-09"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -806,7 +969,10 @@
       "title": "Seven Samurai",
       "blurayComId": "24392",
       "posterUrl": "https://images.static-bluray.com/products/20/4399_3_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-06-27"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -815,7 +981,10 @@
       "title": "The Shining",
       "blurayComId": "18398",
       "posterUrl": "https://images.static-bluray.com/products/20/463_8_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-06-28"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -825,6 +994,7 @@
       "blurayComId": "411321",
       "posterUrl": "https://images.static-bluray.com/products/20/36885_2_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -834,6 +1004,7 @@
       "blurayComId": "23439",
       "posterUrl": "https://images.static-bluray.com/products/20/4355_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -842,7 +1013,10 @@
       "title": "Solaris",
       "blurayComId": "28143",
       "posterUrl": "https://images.static-bluray.com/products/20/4891_2_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-03-30"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -851,7 +1025,10 @@
       "title": "Stalker",
       "blurayComId": "96682",
       "posterUrl": "https://images.static-bluray.com/products/20/8870_2_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-03-20"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -861,6 +1038,7 @@
       "blurayComId": "235556",
       "posterUrl": "https://images.static-bluray.com/products/20/21417_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -870,6 +1048,7 @@
       "blurayComId": "146823",
       "posterUrl": "https://images.static-bluray.com/products/20/14426_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -878,7 +1057,10 @@
       "title": "The Stylist",
       "blurayComId": "1418767",
       "posterUrl": "https://images.static-bluray.com/products/20/112615_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-01-12"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -887,7 +1069,10 @@
       "title": "Sweeney Todd: The Demon Barber of Fleet Street",
       "blurayComId": "18862",
       "posterUrl": "https://images.static-bluray.com/products/20/927_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-09-17"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -896,7 +1081,10 @@
       "title": "Sympathy for Mr. Vengeance",
       "blurayComId": "29043",
       "posterUrl": "https://images.static-bluray.com/products/20/5130_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-06-25"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -905,7 +1093,10 @@
       "title": "Taxi Driver",
       "blurayComId": "18973",
       "posterUrl": "https://images.static-bluray.com/products/20/1038_5_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-09-21"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -914,16 +1105,23 @@
       "title": "Tenebrae",
       "blurayComId": "28132",
       "posterUrl": "https://images.static-bluray.com/products/20/4889_6_small.jpg",
-      "watchDates": [],
-      "hasFeatures": false,
+      "watchDates": [
+        "2026-07-01"
+      ],
+      "watchedCount": 1,
+      "hasFeatures": true,
       "featuresWatched": false,
-      "userComment": ""
+      "userComment": "#features_toWatch #commentary_toWatch"
     },
     {
       "title": "The Thing",
       "blurayComId": "18935",
       "posterUrl": "https://images.static-bluray.com/products/20/1000_6_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-05-30",
+        "2025-07-28"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -933,6 +1131,7 @@
       "blurayComId": "98711",
       "posterUrl": "https://images.static-bluray.com/products/20/9075_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -942,6 +1141,7 @@
       "blurayComId": "19841",
       "posterUrl": "https://images.static-bluray.com/products/20/1906_3_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -950,7 +1150,10 @@
       "title": "Touch of Evil",
       "blurayComId": "36357",
       "posterUrl": "https://images.static-bluray.com/products/20/6789_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-10-04"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -959,7 +1162,10 @@
       "title": "Training Day",
       "blurayComId": "18014",
       "posterUrl": "https://images.static-bluray.com/products/20/79_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-11-01"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -969,6 +1175,7 @@
       "blurayComId": "18018",
       "posterUrl": "https://images.static-bluray.com/products/20/83_6_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -978,6 +1185,7 @@
       "blurayComId": "27314",
       "posterUrl": "https://images.static-bluray.com/products/20/4697_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -987,6 +1195,7 @@
       "blurayComId": "1258913",
       "posterUrl": "https://images.static-bluray.com/products/20/96544_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -995,7 +1204,10 @@
       "title": "Whiplash",
       "blurayComId": "326080",
       "posterUrl": "https://images.static-bluray.com/products/20/29738_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2025-07-07"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -1005,6 +1217,7 @@
       "blurayComId": "36202",
       "posterUrl": "https://images.static-bluray.com/products/20/6748_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -1013,7 +1226,10 @@
       "title": "The Wolf of Wall Street",
       "blurayComId": "147117",
       "posterUrl": "https://images.static-bluray.com/products/20/14482_1_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-01-25"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -1023,6 +1239,7 @@
       "blurayComId": "257291",
       "posterUrl": "https://images.static-bluray.com/products/20/23903_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -1032,6 +1249,7 @@
       "blurayComId": "20831",
       "posterUrl": "https://images.static-bluray.com/products/20/2896_1_small.jpg",
       "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -1040,7 +1258,10 @@
       "title": "Zodiac",
       "blurayComId": "18349",
       "posterUrl": "https://images.static-bluray.com/products/20/414_2_small.jpg",
-      "watchDates": [],
+      "watchDates": [
+        "2026-07-04"
+      ],
+      "watchedCount": 1,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
