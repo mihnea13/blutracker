@@ -723,13 +723,9 @@ function pickRandom() {
 // ════════════════════════════════════════════════════
 function toggle(key) { S.expanded.has(key)?S.expanded.delete(key):S.expanded.add(key); }
 function switchTab(tab) { S.tab=tab; render(); }
-function toggleView() { S.view=S.view==='grid'?'list':'grid'; localStorage.setItem('bt_view',S.view); render(); }
+// toggleView removed — use setView() via drawer
 function syncNav() { $$('.nav__item').forEach(b=>b.classList.toggle('nav__item--active',b.dataset.tab===S.tab)); }
-function syncViewBtn() {
-  const btn=$('#btn-view'); if(!btn)return;
-  btn.textContent=S.view==='grid'?'☰':'⊞';
-  btn.style.visibility=(S.tab==='unwatched'||S.tab==='watched')?'':'hidden';
-}
+function syncViewBtn() { syncViewButtons(); }
 function $$(s) { return [...document.querySelectorAll(s)]; }
 function showToast(msg,type='') {
   const t=mk('div',`toast${type?' toast--'+type:''}`,msg);
@@ -739,10 +735,40 @@ function showToast(msg,type='') {
 // ════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// DRAWER
+// ════════════════════════════════════════════════════
+function openDrawer() {
+  document.body.classList.add('drawer-open');
+  // Update sort label
+  const allOpts = [...SORT_OPTIONS.all, ...SORT_OPTIONS.watched];
+  const found = allOpts.find(o => o.value === S.sort);
+  const lbl = $('#drawer-sort-label');
+  if (lbl && found) lbl.textContent = found.label;
+}
+
+function closeDrawer() {
+  document.body.classList.remove('drawer-open');
+}
+
+function setView(v) {
+  S.view = v;
+  localStorage.setItem('bt_view', v);
+  $('#view-grid-btn')?.classList.toggle('view-btn--active', v === 'grid');
+  $('#view-list-btn')?.classList.toggle('view-btn--active', v === 'list');
+  render();
+}
+
+function syncViewButtons() {
+  $('#view-grid-btn')?.classList.toggle('view-btn--active', S.view === 'grid');
+  $('#view-list-btn')?.classList.toggle('view-btn--active', S.view === 'list');
+}
+
+// ════════════════════════════════════════════════════
+
 async function initApp() {
   $$('.nav__item').forEach(btn=>btn.addEventListener('click',()=>switchTab(btn.dataset.tab)));
-  $('#btn-view').addEventListener('click',toggleView);
-  $('#btn-sync').addEventListener('click',doSync);
+  $('#btn-menu').addEventListener('click', openDrawer);
   $('#overlay').addEventListener('click',e=>{ if(e.target===$('#overlay'))closeModal(); });
 
   try {
