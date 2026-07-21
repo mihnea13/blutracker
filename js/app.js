@@ -1,5 +1,5 @@
-// BluTracker v0.4
-const BT_VERSION = '0.4';
+// BluTracker v0.5
+const BT_VERSION = '0.5';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -811,6 +811,462 @@ function showToast(msg,type='') {
   $('#toasts').appendChild(t); setTimeout(()=>t.remove(),3000);
 }
 
+
+// ════════════════════════════════════════════════════
+// STATS — CALUP E
+// ════════════════════════════════════════════════════
+
+function openStats() {
+  document.body.classList.add('stats-open');
+  setTimeout(renderStats, 80);
+}
+
+function closeStats() {
+  document.body.classList.remove('stats-open');
+}
+
+// ── Data aggregation ─────────────────────────────────
+function computeStats() {
+  const all = list();
+  const w = watched();
+  const allTracks = all.flatMap(m => m.commentaryTracks||[]);
+  const watchedTracks = allTracks.filter(t => t.watched);
+  const watchEvents = [];
+  w.forEach(m => (m.watchHistory||[]).forEach(wh => {
+    if (wh.date && wh.date.length >= 10) watchEvents.push({date:wh.date, title:m.title, runtime:m.runtime||0});
+  }));
+  watchEvents.sort((a,b)=>a.date.localeCompare(b.date));
+
+  // Decade map
+  const decadeMap = {};
+  all.forEach(m => {
+    const yr = parseInt(m.year);
+    const key = isNaN(yr) ? '?' : String(Math.floor(yr/10)*10);
+    if (!decadeMap[key]) decadeMap[key] = {total:0, watched:0};
+    decadeMap[key].total++;
+    if (m.watchHistory?.length) decadeMap[key].watched++;
+  });
+
+  // Monthly (last 18 months)
+  const monthMap = {};
+  const now = new Date();
+  for (let i=17;i>=0;i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    monthMap[d.toISOString().substring(0,7)] = 0;
+  }
+  watchEvents.forEach(e => { const k=e.date.substring(0,7); if(k in monthMap) monthMap[k]++; });
+
+  // Runtime buckets
+  const rb = {'sub 90m':0,'90-120m':0,'120-150m':0,'150m+':0,'?':0};
+  all.forEach(m => {
+    const r = m.runtime||0;
+    if (!r) rb['?']++;
+    else if (r<90) rb['sub 90m']++;
+    else if (r<120) rb['90-120m']++;
+    else if (r<150) rb['120-150m']++;
+    else rb['150m+']++;
+  });
+
+  // Top directors
+  const dm = {};
+  all.forEach(m => (m.directors||[]).forEach(d => {
+    if (!dm[d]) dm[d]={total:0,watched:0};
+    dm[d].total++;
+    if (m.watchHistory?.length) dm[d].watched++;
+  }));
+  const directors = Object.entries(dm).sort((a,b)=>b[1].total-a[1].total).slice(0,7)
+    .map(([name,data])=>({name,...data}));
+
+  // Features
+  const withGenFeat = all.filter(m=>m.hasGenericFeatures);
+  const allSpecial = all.flatMap(m=>m.specialFeatures||[]);
+  const fullDisc = all.filter(m => {
+    const t=m.commentaryTracks||[];
+    return m.watchHistory?.length && t.length>=4 && t.every(x=>x.watched);
+  }).length;
+
+  // Heatmap (last 365 days)
+  const heatmap = {};
+  const yr = new Date(); yr.setFullYear(yr.getFullYear()-1);
+  watchEvents.forEach(e => { if(new Date(e.date+'T12:00:00')>=yr) heatmap[e.date]=(heatmap[e.date]||0)+1; });
+
+  // Longest films
+  const longest = [...all].filter(m=>m.runtime).sort((a,b)=>b.runtime-a.runtime).slice(0,3);
+
+  // Favorite decade
+  const watchedDecades = Object.entries(decadeMap).filter(([k])=>k!=='?').sort((a,b)=>b[1].watched-a[1].watched);
+  const favDecade = watchedDecades[0];
+
+  // Max month
+  const maxMonth = Object.entries(monthMap).reduce((mx,[k,v])=>v>mx[1]?[k,v]:mx, ['',0]);
+
+  // Comm status counts
+  const cByStatus = {pending:0,partial:0,done:0,none:0};
+  all.forEach(m => { const s=commStatus(m); if(s) cByStatus[s]++; else cByStatus.none++; });
+
+  const totalMin = w.reduce((s,m)=>s+(m.runtime||0),0);
+  return {
+    total:all.length, watched:w.length, unwatched:unwatched().length,
+    watchedPct: all.length?Math.round(w.length/all.length*100):0,
+    totalMin, totalHours:Math.floor(totalMin/60), totalDays:Math.floor(totalMin/60/24),
+    commTotal:allTracks.length, commWatched:watchedTracks.length,
+    watchEvents, cByStatus, decadeMap, monthMap, rb, directors,
+    withGenFeat:withGenFeat.length, genFeatWatched:withGenFeat.filter(m=>m.genericFeaturesWatched).length,
+    allSpecial:allSpecial.length, specialWatched:allSpecial.filter(f=>f.watched).length,
+    fullDisc, heatmap, longest, favDecade, maxMonth,
+    firstWatch:watchEvents[0]?.date, lastWatch:watchEvents[watchEvents.length-1]?.date,
+  };
+}
+
+// ── Render ───────────────────────────────────────────
+function renderStats() {
+  const el = $('#stats-content');
+  if (!el) return;
+  el.innerHTML = '';
+  const s = computeStats();
+
+  // Hero cards
+  el.appendChild(makeStatsHero(s));
+
+  // Donuts
+  const ds = mk('div','stats-section');
+  ds.appendChild(mk('div','stats-section-title','Progres colecție'));
+  const dw = mk('div','chart-wrap');
+  dw.appendChild(makeDonutsRow(s));
+  ds.appendChild(dw); el.appendChild(ds);
+
+  // Decade chart
+  const decs = mk('div','stats-section');
+  decs.appendChild(mk('div','stats-section-title','Distribuție pe decadă'));
+  const decw = mk('div','chart-wrap');
+  decw.appendChild(makeDecadeChart(s));
+  decs.appendChild(decw); el.appendChild(decs);
+
+  // Monthly
+  const ms = mk('div','stats-section');
+  ms.appendChild(mk('div','stats-section-title','Activitate lunară (18 luni)'));
+  el.appendChild(ms);
+  el.appendChild(makeMonthlyChart(s));
+
+  // Heatmap
+  const hs = mk('div','stats-section');
+  hs.appendChild(mk('div','stats-section-title','Calendar activitate (12 luni)'));
+  const hw = mk('div','heatmap-wrap');
+  hw.appendChild(makeHeatmap(s.heatmap));
+  hs.appendChild(hw); el.appendChild(hs);
+
+  // Runtime
+  const rs = mk('div','stats-section');
+  rs.appendChild(mk('div','stats-section-title','Distribuție durată'));
+  const rw = mk('div','chart-wrap');
+  rw.appendChild(makeRuntimeChart(s));
+  rs.appendChild(rw); el.appendChild(rs);
+
+  // Directors
+  if (s.directors.length) {
+    const dir = mk('div','stats-section');
+    dir.appendChild(mk('div','stats-section-title','Top regizori'));
+    const dw2 = mk('div','chart-wrap');
+    dw2.appendChild(makeDirectorsChart(s));
+    dir.appendChild(dw2); el.appendChild(dir);
+  }
+
+  // Features
+  el.appendChild(makeFeaturesStats(s));
+
+  // Fun stats
+  el.appendChild(makeFunStats(s));
+}
+
+// ── Hero ─────────────────────────────────────────────
+function makeStatsHero(s) {
+  const wrap = mk('div','stats-hero');
+  const cards = [
+    { val: s.watched + ' / ' + s.total, lbl: 'filme văzute (' + s.watchedPct + '%)', accent: true },
+    { val: s.totalDays + 'z ' + (s.totalHours%24) + 'h', lbl: 'timp total' },
+    { val: s.commWatched + ' / ' + s.commTotal, lbl: 'commentary tracks' },
+    { val: s.watchEvents.length, lbl: 'sesiuni de vizionare' },
+  ];
+  cards.forEach(c => {
+    const card = mk('div','stats-hero-card'+(c.accent?' stats-hero-card--accent':''));
+    const v = mk('div','stats-hero-val',String(c.val));
+    const l = mk('div','stats-hero-lbl',c.lbl);
+    card.append(v,l); wrap.appendChild(card);
+  });
+  return wrap;
+}
+
+// ── Donut chart (SVG) ─────────────────────────────────
+function makeSVGDonut(segments, label, sublabel) {
+  const r = 54, cx = 80, cy = 80, thick = 18, circ = 2*Math.PI*r;
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 160 160');
+  svg.style.cssText = 'width:100%;max-width:150px;display:block;';
+
+  const bg = document.createElementNS(ns,'circle');
+  bg.setAttribute('cx',cx); bg.setAttribute('cy',cy); bg.setAttribute('r',r);
+  bg.setAttribute('fill','none'); bg.setAttribute('stroke','var(--surface-2)');
+  bg.setAttribute('stroke-width',thick);
+  svg.appendChild(bg);
+
+  let offset = 0;
+  segments.forEach((seg,i) => {
+    if (!seg.pct) return;
+    const arc = document.createElementNS(ns,'circle');
+    arc.setAttribute('cx',cx); arc.setAttribute('cy',cy); arc.setAttribute('r',r);
+    arc.setAttribute('fill','none'); arc.setAttribute('stroke',seg.color);
+    arc.setAttribute('stroke-width',thick);
+    arc.setAttribute('stroke-dasharray','0 '+circ);
+    arc.style.cssText = 'transform:rotate(-90deg);transform-origin:'+cx+'px '+cy+'px;transition:stroke-dasharray 0.9s ease '+(i*0.15)+'s;';
+    arc.setAttribute('stroke-dashoffset',(-offset/100*circ));
+    svg.appendChild(arc);
+    const dash = seg.pct/100*circ;
+    setTimeout(()=>{arc.setAttribute('stroke-dasharray',dash+' '+circ);},120+i*100);
+    offset += seg.pct;
+  });
+
+  const t1 = document.createElementNS(ns,'text');
+  t1.setAttribute('x',cx); t1.setAttribute('y',cy-6);
+  t1.setAttribute('text-anchor','middle'); t1.setAttribute('font-size','20');
+  t1.setAttribute('font-weight','800'); t1.setAttribute('fill','var(--text)');
+  t1.textContent = label;
+  const t2 = document.createElementNS(ns,'text');
+  t2.setAttribute('x',cx); t2.setAttribute('y',cy+14);
+  t2.setAttribute('text-anchor','middle'); t2.setAttribute('font-size','10');
+  t2.setAttribute('fill','var(--text-2)');
+  t2.textContent = sublabel;
+  svg.append(t1,t2);
+  return svg;
+}
+
+function makeDonutsRow(s) {
+  const row = mk('div','donuts-row');
+  const p = s.total ? Math.round(s.watched/s.total*100) : 0;
+
+  // Donut 1: watched vs unwatched
+  const d1 = mk('div','donut-item');
+  d1.appendChild(makeSVGDonut(
+    [{pct:p,color:'var(--green)'},{pct:100-p,color:'var(--surface-2)'}],
+    p+'%','văzut'
+  ));
+  const l1 = mk('div','donut-legend');
+  [{c:'var(--green)',t:'Văzute'},{c:'var(--surface-2)',t:'Nevăzute'}].forEach(({c,t})=>{
+    const li=mk('div','legend-item');
+    const dot=mk('span','legend-dot'); dot.style.background=c;
+    li.append(dot,document.createTextNode(t)); l1.appendChild(li);
+  });
+  d1.appendChild(l1); row.appendChild(d1);
+
+  // Donut 2: commentary status
+  if (s.commTotal > 0) {
+    const cPct = Math.round(s.commWatched/s.commTotal*100);
+    const pendN = s.cByStatus.pending, partN = s.cByStatus.partial, doneN = s.cByStatus.done;
+    const tot2 = pendN+partN+doneN||1;
+    const d2 = mk('div','donut-item');
+    d2.appendChild(makeSVGDonut([
+      {pct:Math.round(doneN/tot2*100),color:'var(--green)'},
+      {pct:Math.round(partN/tot2*100),color:'var(--amber)'},
+      {pct:Math.round(pendN/tot2*100),color:'var(--red)'},
+    ], cPct+'%','tracks'));
+    const l2 = mk('div','donut-legend');
+    [{c:'var(--green)',t:'Complete'},{c:'var(--amber)',t:'Parțial'},{c:'var(--red)',t:'Niciun track'}].forEach(({c,t})=>{
+      const li=mk('div','legend-item');
+      const dot=mk('span','legend-dot'); dot.style.background=c;
+      li.append(dot,document.createTextNode(t)); l2.appendChild(li);
+    });
+    d2.appendChild(l2); row.appendChild(d2);
+  }
+  return row;
+}
+
+// ── Decade chart ─────────────────────────────────────
+function makeDecadeChart(s) {
+  const wrap = mk('div');
+  const entries = Object.entries(s.decadeMap)
+    .sort((a,b) => a[0]==='?'?1:b[0]==='?'?-1:parseInt(a[0])-parseInt(b[0]));
+  const maxTotal = Math.max(...entries.map(([,d])=>d.total),1);
+  entries.forEach(([decade,d]) => {
+    const row = mk('div','bar-h-row');
+    const lbl = mk('div','bar-h-label', decade==='?' ? '?' : decade+'s');
+    const track = mk('div','bar-h-track');
+    const fillTotal = mk('div','bar-h-fill-sub');
+    fillTotal.style.background='var(--text-3)';
+    fillTotal.style.width='0%';
+    const fill = mk('div','bar-h-fill');
+    fill.style.background='var(--accent)';
+    fill.style.width='0%';
+    track.append(fillTotal,fill);
+    const val = mk('div','bar-h-val', d.watched+'/'+d.total);
+    row.append(lbl,track,val);
+    wrap.appendChild(row);
+    const pTotal = d.total/maxTotal*100;
+    const pWatched = d.watched/maxTotal*100;
+    setTimeout(()=>{ fillTotal.style.width=pTotal+'%'; fill.style.width=pWatched+'%'; },120);
+  });
+  return wrap;
+}
+
+// ── Monthly chart ─────────────────────────────────────
+function makeMonthlyChart(s) {
+  const container = mk('div','bar-v-container');
+  const entries = Object.entries(s.monthMap);
+  const maxVal = Math.max(...entries.map(([,v])=>v),1);
+  const wrap = mk('div','bar-v-wrap');
+  const labelsEl = mk('div','bar-v-labels');
+  const MO = ['G','F','M','A','M','I','I','A','S','O','N','D'];
+  entries.forEach(([month,count]) => {
+    const col = mk('div','bar-v-col');
+    const bar = mk('div','bar-v-bar'+(count===0?' bar-v-bar--zero':''));
+    bar.style.height='0px';
+    col.appendChild(bar); wrap.appendChild(col);
+    setTimeout(()=>{ bar.style.height = (count/maxVal*88)+'px'; },120);
+    const lbl = mk('div','bar-v-label', MO[parseInt(month.substring(5,7))-1]);
+    labelsEl.appendChild(lbl);
+  });
+  container.append(wrap,labelsEl);
+  return container;
+}
+
+// ── Heatmap ───────────────────────────────────────────
+function makeHeatmap(heatmapData) {
+  const CELL=11, GAP=2, ROWS=7, ns='http://www.w3.org/2000/svg';
+  const today=new Date();
+  const start=new Date(today); start.setFullYear(start.getFullYear()-1);
+  start.setDate(start.getDate()-start.getDay());
+  const cols=Math.ceil((today-start)/(7*24*3600000))+1;
+  const W=cols*(CELL+GAP)+1, H=ROWS*(CELL+GAP)+22;
+  const svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.style.cssText='width:'+W+'px;min-width:'+W+'px;display:block;';
+
+  const COLORS=['var(--surface-2)','#1c3a2e','#2d6b47','var(--green)'];
+  const MO=['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec'];
+  let cur=new Date(start), col=0, row=0, lastM=-1;
+
+  while(cur<=today) {
+    if(row===0 && cur.getMonth()!==lastM) {
+      const t=document.createElementNS(ns,'text');
+      t.setAttribute('x',col*(CELL+GAP)); t.setAttribute('y',10);
+      t.setAttribute('font-size','8'); t.setAttribute('fill','var(--text-3)');
+      t.textContent=MO[cur.getMonth()]; svg.appendChild(t);
+      lastM=cur.getMonth();
+    }
+    const ds=cur.toISOString().substring(0,10);
+    const cnt=heatmapData[ds]||0;
+    const lvl=cnt===0?0:cnt===1?1:cnt<=3?2:3;
+    const rect=document.createElementNS(ns,'rect');
+    rect.setAttribute('x',col*(CELL+GAP)); rect.setAttribute('y',row*(CELL+GAP)+14);
+    rect.setAttribute('width',CELL); rect.setAttribute('height',CELL);
+    rect.setAttribute('rx',2); rect.setAttribute('fill',COLORS[lvl]);
+    svg.appendChild(rect);
+    cur.setDate(cur.getDate()+1); row++;
+    if(row===7){row=0;col++;}
+  }
+  return svg;
+}
+
+// ── Runtime chart ─────────────────────────────────────
+function makeRuntimeChart(s) {
+  const wrap = mk('div');
+  const keys = ['sub 90m','90-120m','120-150m','150m+','?'];
+  const maxVal = Math.max(...keys.map(k=>s.rb[k]),1);
+  keys.forEach(k => {
+    const val = s.rb[k];
+    const row = mk('div','runtime-row');
+    const lbl = mk('div','runtime-label',k);
+    const track = mk('div','runtime-track');
+    const fill = mk('div','runtime-fill'); fill.style.width='0%';
+    track.appendChild(fill);
+    const v = mk('div','runtime-val',String(val));
+    row.append(lbl,track,v); wrap.appendChild(row);
+    setTimeout(()=>{ fill.style.width=(val/maxVal*100)+'%'; },120);
+  });
+  return wrap;
+}
+
+// ── Directors chart ───────────────────────────────────
+function makeDirectorsChart(s) {
+  const wrap = mk('div');
+  const maxVal = Math.max(...s.directors.map(d=>d.total),1);
+  s.directors.forEach(d => {
+    const row = mk('div','director-row');
+    const nm = mk('div','director-name',d.name);
+    const track = mk('div','director-track');
+    const fill = mk('div','director-fill'); fill.style.width='0%';
+    track.appendChild(fill);
+    const v = mk('div','director-val', d.watched+'/'+d.total);
+    row.append(nm,track,v); wrap.appendChild(row);
+    setTimeout(()=>{ fill.style.width=(d.total/maxVal*100)+'%'; },120);
+  });
+  return wrap;
+}
+
+// ── Features stats ────────────────────────────────────
+function makeFeaturesStats(s) {
+  const sec = mk('div','stats-section');
+  sec.appendChild(mk('div','stats-section-title','Extras & Features'));
+  const wrap = mk('div','chart-wrap');
+
+  const items = [
+    { label:'Extras generice', val:s.genFeatWatched, total:s.withGenFeat },
+    { label:'Features speciale', val:s.specialWatched, total:s.allSpecial },
+  ];
+  items.forEach(item => {
+    if (!item.total) return;
+    const div = mk('div','feat-progress');
+    const lbl = mk('div','feat-progress-label');
+    lbl.innerHTML = '<span>'+esc(item.label)+'</span><span>'+item.val+'/'+item.total+'</span>';
+    const track = mk('div','feat-progress-track');
+    const fill = mk('div','feat-progress-fill'); fill.style.width='0%';
+    track.appendChild(fill);
+    div.append(lbl,track); wrap.appendChild(div);
+    const pct = item.total?Math.round(item.val/item.total*100):0;
+    setTimeout(()=>{ fill.style.width=pct+'%'; },120);
+  });
+  if (s.fullDisc > 0) {
+    const txt = mk('div','fun-stat');
+    txt.innerHTML = '<span class="fun-stat__icon">💿</span><span class="fun-stat__text">Filme cu disc 100% complet (watched + 4+ commentary): <strong>'+s.fullDisc+'</strong></span>';
+    wrap.appendChild(txt);
+  }
+  sec.appendChild(wrap);
+  return sec;
+}
+
+// ── Fun stats ─────────────────────────────────────────
+function makeFunStats(s) {
+  const sec = mk('div','stats-section');
+  sec.appendChild(mk('div','stats-section-title','Fapte'));
+  const wrap = mk('div');
+
+  const fmtDate2 = d => d ? new Date(d+'T12:00:00').toLocaleDateString('ro-RO',{month:'long',year:'numeric'}) : '—';
+  const items = [];
+
+  if (s.totalDays > 0) items.push({icon:'⏱',text:'Ai petrecut <strong>'+s.totalDays+' zile și '+s.totalHours%24+' ore</strong> urmărind filme.'});
+  if (s.favDecade) items.push({icon:'🗓',text:'Decada favorită: <strong>'+s.favDecade[0]+'s</strong> ('+s.favDecade[1].watched+' filme văzute).'});
+  if (s.longest.length) {
+    const tops = s.longest.map(m=>esc(m.title)+' ('+m.runtime+'m)').join(', ');
+    items.push({icon:'🎬',text:'Cele mai lungi filme din colecție: <strong>'+tops+'</strong>.'});
+  }
+  if (s.maxMonth[1] > 0) {
+    const d=new Date(s.maxMonth[0]+'-15T12:00:00');
+    const ml=d.toLocaleDateString('ro-RO',{month:'long',year:'numeric'});
+    items.push({icon:'🔥',text:'Luna cea mai activă: <strong>'+ml+'</strong> ('+s.maxMonth[1]+' vizionări).'});
+  }
+  if (s.firstWatch) items.push({icon:'📅',text:'Prima vizionare înregistrată: <strong>'+fmtDate2(s.firstWatch)+'</strong>.'});
+  const toGo = s.total - s.watched;
+  if (toGo > 0) items.push({icon:'🎯',text:'Ești la <strong>'+toGo+' filme</strong> distanță de colecție 100% văzută.'});
+  if (s.watchedPct === 100) items.push({icon:'🏆',text:'<strong>Colecție 100% văzută!</strong> Legendă.'});
+
+  items.forEach(({icon,text}) => {
+    const row = mk('div','fun-stat');
+    row.innerHTML = '<span class="fun-stat__icon">'+icon+'</span><span class="fun-stat__text">'+text+'</span>';
+    wrap.appendChild(row);
+  });
+  sec.appendChild(wrap);
+  return sec;
+}
+
 // ════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════
@@ -1011,9 +1467,10 @@ function setView(v) {
   localStorage.setItem('bt_view', v);
   if (v === 'diary') S.tab = 'watched';
   syncViewButtons();
-  closeDrawer();
   syncNav();
-  render();
+  closeDrawer();
+  // Small delay so drawer CSS transition completes on iOS before render
+  setTimeout(render, 50);
 }
 
 function syncViewButtons() {
@@ -1027,6 +1484,7 @@ function syncViewButtons() {
 async function initApp() {
   $$('.nav__item').forEach(btn=>btn.addEventListener('click',()=>switchTab(btn.dataset.tab)));
   $('#btn-menu').addEventListener('click', openDrawer);
+  $('#btn-stats')?.addEventListener('click', openStats);
   $('#btn-search').addEventListener('click', () => {
     if (document.body.classList.contains('search-open')) closeSearch();
     else openSearch();

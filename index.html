@@ -16,8 +16,11 @@
 
 <!-- HEADER -->
 <header class="header">
-  <span class="header__title">🎬 BluTracker <span class="header__version">v0.4</span></span>
+  <span class="header__title">🎬 BluTracker <span class="header__version">v0.5</span></span>
   <div class="header__actions">
+    <button class="header__icon-btn" id="btn-stats" aria-label="Statistici" onclick="openStats()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg>
+    </button>
     <button class="header__icon-btn" id="btn-search" aria-label="Caută">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/>
@@ -100,6 +103,15 @@
 
 <!-- MODAL -->
 <div id="overlay"><div id="modal"></div></div>
+<!-- STATS PANEL -->
+<div id="stats-panel">
+  <div class="stats-header">
+    <h2 class="stats-header__title">📊 Statistici</h2>
+    <button class="stats-header__close" onclick="closeStats()">✕</button>
+  </div>
+  <div id="stats-content"></div>
+</div>
+
 <!-- TOASTS -->
 <div id="toasts"></div>
 
