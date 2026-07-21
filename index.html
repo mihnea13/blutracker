@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+  <!-- PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BluTracker">
+  <meta name="theme-color" content="#0d0d1a">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <title>BluTracker</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────── -->
+<header class="header">
+  <span class="header__title">🎬 BluTracker</span>
+  <div class="header__actions">
+    <button class="icon-btn" id="btn-view" title="Schimbă view">⊞</button>
+    <button class="icon-btn" id="btn-sync" title="Sincronizează colecția">⟳</button>
+  </div>
+</header>
+
+<!-- ── MAIN CONTENT ───────────────────────── -->
+<main id="main">
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>Se încarcă colecția…</p>
+  </div>
+</main>
+
+<!-- ── BOTTOM NAV ─────────────────────────── -->
+<nav class="nav">
+  <button class="nav__item nav__item--active" data-tab="unwatched">
+    <span class="nav__icon">📽</span>
+    <span class="nav__label">Nevăzute</span>
+  </button>
+  <button class="nav__item" data-tab="watched">
+    <span class="nav__icon">✓</span>
+    <span class="nav__label">Văzute</span>
+  </button>
+  <button class="nav__item" data-tab="commentaries">
+    <span class="nav__icon">🎙</span>
+    <span class="nav__label">Comentarii</span>
+  </button>
+  <button class="nav__item" data-tab="features">
+    <span class="nav__icon">🎞</span>
+    <span class="nav__label">Extras</span>
+  </button>
+</nav>
+
+<!-- ── MODAL OVERLAY ──────────────────────── -->
+<div id="overlay">
+  <div id="modal"></div>
+</div>
+
+<!-- ── TOASTS ─────────────────────────────── -->
+<div id="toasts"></div>
+
+<!-- ── FIREBASE (compat SDK v10) ──────────── -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<!-- ── APP ────────────────────────────────── -->
+<script src="js/config.js"></script>
+<script src="js/db.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+name: Sync blu-ray.com Collection
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"  # Luni, ora 6:00 UTC
+  workflow_dispatch:       # Manual trigger din GitHub UI
+
+permissions:
+  contents: write          # Permite commit-ul fișierului
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Run scraper
+        env:
+          BLURAY_USERNAME:   ${{ secrets.BLURAY_USERNAME }}
+          BLURAY_PASSWORD:   ${{ secrets.BLURAY_PASSWORD }}
+          BLURAY_PROFILE_ID: ${{ secrets.BLURAY_PROFILE_ID }}
+        run: python scripts/scraper.py
+
+      - name: Commit collection.json (if changed)
+        run: |
+          git config user.name  "BluTracker Bot"
+          git config user.email "bot@blutracker.local"
+          git add data/collection.json
+          git diff --cached --quiet || git commit -m "chore: sync collection [skip ci]"
+          git push
