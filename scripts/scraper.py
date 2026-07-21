@@ -125,18 +125,22 @@ def fetch_properties(s: requests.Session, release_id: str) -> dict:
         c = data.get("c", {})
         p_data = data.get("p", {})
 
+        # c.watched == 1 inseamna ca filmul e efectiv marcat ca vazut de user
+        is_watched = int(c.get("watched") or 0) == 1
+
         watch_dates = []
-        if c.get("watcheddate"):
-            watch_dates.append(c["watcheddate"])
-        if c.get("rewatcheddate"):
-            watch_dates.append(c["rewatcheddate"])
+        if is_watched:
+            if c.get("watcheddate"):
+                watch_dates.append(c["watcheddate"])
+            if c.get("rewatcheddate"):
+                watch_dates.append(c["rewatcheddate"])
 
         comment = (c.get("comment") or c.get("description") or "").strip()
         poster  = p_data.get("coverurl", "") or ""
 
         return {
             "watchDates":      sorted(set(d for d in watch_dates if d)),
-            "watchedCount":    int(c.get("watchedcount") or 0),
+            "watchedCount":    int(c.get("watchedcount") or 0) if is_watched else 0,
             "hasFeatures":     bool(FEAT_TOWATCH.search(comment) or FEAT_WATCHED.search(comment)),
             "featuresWatched": bool(FEAT_WATCHED.search(comment)),
             "userComment":     comment[:500],
