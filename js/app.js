@@ -10,8 +10,26 @@ const S = {
   view:    localStorage.getItem('bt_view') || 'grid',
   expanded: new Set(),
   search:  '',
+  activeFilters: new Set(),
   sort:    'az',   // az | za | year-desc | year-asc | runtime-desc | runtime-asc
   loading: true,
+};
+
+// ── FILTER DEFINITIONS per tab ─────────────────────────────
+const TAB_FILTERS = {
+  unwatched: [
+    { id:'com',  label:'🎙 Cu commentary', fn: m => m.commentaryTracks?.length > 0 },
+    { id:'feat', label:'🎞 Cu features',   fn: m => m.hasGenericFeatures || m.specialFeatures?.length > 0 },
+  ],
+  watched: [
+    { id:'com-pending',  label:'🎙 Com. nevăzute',     fn: m => (m.commentaryTracks||[]).some(t=>!t.watched) },
+    { id:'feat-pending', label:'🎞 Features pending',  fn: m => (m.hasGenericFeatures&&!m.genericFeaturesWatched)||(m.specialFeatures||[]).some(f=>!f.watched) },
+  ],
+  commentaries: [],
+  features: [
+    { id:'feat-pending', label:'Pending', fn: m => !allFeatDone(m) },
+    { id:'feat-done',    label:'Complete ✓', fn: m => allFeatDone(m) },
+  ],
 };
 
 // Sort options per tab
@@ -69,10 +87,16 @@ const pendingComm = () => withComm().filter(m=>(m.commentaryTracks||[]).some(t=>
 
 function filterSort(arr) {
   let out = arr;
+  // Text search
   if (S.search) {
     const q = S.search.toLowerCase();
     out = out.filter(m => m.title.toLowerCase().includes(q) ||
                           (m.directors||[]).some(d=>d.toLowerCase().includes(q)));
+  }
+  // Active chip filters
+  const tabF = TAB_FILTERS[S.tab] || [];
+  for (const f of tabF) {
+    if (S.activeFilters.has(f.id)) out = out.filter(f.fn);
   }
   switch (S.sort) {
     case 'za':           return out.sort((a,b)=>b.title.localeCompare(a.title));
@@ -715,7 +739,12 @@ function pickRandom() {
 // UI UTILS
 // ════════════════════════════════════════════════════
 function toggle(key) { S.expanded.has(key)?S.expanded.delete(key):S.expanded.add(key); }
-function switchTab(tab) { S.tab=tab; render(); }
+function switchTab(tab) {
+  S.tab=tab;
+  S.activeFilters.clear();
+  renderFilterChips();
+  render();
+}
 // toggleView removed — use setView() via drawer
 function syncNav() { $$('.nav__item').forEach(b=>b.classList.toggle('nav__item--active',b.dataset.tab===S.tab)); }
 function syncViewBtn() { syncViewButtons(); }
@@ -728,6 +757,41 @@ function showToast(msg,type='') {
 // ════════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// SEARCH PANEL
+// ════════════════════════════════════════════════════
+function openSearch() {
+  document.body.classList.add('search-open');
+  setTimeout(() => { $('#search-input')?.focus(); }, 300);
+  renderFilterChips();
+}
+
+function closeSearch() {
+  S.search = '';
+  S.activeFilters.clear();
+  document.body.classList.remove('search-open','has-search');
+  const inp = $('#search-input');
+  if (inp) inp.value = '';
+  render();
+}
+
+function renderFilterChips() {
+  const container = $('#filter-chips');
+  if (!container) return;
+  const filters = TAB_FILTERS[S.tab] || [];
+  container.innerHTML = '';
+  filters.forEach(f => {
+    const chip = mk('button', 'chip-filter' + (S.activeFilters.has(f.id) ? ' chip-filter--active' : ''), f.label);
+    chip.onclick = () => {
+      if (S.activeFilters.has(f.id)) S.activeFilters.delete(f.id);
+      else S.activeFilters.add(f.id);
+      renderFilterChips();
+      render();
+    };
+    container.appendChild(chip);
+  });
+}
+
 // ════════════════════════════════════════════════════
 // DRAWER
 // ════════════════════════════════════════════════════
@@ -762,6 +826,16 @@ function syncViewButtons() {
 async function initApp() {
   $$('.nav__item').forEach(btn=>btn.addEventListener('click',()=>switchTab(btn.dataset.tab)));
   $('#btn-menu').addEventListener('click', openDrawer);
+  $('#btn-search').addEventListener('click', () => {
+    if (document.body.classList.contains('search-open')) closeSearch();
+    else openSearch();
+  });
+  $('#search-input')?.addEventListener('input', e => {
+    S.search = e.target.value;
+    document.body.classList.toggle('has-search', !!S.search);
+    render();
+  });
+  $('#btn-search-clear')?.addEventListener('click', closeSearch);
   $('#overlay').addEventListener('click',e=>{ if(e.target===$('#overlay'))closeModal(); });
 
   try {
