@@ -1,5 +1,5 @@
-// BluTracker v0.6
-const BT_VERSION = '0.6';
+// BluTracker v0.7
+const BT_VERSION = '0.7';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -420,11 +420,10 @@ async function openFilmDetail(id) {
 }
 
 function refetchBtn(id) {
-  const btn = mk('button','btn btn--ghost btn--sm');
-  btn.style.cssText='margin-bottom:6px;width:100%';
-  btn.textContent='🔄 Re-fetch TMDB';
-  btn.onclick=()=>refetchTmdb(id);
-  return btn.outerHTML;
+  // Return HTML string with data-id to avoid JS event listener loss via outerHTML
+  return '<button class="btn btn--ghost btn--sm" style="margin-bottom:6px;width:100%" ' +
+         'onclick="openRefetchModal(this.dataset.id)" data-id="' + esc(id) + '">' +
+         '🔄 Re-fetch TMDB</button>';
 }
 
 function renderDetailModal(id) {
@@ -493,7 +492,7 @@ async function enrichWithTmdb(id) {
   if (m.tmdbId) return;
   try {
     const q  = encodeURIComponent(m.title);
-    const yr = m.year || '';
+    const yr = m.year || '';  // year saved from blu-ray.com or manually entered
     let hit = null;
 
     // Search with year for accurate matching (avoids wrong decade remakes)
@@ -531,26 +530,46 @@ async function enrichWithTmdb(id) {
   } catch(e) { console.warn('TMDB error',m.title,e); }
 }
 
-async function refetchTmdb(id) {
-  // Clear existing TMDB data and re-fetch with corrected year-based matching
+function openRefetchModal(id) {
+  const m = S.movies[id];
+  openModal(
+    '🔄 Re-fetch TMDB',
+    '<p class="modal__subtitle">' + esc(m.title) + '</p>' +
+    '<p style="font-size:13px;color:var(--text-2);margin-bottom:14px">' +
+    'Introdu anul de producție pentru matching precis (ex: 1989 pentru Cold Light of Day).</p>' +
+    '<div class="field"><label>Anul filmului</label>' +
+    '<input type="number" id="refetch-year" value="' + (m.year||'') + '" min="1900" max="2030" placeholder="ex: 1989">' +
+    '</div>',
+    '<button class="btn btn--ghost" onclick="closeModal()">Anulează</button>' +
+    '<button class="btn btn--accent" onclick="doRefetchTmdb(&quot;' + id + '&quot;)">✓ Caută</button>'
+  );
+}
+
+async function doRefetchTmdb(id) {
+  // Read value BEFORE closeModal removes the DOM
+  const year = ($('#refetch-year')?.value || '').trim();
+  closeModal();
+  showToast('Se caută pe TMDB…');
   try {
-    await _db.collection('movies').doc(id).update({
-      tmdbId: firebase.firestore.FieldValue.delete(),
-      tmdbPosterUrl: firebase.firestore.FieldValue.delete(),
-      overview: firebase.firestore.FieldValue.delete(),
-      voteAverage: firebase.firestore.FieldValue.delete(),
-      directors: firebase.firestore.FieldValue.delete(),
-      runtime: firebase.firestore.FieldValue.delete(),
-    });
+    // Save year first so enrichWithTmdb uses it
+    const upd = { tmdbId: firebase.firestore.FieldValue.delete(),
+                  tmdbPosterUrl: firebase.firestore.FieldValue.delete(),
+                  overview: firebase.firestore.FieldValue.delete(),
+                  voteAverage: firebase.firestore.FieldValue.delete(),
+                  directors: firebase.firestore.FieldValue.delete(),
+                  runtime: firebase.firestore.FieldValue.delete() };
+    if (year) upd.year = year;
+    await _db.collection('movies').doc(id).update(upd);
     const doc = await _db.collection('movies').doc(id).get();
     S.movies[id] = doc.data();
-    closeModal();
-    showToast('Se re-caută pe TMDB…');
     await enrichWithTmdb(id);
     render();
-    showToast('TMDB actualizat ✓','success');
-  } catch(e) { showToast('Eroare: '+e.message,'error'); }
+    showToast('TMDB actualizat ✓', 'success');
+  } catch(e) { showToast('Eroare: ' + e.message, 'error'); }
 }
+
+// Legacy alias
+async function refetchTmdb(id) { openRefetchModal(id); }
 
 // Preîncarcă TMDB pentru toate filmele fără date (în fundal, throttled)
 async function prefetchTmdb() {
