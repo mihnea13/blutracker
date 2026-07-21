@@ -107,7 +107,7 @@ input, textarea, select { font: inherit; color: inherit; }
   position: sticky; top: 0; z-index: 10;
   background: linear-gradient(var(--bg) 85%, transparent);
 }
-.toolbar__title  { font-size: 20px; font-weight: 700; letter-spacing: -.4px; }
+.toolbar__count  { font-size: 13px; font-weight: 500; color: var(--text-2); letter-spacing: .2px; }
 .toolbar__actions { display: flex; gap: 8px; align-items: center; }
 
 /* ── GRID / LIST ──────────────────────────────────── */
@@ -269,8 +269,9 @@ input, textarea, select { font: inherit; color: inherit; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px 20px 0 0;
-  width: 100%; max-width: 520px;
-  max-height: 88dvh; overflow-y: auto;
+  width: min(460px, 100vw);  /* never wider than viewport */
+  max-height: 82dvh;
+  display: flex; flex-direction: column;
   transform: translateY(40px);
   transition: transform .25s cubic-bezier(.2,.9,.4,1);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -288,7 +289,7 @@ input, textarea, select { font: inherit; color: inherit; }
                    display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text-2); }
 .modal__subtitle { font-size: 14px; color: var(--text-2); margin-bottom: 14px; }
 .modal__empty    { color: var(--text-2); text-align: center; padding: 20px 0; }
-.modal__body     { padding: 16px 18px; }
+.modal__body     { padding: 16px 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; }
 .modal__footer   { padding: 12px 18px; display: flex; gap: 10px; justify-content: flex-end;
                    border-top: 1px solid var(--border); }
 
@@ -392,3 +393,72 @@ input, textarea, select { font: inherit; color: inherit; }
 /* ── SCROLLBAR (desktop) ──────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── DELETE WATCH BUTTON ────────────────────────────────── */
+.del-watch-btn {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--red-dim); color: var(--red);
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--red);
+  flex-shrink: 0;
+  transition: opacity .15s;
+}
+.del-watch-btn:active { opacity: .6; }
+
+/* ── FILM DETAIL PANEL ───────────────────────────────────── */
+.detail-poster { margin: -16px -18px 14px; }
+.detail-poster img { width: 100%; max-height: 260px; object-fit: cover; object-position: top; border-radius: 0; }
+.detail-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 2px 10px; font-size: 12px; color: var(--text-2); }
+.detail-director { font-size: 13px; color: var(--text-2); margin-bottom: 10px; }
+.detail-overview { font-size: 13px; color: var(--text); line-height: 1.6; margin-bottom: 12px; }
+.detail-loading { font-size: 13px; color: var(--text-3); margin-bottom: 12px; }
+.detail-section { border-top: 1px solid var(--border); padding: 10px 0; margin-bottom: 10px; }
+.detail-stat { font-size: 13px; color: var(--text-2); padding: 3px 0; }
+.detail-actions-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+.detail-danger { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.btn--danger { background: var(--red-dim); border-color: var(--red); color: var(--red); font-weight: 700; }
+
+/* ── SEARCH INPUT ────────────────────────────────────────── */
+.search-wrap { flex: 1; }
+.search-input {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 6px 10px; color: var(--text);
+  font-size: 14px; outline: none; -webkit-appearance: none;
+}
+.search-input:focus { border-color: var(--accent); }
+
+/* ── CARD META CHIPS ─────────────────────────────────────── */
+.card__year, .card__rt { font-size: 11px; color: var(--text-3); }
+
+/* ── TOOLBAR ICON BUTTONS ────────────────────────────────── */
+.toolbar__icon-btn {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface-2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; transition: background .15s;
+  position: relative;
+}
+.toolbar__icon-btn:active { background: var(--surface); }
+.toolbar__icon-btn .badge-dot {
+  position: absolute; top: 2px; right: 2px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--bg);
+}
+
+/* ── SORT SHEET ───────────────────────────────────────────── */
+.sort-options { padding: 4px 0; }
+.sort-option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sort-option:last-child { border-bottom: none; }
+.sort-option:active { background: var(--surface-2); }
+.sort-option input[type="radio"] { display: none; }
+.sort-option__label { flex: 1; font-size: 15px; }
+.sort-option__check { color: var(--accent); font-weight: 700; font-size: 16px; }
+.sort-option--active .sort-option__label { color: var(--accent); font-weight: 600; }

@@ -14,14 +14,28 @@ const S = {
   loading: true,
 };
 
-const SORT_CYCLE  = ['az','za','year-desc','year-asc','runtime-desc','runtime-asc',
-                    'last-watch-desc','first-watch-asc','watch-count-desc','watch-count-asc'];
-const SORT_LABELS = {
-  'az':'A→Z', 'za':'Z→A',
-  'year-desc':'An↓', 'year-asc':'An↑',
-  'runtime-desc':'Dur↓', 'runtime-asc':'Dur↑',
-  'last-watch-desc':'Ultim↓', 'first-watch-asc':'Primul↑',
-  'watch-count-desc':'Vz↓', 'watch-count-asc':'Vz↑',
+// Sort options per tab
+const SORT_OPTIONS = {
+  all: [
+    { value:'az',           label:'A → Z' },
+    { value:'za',           label:'Z → A' },
+    { value:'year-desc',    label:'An: nou → vechi' },
+    { value:'year-asc',     label:'An: vechi → nou' },
+    { value:'runtime-desc', label:'Durată: lung → scurt' },
+    { value:'runtime-asc',  label:'Durată: scurt → lung' },
+  ],
+  watched: [
+    { value:'az',                label:'A → Z' },
+    { value:'za',                label:'Z → A' },
+    { value:'year-desc',         label:'An: nou → vechi' },
+    { value:'year-asc',          label:'An: vechi → nou' },
+    { value:'runtime-desc',      label:'Durată: lung → scurt' },
+    { value:'runtime-asc',       label:'Durată: scurt → lung' },
+    { value:'watch-count-desc',  label:'Nr. vizionări ↓' },
+    { value:'watch-count-asc',   label:'Nr. vizionări ↑' },
+    { value:'last-watch-desc',   label:'Ultima vizionare ↓' },
+    { value:'first-watch-asc',   label:'Prima vizionare ↑' },
+  ],
 };
 const lastDate  = m => [...(m.watchHistory||[])].sort((a,b)=>b.date>a.date?1:-1)[0]?.date||'';
 const firstDate = m => [...(m.watchHistory||[])].sort((a,b)=>a.date>b.date?1:-1)[0]?.date||'';
@@ -92,35 +106,43 @@ function render() {
 // ════════════════════════════════════════════════════
 // TOOLBAR
 // ════════════════════════════════════════════════════
-function makeToolbar(titleText, showControls=true) {
-  const bar = mk('div','toolbar');
-  const t   = mk('h2','toolbar__title',titleText);
-  bar.appendChild(t);
+function makeToolbar(count, tab, extraBtns=[]) {
+  const bar  = mk('div','toolbar');
+  const countEl = mk('span','toolbar__count', count + ' filme');
+  bar.appendChild(countEl);
 
-  if (showControls) {
-    const acts = mk('div','toolbar__actions');
+  const acts = mk('div','toolbar__actions');
 
-    // Search toggle
-    const searchWrap = mk('div','search-wrap');
-    const searchInp  = mk('input','search-input');
-    searchInp.type        = 'search';
-    searchInp.placeholder = 'Caută…';
-    searchInp.value       = S.search;
-    searchInp.oninput     = e => { S.search=e.target.value; render(); };
-    searchWrap.appendChild(searchInp);
-    acts.appendChild(searchWrap);
+  // Extra buttons (e.g. Random picker)
+  extraBtns.forEach(b => acts.appendChild(b));
 
-    // Sort
-    const sortBtn = mk('button','btn btn--ghost btn--sm', '⇅ '+SORT_LABELS[S.sort]);
-    sortBtn.onclick = () => {
-      const i = SORT_CYCLE.indexOf(S.sort);
-      S.sort = SORT_CYCLE[(i+1)%SORT_CYCLE.length];
-      render();
-    };
-    acts.appendChild(sortBtn);
-    bar.appendChild(acts);
-  }
+  // Sort button
+  const sortBtn = mk('button','toolbar__icon-btn');
+  sortBtn.title = 'Sortare';
+  sortBtn.innerHTML = '⇅';
+  sortBtn.onclick = () => openSortSheet(tab || S.tab);
+  acts.appendChild(sortBtn);
+
+  bar.appendChild(acts);
   return bar;
+}
+
+function openSortSheet(tab) {
+  const opts = (tab === 'watched' ? SORT_OPTIONS.watched : SORT_OPTIONS.all);
+  const rows = opts.map(o => {
+    const active = S.sort === o.value;
+    return '<label class="sort-option' + (active ? ' sort-option--active' : '') + '">' +
+      '<input type="radio" name="sort-pick" value="' + o.value + '"' + (active ? ' checked' : '') + '>' +
+      '<span class="sort-option__label">' + o.label + '</span>' +
+      (active ? '<span class="sort-option__check">✓</span>' : '') +
+      '</label>';
+  }).join('');
+  openModal('Sortare', '<div class="sort-options">' + rows + '</div>', '');
+  setTimeout(() => {
+    document.querySelectorAll('input[name="sort-pick"]').forEach(inp => {
+      inp.addEventListener('change', () => { S.sort = inp.value; closeModal(); render(); });
+    });
+  }, 50);
 }
 
 function emptyState(icon, text) {
@@ -134,8 +156,8 @@ function emptyState(icon, text) {
 // ════════════════════════════════════════════════════
 function renderUnwatched(main) {
   main.innerHTML = '';
-  const movies = filterSort(unwatched());
-  main.appendChild(makeToolbar(`📽 Nevăzute (${unwatched().length})`));
+  const all = unwatched(); const movies = filterSort(all);
+  main.appendChild(makeToolbar(all.length, 'unwatched'));
   if (!movies.length) { main.appendChild(emptyState('🎉', S.search?'Niciun rezultat.':'Toate filmele au fost vizionate!')); return; }
   const grid = mk('div', S.view==='grid'?'grid':'grid list');
   movies.forEach(m => {
@@ -153,8 +175,8 @@ function renderUnwatched(main) {
 // ════════════════════════════════════════════════════
 function renderWatched(main) {
   main.innerHTML = '';
-  const movies = filterSort(watched());
-  main.appendChild(makeToolbar(`✓ Văzute (${watched().length})`));
+  const all = watched(); const movies = filterSort(all);
+  main.appendChild(makeToolbar(all.length, 'watched'));
   if (!movies.length) { main.appendChild(emptyState('📼', S.search?'Niciun rezultat.':'Niciun film văzut.')); return; }
   const grid = mk('div', S.view==='grid'?'grid':'grid list');
   movies.forEach(m => {
@@ -174,12 +196,11 @@ function renderWatched(main) {
 // ════════════════════════════════════════════════════
 function renderCommentaries(main) {
   main.innerHTML = '';
-  const rndBtn = mk('button','btn btn--accent btn--sm','🎲 Random');
+  const rndBtn = mk('button','toolbar__icon-btn');
+  rndBtn.title = 'Film random cu commentary nevăzute';
+  rndBtn.innerHTML = '🎲';
   rndBtn.onclick = pickRandom;
-  main.appendChild(makeToolbar('🎙 Commentary Tracks', false));
-  main.querySelector('.toolbar').querySelector('.toolbar__title').after((() => {
-    const acts = mk('div','toolbar__actions'); acts.appendChild(rndBtn); return acts;
-  })());
+  main.appendChild(makeToolbar(withComm().length, 'commentaries', [rndBtn]));
 
   const order = {pending:0,partial:1,done:2};
   const movies = filterSort(withComm())
@@ -229,7 +250,7 @@ function commSection(m) {
 // ════════════════════════════════════════════════════
 function renderFeatures(main) {
   main.innerHTML = '';
-  main.appendChild(makeToolbar('🎞 Extras & Features', false));
+  main.appendChild(makeToolbar(withFeat().length, 'features'));
   const allFeat = withFeat();
   if (!allFeat.length) { main.appendChild(emptyState('🎞','Niciun film cu features.\nDin tab-ul Văzute → ⚙ Disc pe fiecare film.')); return; }
   const movies = [...allFeat].sort((a,b)=>{
