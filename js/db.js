@@ -244,6 +244,7 @@ function ts() { return new Date().toISOString(); }
 function buildNewMovie(movie, seed) {
   return {
     title:              movie.title,
+    year:               movie.year || '',
     blurayComId:        movie.blurayComId || '',
     posterUrl:          movie.posterUrl   || '',
     isOwned:            true,

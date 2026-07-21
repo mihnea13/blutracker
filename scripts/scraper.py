@@ -60,8 +60,11 @@ def parse_letter_page(html: str, seen_ids: set) -> list[dict]:
         release_id = m.group(2)
         if release_id in seen_ids:
             continue
-        title = (a.get("alt") or a.get("title") or a.get_text()).strip()
-        title = re.sub(r'\s*\(\d{4}\)\s*$', '', title).strip()
+        title_raw = (a.get("alt") or a.get("title") or a.get_text()).strip()
+        # Extract year BEFORE stripping - critical for accurate TMDB matching
+        year_m = re.search(r'\((\d{4})\)\s*$', title_raw)
+        year = year_m.group(1) if year_m else ""
+        title = re.sub(r'\s*\(\d{4}\)\s*$', '', title_raw).strip()
         if not title or TV_RX.search(title):
             continue
         # Deduplica si pe titlu normalizat
@@ -74,6 +77,7 @@ def parse_letter_page(html: str, seen_ids: set) -> list[dict]:
         seen_ids.add(norm)
         movies.append({
             "title":           title,
+            "year":            year,
             "blurayComId":     release_id,
             "posterUrl":       poster,
             "watchDates":      [],

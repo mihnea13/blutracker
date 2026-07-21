@@ -1,5 +1,5 @@
-// BluTracker v0.5
-const BT_VERSION = '0.5';
+// BluTracker v0.6
+const BT_VERSION = '0.6';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -419,6 +419,14 @@ async function openFilmDetail(id) {
   }
 }
 
+function refetchBtn(id) {
+  const btn = mk('button','btn btn--ghost btn--sm');
+  btn.style.cssText='margin-bottom:6px;width:100%';
+  btn.textContent='🔄 Re-fetch TMDB';
+  btn.onclick=()=>refetchTmdb(id);
+  return btn.outerHTML;
+}
+
 function renderDetailModal(id) {
   const m        = S.movies[id];
   const poster   = m.tmdbPosterUrl || m.posterUrl || posterPlaceholder(m.title);
@@ -449,6 +457,7 @@ function renderDetailModal(id) {
     </div>
     ${!wCount ? `<button class="btn btn--primary btn--full" style="margin-top:10px" onclick="closeModal();openMarkWatchedModal('${id}')">▶ Marchează văzut</button>` : `<button class="btn btn--ghost btn--sm" style="margin-top:6px" onclick="closeModal();openAddWatchModal('${id}')">+ Vizionare nouă</button>`}
     <div class="detail-danger">
+      ${m.tmdbId ? '<button class="btn btn--ghost btn--sm" style="margin-bottom:6px;width:100%" onclick="refetchTmdb(&quot;'+id+'&quot;)">🔄 Re-fetch TMDB</button>' : ''}
       <button class="btn btn--danger btn--full" onclick="confirmDeleteModal('${id}')">🗑 Șterge din colecție</button>
     </div>`;
 
@@ -484,9 +493,28 @@ async function enrichWithTmdb(id) {
   if (m.tmdbId) return;
   try {
     const q  = encodeURIComponent(m.title);
-    const r1 = await fetch(`${TMDB_BASE}/search/movie?api_key=${TMDB_API_KEY}&query=${q}&language=en-US`);
-    const d1 = await r1.json();
-    const hit = d1.results?.[0];
+    const yr = m.year || '';
+    let hit = null;
+
+    // Search with year for accurate matching (avoids wrong decade remakes)
+    if (yr) {
+      const r = await fetch(TMDB_BASE+'/search/movie?api_key='+TMDB_API_KEY+'&query='+q+'&year='+yr+'&language=en-US');
+      const d = await r.json();
+      if (d.results?.length) {
+        const target = parseInt(yr);
+        hit = d.results.reduce((best, r) => {
+          const ry = parseInt(r.release_date?.substring(0,4)||'0');
+          const by = parseInt(best.release_date?.substring(0,4)||'0');
+          return Math.abs(ry-target) < Math.abs(by-target) ? r : best;
+        });
+      }
+    }
+    // Fallback: without year
+    if (!hit) {
+      const r1 = await fetch(TMDB_BASE+'/search/movie?api_key='+TMDB_API_KEY+'&query='+q+'&language=en-US');
+      const d1 = await r1.json();
+      hit = d1.results?.[0];
+    }
     if (!hit) return;
     const r2 = await fetch(`${TMDB_BASE}/movie/${hit.id}?api_key=${TMDB_API_KEY}&append_to_response=credits&language=en-US`);
     const d2 = await r2.json();
@@ -501,6 +529,27 @@ async function enrichWithTmdb(id) {
     };
     S.movies[id] = await dbSaveTmdb(id, tmdb);
   } catch(e) { console.warn('TMDB error',m.title,e); }
+}
+
+async function refetchTmdb(id) {
+  // Clear existing TMDB data and re-fetch with corrected year-based matching
+  try {
+    await _db.collection('movies').doc(id).update({
+      tmdbId: firebase.firestore.FieldValue.delete(),
+      tmdbPosterUrl: firebase.firestore.FieldValue.delete(),
+      overview: firebase.firestore.FieldValue.delete(),
+      voteAverage: firebase.firestore.FieldValue.delete(),
+      directors: firebase.firestore.FieldValue.delete(),
+      runtime: firebase.firestore.FieldValue.delete(),
+    });
+    const doc = await _db.collection('movies').doc(id).get();
+    S.movies[id] = doc.data();
+    closeModal();
+    showToast('Se re-caută pe TMDB…');
+    await enrichWithTmdb(id);
+    render();
+    showToast('TMDB actualizat ✓','success');
+  } catch(e) { showToast('Eroare: '+e.message,'error'); }
 }
 
 // Preîncarcă TMDB pentru toate filmele fără date (în fundal, throttled)
@@ -891,7 +940,8 @@ function computeStats() {
   watchEvents.forEach(e => { if(new Date(e.date+'T12:00:00')>=yr) heatmap[e.date]=(heatmap[e.date]||0)+1; });
 
   // Longest films
-  const longest = [...all].filter(m=>m.runtime).sort((a,b)=>b.runtime-a.runtime).slice(0,3);
+  const longestWatched = [...w].filter(m=>m.runtime).sort((a,b)=>b.runtime-a.runtime).slice(0,3);
+  const longestUnwatched = [...unwatched()].filter(m=>m.runtime).sort((a,b)=>b.runtime-a.runtime).slice(0,3);
 
   // Favorite decade
   const watchedDecades = Object.entries(decadeMap).filter(([k])=>k!=='?').sort((a,b)=>b[1].watched-a[1].watched);
@@ -1130,7 +1180,7 @@ function makeMonthlyChart(s) {
 
 // ── Heatmap ───────────────────────────────────────────
 function makeHeatmap(heatmapData) {
-  const CELL=11, GAP=2, ROWS=7, ns='http://www.w3.org/2000/svg';
+  const CELL=14, GAP=3, ROWS=7, ns='http://www.w3.org/2000/svg';
   const today=new Date();
   const start=new Date(today); start.setFullYear(start.getFullYear()-1);
   start.setDate(start.getDate()-start.getDay());
@@ -1173,6 +1223,7 @@ function makeRuntimeChart(s) {
   const maxVal = Math.max(...keys.map(k=>s.rb[k]),1);
   keys.forEach(k => {
     const val = s.rb[k];
+    if (!val) return;  // skip empty buckets
     const row = mk('div','runtime-row');
     const lbl = mk('div','runtime-label',k);
     const track = mk('div','runtime-track');
@@ -1244,9 +1295,13 @@ function makeFunStats(s) {
 
   if (s.totalDays > 0) items.push({icon:'⏱',text:'Ai petrecut <strong>'+s.totalDays+' zile și '+s.totalHours%24+' ore</strong> urmărind filme.'});
   if (s.favDecade) items.push({icon:'🗓',text:'Decada favorită: <strong>'+s.favDecade[0]+'s</strong> ('+s.favDecade[1].watched+' filme văzute).'});
-  if (s.longest.length) {
-    const tops = s.longest.map(m=>esc(m.title)+' ('+m.runtime+'m)').join(', ');
-    items.push({icon:'🎬',text:'Cele mai lungi filme din colecție: <strong>'+tops+'</strong>.'});
+  if (s.longestWatched.length) {
+    const tops = s.longestWatched.map(m=>esc(m.title)+' ('+m.runtime+'m)').join(', ');
+    items.push({icon:'🎬',text:'Cele mai lungi văzute: <strong>'+tops+'</strong>.'});
+  }
+  if (s.longestUnwatched.length) {
+    const tops = s.longestUnwatched.map(m=>esc(m.title)+' ('+m.runtime+'m)').join(', ');
+    items.push({icon:'📼',text:'Cele mai lungi nevăzute: <strong>'+tops+'</strong>.'});
   }
   if (s.maxMonth[1] > 0) {
     const d=new Date(s.maxMonth[0]+'-15T12:00:00');
