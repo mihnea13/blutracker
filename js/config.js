@@ -1,4 +1,4 @@
-const firebaseConfig = {
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyB6EpQT3XbLFCMCUtsGFBMN2AiKT199D7Q",
   authDomain: "blutracker.firebaseapp.com",
   projectId: "blutracker",
