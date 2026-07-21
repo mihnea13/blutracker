@@ -31,7 +31,16 @@ XHR_HEADERS = {
 
 FEAT_TOWATCH = re.compile(r'#features_towatch', re.IGNORECASE)
 FEAT_WATCHED = re.compile(r'#features_watched', re.IGNORECASE)
-TV_RX        = re.compile(r'\(TV Series\)', re.IGNORECASE)
+TV_RX        = re.compile(
+    r'\(TV Series\)'         # explicit marker
+    r'|\(TV Mini.?Series\)'  # mini-series
+    r'|\(Season\s+\d'        # "(Season 1"
+    r'|:\s+Season\s+\d'      # ": Season 1"
+    r'|\(Complete Series\)'  # box sets
+    r'|\(Seasons?\s+\d'      # "(Seasons 1-3"
+    r'|\(TV\)',               # "(TV)" alone
+    re.IGNORECASE
+)
 MOVIE_URL_RX = re.compile(r'https://www\.blu-ray\.com/([A-Za-z0-9][^/"?]+)/(\d{4,})/')
 
 
