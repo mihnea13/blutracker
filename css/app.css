@@ -35,8 +35,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-size: 15px;
   line-height: 1.5;
-  min-height: 100dvh;
-  overflow-x: hidden;
+  height: 100dvh;
+  overflow: hidden;
 }
 img { display: block; width: 100%; }
 button { cursor: pointer; border: none; background: none; color: inherit; font: inherit; }
@@ -567,8 +567,7 @@ body.search-open #search-panel {
   height: var(--search-h);
   border-color: var(--border);
 }
-body.search-open { --search-h: 108px; }
-body.search-open.has-chips { --search-h: 108px; }
+body.search-open { --search-h: 116px; }
 
 .search-bar {
   display: flex; align-items: center; gap: 10px;
@@ -624,3 +623,77 @@ body.has-search .search-bar__clear { opacity: 1; pointer-events: all; }
   background: var(--accent-dim); border-color: var(--accent);
   color: var(--accent); font-weight: 700;
 }
+
+/* ── COMMENTARY SECTION HEADERS ───────────────────────────── */
+.comm-section {
+  border-top: 2px solid var(--border);
+}
+.comm-section:first-child { border-top: none; }
+
+.comm-section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px;
+  background: var(--bg);
+  position: sticky; top: 0; z-index: 5;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.comm-section-hdr:active { background: var(--surface); }
+
+.comm-section-left { display: flex; align-items: center; gap: 8px; }
+.comm-section-label {
+  font-size: 12px; font-weight: 800; letter-spacing: .6px;
+  text-transform: uppercase; color: var(--text-2);
+}
+.comm-section-right { display: flex; align-items: center; gap: 8px; }
+.comm-section-count {
+  font-size: 12px; font-weight: 700;
+  background: var(--surface-2); border-radius: 12px;
+  padding: 2px 9px; color: var(--text-2);
+}
+.comm-section-arrow {
+  font-size: 11px; color: var(--text-3);
+  transition: transform .2s;
+}
+.comm-section--open .comm-section-arrow { transform: rotate(90deg); }
+.comm-section-body { display: none; }
+.comm-section--open .comm-section-body { display: block; }
+
+/* ── COMMENTARY CARDS ─────────────────────────────────────── */
+.comm-card {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.comm-card--expanded { background: var(--surface-2); }
+
+.comm-card__header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.comm-card__header:active { opacity: .75; }
+
+.comm-card__poster {
+  width: 42px; height: 58px; flex-shrink: 0;
+  background: var(--surface-2); border-radius: 6px;
+  overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
+.comm-card__poster img { width: 100%; height: 100%; object-fit: cover; }
+
+.comm-card__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.comm-card__title {
+  font-size: 15px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.comm-card__meta { font-size: 12px; color: var(--text-2); }
+
+.comm-card__progress { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.track-dots { display: flex; gap: 5px; }
+.track-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--text-3); flex-shrink: 0;
+}
+.track-dot--on { background: var(--green); box-shadow: 0 0 5px rgba(77,214,128,.5); }
+.track-dot--amber { background: var(--amber); }
+.track-count { font-size: 12px; font-weight: 600; color: var(--text-2); }
+
+.comm-card__expand { border-top: 1px solid var(--border); }

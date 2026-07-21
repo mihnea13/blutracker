@@ -11,6 +11,7 @@ const S = {
   expanded: new Set(),
   search:  '',
   activeFilters: new Set(),
+  collapsed: new Set(['csect-done']),  // done section collapsed by default
   sort:    'az',   // az | za | year-desc | year-asc | runtime-desc | runtime-asc
   loading: true,
 };
