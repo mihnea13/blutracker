@@ -296,3 +296,31 @@ async function dbUpdateDisc(id, newCommCount, hasGenericFeatures) {
   await ref.update(upd);
   return { ...data, ...upd };
 }
+
+/**
+ * Sterge o intrare specifica din watchHistory.
+ * entry trebuie sa fie obiectul exact (cu addedAt) pentru arrayRemove.
+ */
+async function dbRemoveWatch(id, entry) {
+  const ref = _db.collection('movies').doc(id);
+  await ref.update({
+    watchHistory: firebase.firestore.FieldValue.arrayRemove(entry)
+  });
+  return (await ref.get()).data();
+}
+
+/**
+ * Salveaza date TMDB in Firestore.
+ */
+async function dbSaveTmdb(id, tmdb) {
+  const ref = _db.collection('movies').doc(id);
+  await ref.update(tmdb);
+  return (await ref.get()).data();
+}
+
+/**
+ * Sterge definitiv un film din Firestore.
+ */
+async function dbDeleteMovie(id) {
+  await _db.collection('movies').doc(id).delete();
+}
