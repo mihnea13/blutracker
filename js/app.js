@@ -1,3 +1,6 @@
+// BluTracker v0.3
+const BT_VERSION = '0.3';
+
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
 
@@ -215,52 +218,98 @@ function renderWatched(main) {
 function renderCommentaries(main) {
   main.innerHTML = '';
   const rndBtn = mk('button','toolbar__icon-btn');
-  rndBtn.title = 'Film random cu commentary nevăzute';
-  rndBtn.innerHTML = '🎲';
+  rndBtn.title = 'Film random'; rndBtn.innerHTML = '🎲';
   rndBtn.onclick = pickRandom;
   main.appendChild(makeToolbar(withComm().length, 'commentaries', [rndBtn]));
 
-  const order = {pending:0,partial:1,done:2};
-  const movies = filterSort(withComm())
-    .sort((a,b) => (order[commStatus(a)]??3)-(order[commStatus(b)]??3) || a.title.localeCompare(b.title));
+  const all = filterSort(withComm());
+  if (!all.length) { main.appendChild(emptyState('🎙','Niciun film cu commentary tracks.')); return; }
 
-  if (!movies.length) { main.appendChild(emptyState('🎙','Niciun film cu commentary tracks.')); return; }
-  movies.forEach(m => main.appendChild(commSection(m)));
+  const GROUPS = [
+    { key:'csect-pending', label:'Niciun track văzut', dotCls:'status-dot--pending', filter: m=>commStatus(m)==='pending' },
+    { key:'csect-partial', label:'Parțial văzute',      dotCls:'status-dot--partial', filter: m=>commStatus(m)==='partial' },
+    { key:'csect-done',    label:'Complet văzute',       dotCls:'status-dot--done',    filter: m=>commStatus(m)==='done' },
+  ];
+
+  GROUPS.forEach(g => {
+    const movies = all.filter(g.filter);
+    if (!movies.length) return;
+    const isOpen = !S.collapsed.has(g.key);
+    const section = mk('div','comm-section' + (isOpen ? ' comm-section--open' : ''));
+
+    const hdr = mk('div','comm-section-hdr');
+    hdr.innerHTML =
+      '<div class="comm-section-left">' +
+        '<span class="status-dot ' + g.dotCls + '"></span>' +
+        '<span class="comm-section-label">' + esc(g.label) + '</span>' +
+      '</div>' +
+      '<div class="comm-section-right">' +
+        '<span class="comm-section-count">' + movies.length + '</span>' +
+        '<span class="comm-section-arrow">›</span>' +
+      '</div>';
+    hdr.onclick = () => {
+      if (S.collapsed.has(g.key)) S.collapsed.delete(g.key);
+      else S.collapsed.add(g.key);
+      render();
+    };
+    section.appendChild(hdr);
+
+    const body = mk('div','comm-section-body');
+    if (isOpen) movies.forEach(m => body.appendChild(commCard(m)));
+    section.appendChild(body);
+    main.appendChild(section);
+  });
 }
 
-function commSection(m) {
-  const status = commStatus(m), tracks = m.commentaryTracks||[];
+function commCard(m) {
+  const tracks = m.commentaryTracks || [];
   const nW = tracks.filter(t=>t.watched).length;
-  const key = `comm-${m.id}`, open = S.expanded.has(key);
-  const section = mk('div',`collapsible${open?' collapsible--open':''}`);
-  section.id = key;
-  const header = mk('div','collapsible__header');
-  header.innerHTML = `
-    <div class="collapsible__title">
-      <span class="status-dot status-dot--${status}"></span>
-      <span class="collapsible__name">${esc(m.title)}</span>
-    </div>
-    <div class="collapsible__meta">
-      <span class="badge badge--${status==='done'?'green':status==='partial'?'amber':'red'}">${nW}/${tracks.length}</span>
-      <span class="caret">${open?'▲':'▼'}</span>
-    </div>`;
-  header.onclick = () => { toggle(key); render(); };
-  const body = mk('div','collapsible__body');
-  if (open) {
+  const key = 'ccard-' + m.id;
+  const isExpanded = S.expanded.has(key);
+
+  const card = mk('div','comm-card' + (isExpanded ? ' comm-card--expanded' : ''));
+
+  const hdr = mk('div','comm-card__header');
+  hdr.onclick = () => { toggle(key); render(); };
+
+  const poster = mk('div','comm-card__poster');
+  const img = mk('img'); img.alt = m.title; img.loading='lazy';
+  img.src = m.tmdbPosterUrl || m.posterUrl || posterPlaceholder(m.title);
+  img.onerror = () => { img.src = posterPlaceholder(m.title); };
+  poster.appendChild(img);
+
+  const info = mk('div','comm-card__info');
+  info.appendChild(mk('div','comm-card__title', m.title));
+  if (m.year || m.runtime) {
+    info.appendChild(mk('div','comm-card__meta',
+      [m.year, m.runtime ? m.runtime+'m' : ''].filter(Boolean).join(' · ')));
+  }
+
+  const prog = mk('div','comm-card__progress');
+  const dots = mk('div','track-dots');
+  tracks.forEach(t => dots.appendChild(mk('span','track-dot'+(t.watched?' track-dot--on':''))));
+  prog.append(dots, mk('span','track-count', nW+'/'+tracks.length));
+  info.appendChild(prog);
+
+  hdr.append(poster, info);
+  card.appendChild(hdr);
+
+  if (isExpanded) {
+    const expand = mk('div','comm-card__expand');
     tracks.forEach((t,i) => {
-      const row = mk('div',`track-row${t.watched?' track-row--watched':''}`);
-      const chk = mk('button',`track-check${t.watched?' track-check--on':''}`,t.watched?'✓':'');
-      chk.onclick = () => doToggleCommentary(m.id,i);
-      const lbl = mk('span','track-label',`Commentary ${i+1}`);
-      const dt  = mk('span','track-date', t.watchDate?fmtDate(t.watchDate):'');
-      row.append(chk,lbl,dt); body.appendChild(row);
+      const row = mk('div','track-row'+(t.watched?' track-row--watched':''));
+      const chk = mk('button','track-check'+(t.watched?' track-check--on':''),t.watched?'✓':'');
+      chk.onclick = e => { e.stopPropagation(); doToggleCommentary(m.id,i); };
+      row.append(chk, mk('span','track-label','Commentary '+(i+1)),
+                 mk('span','track-date', t.watchDate?fmtDate(t.watchDate):''));
+      expand.appendChild(row);
     });
     const addBtn = mk('button','btn btn--ghost btn--sm track-add-btn','+ Track nou');
-    addBtn.onclick = () => doAddCommentaryTrack(m.id);
-    body.appendChild(addBtn);
+    addBtn.onclick = e => { e.stopPropagation(); doAddCommentaryTrack(m.id); };
+    expand.appendChild(addBtn);
+    card.appendChild(expand);
   }
-  section.append(header,body);
-  return section;
+  return card;
 }
 
 // ════════════════════════════════════════════════════
@@ -849,7 +898,7 @@ async function initApp() {
   S.loading=false;
   try { render(); }
   catch(e) {
-    console.error('Render error:', e);
+    console.error('Render error v' + BT_VERSION + ':', e);
     $('#main').innerHTML = `<div class="empty"><div class="empty__icon">⚠️</div><p class="empty__text">Eroare la încărcare.<br>Deschide consola pentru detalii.</p></div>`;
   }
 }

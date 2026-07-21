@@ -345,7 +345,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
 
 /* Number row */
 .num-row  { display: flex; align-items: center; gap: 10px; }
-.num-input { text-align: center; width: 64px; flex-shrink: 0; font-size: 18px; font-weight: 700; }
+.num-row .num-input { text-align: center; width: 64px !important; flex: 0 0 64px !important; font-size: 18px; font-weight: 700; }
 .num-btn {
   width: 36px; height: 36px; border-radius: 50%;
   background: var(--surface-2); border: 1px solid var(--border);
@@ -697,3 +697,11 @@ body.has-search .search-bar__clear { opacity: 1; pointer-events: all; }
 .track-count { font-size: 12px; font-weight: 600; color: var(--text-2); }
 
 .comm-card__expand { border-top: 1px solid var(--border); }
+
+/* ── VERSION BADGE ──────────────────────────────────────── */
+.header__version {
+  font-size: 11px; font-weight: 500; color: var(--text-3);
+  letter-spacing: .3px; vertical-align: middle;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1px 6px; margin-left: 4px;
+}
