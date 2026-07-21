@@ -1,5 +1,5 @@
-// BluTracker v0.7
-const BT_VERSION = '0.7';
+// BluTracker v0.7b
+const BT_VERSION = '0.7b';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -982,7 +982,7 @@ function computeStats() {
     watchEvents, cByStatus, decadeMap, monthMap, rb, directors,
     withGenFeat:withGenFeat.length, genFeatWatched:withGenFeat.filter(m=>m.genericFeaturesWatched).length,
     allSpecial:allSpecial.length, specialWatched:allSpecial.filter(f=>f.watched).length,
-    fullDisc, heatmap, longest, favDecade, maxMonth,
+    fullDisc, heatmap, longestWatched, longestUnwatched, favDecade, maxMonth,
     firstWatch:watchEvents[0]?.date, lastWatch:watchEvents[watchEvents.length-1]?.date,
   };
 }
