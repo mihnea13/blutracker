@@ -1,8 +1,9 @@
 {
-  "lastUpdated": "2026-07-21T10:46:39.959417Z",
+  "lastUpdated": "2026-07-21T20:15:13.326107Z",
   "movies": [
     {
       "title": "Alien",
+      "year": "",
       "blurayComId": "19887",
       "posterUrl": "https://images.static-bluray.com/products/20/1952_2_small.jpg",
       "watchDates": [],
@@ -13,6 +14,7 @@
     },
     {
       "title": "Alien: Covenant",
+      "year": "",
       "blurayComId": "577989",
       "posterUrl": "https://images.static-bluray.com/products/20/48139_3_small.jpg",
       "watchDates": [],
@@ -23,6 +25,7 @@
     },
     {
       "title": "Alien: Resurrection",
+      "year": "",
       "blurayComId": "19890",
       "posterUrl": "https://images.static-bluray.com/products/20/1955_4_small.jpg",
       "watchDates": [],
@@ -33,6 +36,7 @@
     },
     {
       "title": "Alien: Romulus",
+      "year": "",
       "blurayComId": "1680691",
       "posterUrl": "https://images.static-bluray.com/products/20/140507_5_small.jpg",
       "watchDates": [],
@@ -43,6 +47,7 @@
     },
     {
       "title": "Aliens",
+      "year": "",
       "blurayComId": "19888",
       "posterUrl": "https://images.static-bluray.com/products/20/1953_6_small.jpg",
       "watchDates": [],
@@ -53,6 +58,7 @@
     },
     {
       "title": "American Boy: A Profile of Steven Prince",
+      "year": "",
       "blurayComId": "1258916",
       "posterUrl": "https://images.static-bluray.com/products/20/96547_1_small.jpg",
       "watchDates": [],
@@ -63,6 +69,7 @@
     },
     {
       "title": "American Gangster",
+      "year": "",
       "blurayComId": "18714",
       "posterUrl": "https://images.static-bluray.com/products/20/779_1_small.jpg",
       "watchDates": [
@@ -75,6 +82,7 @@
     },
     {
       "title": "American History X",
+      "year": "",
       "blurayComId": "19474",
       "posterUrl": "https://images.static-bluray.com/products/20/1539_3_small.jpg",
       "watchDates": [
@@ -87,6 +95,7 @@
     },
     {
       "title": "Anatomy of a Murder",
+      "year": "",
       "blurayComId": "64298",
       "posterUrl": "https://images.static-bluray.com/products/20/7741_1_small.jpg",
       "watchDates": [],
@@ -97,6 +106,7 @@
     },
     {
       "title": "Angel Heart",
+      "year": "",
       "blurayComId": "20410",
       "posterUrl": "https://images.static-bluray.com/products/20/2475_1_small.jpg",
       "watchDates": [
@@ -109,6 +119,7 @@
     },
     {
       "title": "Apocalypse Now",
+      "year": "",
       "blurayComId": "21871",
       "posterUrl": "https://images.static-bluray.com/products/20/3936_6_small.jpg",
       "watchDates": [
@@ -121,6 +132,7 @@
     },
     {
       "title": "Argo",
+      "year": "",
       "blurayComId": "128491",
       "posterUrl": "https://images.static-bluray.com/products/20/12170_1_small.jpg",
       "watchDates": [],
@@ -131,6 +143,7 @@
     },
     {
       "title": "The Babadook",
+      "year": "",
       "blurayComId": "327369",
       "posterUrl": "https://images.static-bluray.com/products/20/29834_1_small.jpg",
       "watchDates": [
@@ -143,6 +156,7 @@
     },
     {
       "title": "Babylon",
+      "year": "",
       "blurayComId": "1223550",
       "posterUrl": "https://images.static-bluray.com/products/20/93262_8_small.jpg",
       "watchDates": [
@@ -155,6 +169,7 @@
     },
     {
       "title": "The Batman",
+      "year": "",
       "blurayComId": "786253",
       "posterUrl": "https://images.static-bluray.com/products/20/62778_9_small.jpg",
       "watchDates": [
@@ -167,6 +182,7 @@
     },
     {
       "title": "Ben-Hur",
+      "year": "",
       "blurayComId": "18643",
       "posterUrl": "https://images.static-bluray.com/products/20/708_2_small.jpg",
       "watchDates": [
@@ -179,6 +195,7 @@
     },
     {
       "title": "The Big Shave",
+      "year": "",
       "blurayComId": "1258915",
       "posterUrl": "https://images.static-bluray.com/products/20/96546_1_small.jpg",
       "watchDates": [],
@@ -189,6 +206,7 @@
     },
     {
       "title": "Black Mass",
+      "year": "",
       "blurayComId": "347430",
       "posterUrl": "https://images.static-bluray.com/products/20/32712_2_small.jpg",
       "watchDates": [],
@@ -199,6 +217,7 @@
     },
     {
       "title": "Black Swan",
+      "year": "",
       "blurayComId": "25691",
       "posterUrl": "https://images.static-bluray.com/products/20/4449_2_small.jpg",
       "watchDates": [
@@ -211,6 +230,7 @@
     },
     {
       "title": "Blade Runner",
+      "year": "",
       "blurayComId": "18435",
       "posterUrl": "https://images.static-bluray.com/products/20/500_2_small.jpg",
       "watchDates": [],
@@ -221,6 +241,7 @@
     },
     {
       "title": "The Bridge on the River Kwai",
+      "year": "",
       "blurayComId": "17942",
       "posterUrl": "https://images.static-bluray.com/products/20/7_1_small.jpg",
       "watchDates": [],
@@ -231,6 +252,7 @@
     },
     {
       "title": "Chinatown",
+      "year": "",
       "blurayComId": "20192",
       "posterUrl": "https://images.static-bluray.com/products/20/2257_4_small.jpg",
       "watchDates": [
@@ -243,6 +265,7 @@
     },
     {
       "title": "Cinema Paradiso",
+      "year": "",
       "blurayComId": "25740",
       "posterUrl": "https://images.static-bluray.com/products/20/4457_1_small.jpg",
       "watchDates": [
@@ -255,6 +278,7 @@
     },
     {
       "title": "A Clockwork Orange",
+      "year": "",
       "blurayComId": "18400",
       "posterUrl": "https://images.static-bluray.com/products/20/465_1_small.jpg",
       "watchDates": [
@@ -267,6 +291,7 @@
     },
     {
       "title": "Code Geass: Lelouch of the Rebellion",
+      "year": "",
       "blurayComId": "139239",
       "posterUrl": "https://images.static-bluray.com/products/20/13193_1_small.jpg",
       "watchDates": [],
@@ -277,6 +302,7 @@
     },
     {
       "title": "The Coffee Table",
+      "year": "",
       "blurayComId": "1801182",
       "posterUrl": "https://images.static-bluray.com/products/20/151849_1_small.jpg",
       "watchDates": [],
@@ -287,6 +313,7 @@
     },
     {
       "title": "Cold Light of Day",
+      "year": "",
       "blurayComId": "330598",
       "posterUrl": "https://images.static-bluray.com/products/20/30140_1_small.jpg",
       "watchDates": [
@@ -299,6 +326,7 @@
     },
     {
       "title": "The Conversation",
+      "year": "",
       "blurayComId": "31742",
       "posterUrl": "https://images.static-bluray.com/products/20/5546_3_small.jpg",
       "watchDates": [
@@ -311,6 +339,7 @@
     },
     {
       "title": "Dark City",
+      "year": "",
       "blurayComId": "18690",
       "posterUrl": "https://images.static-bluray.com/products/20/755_1_small.jpg",
       "watchDates": [
@@ -323,6 +352,7 @@
     },
     {
       "title": "The Deer Hunter",
+      "year": "",
       "blurayComId": "22860",
       "posterUrl": "https://images.static-bluray.com/products/20/4307_1_small.jpg",
       "watchDates": [],
@@ -333,6 +363,7 @@
     },
     {
       "title": "The Departed",
+      "year": "",
       "blurayComId": "18247",
       "posterUrl": "https://images.static-bluray.com/products/20/312_1_small.jpg",
       "watchDates": [
@@ -345,6 +376,7 @@
     },
     {
       "title": "Dogville",
+      "year": "",
       "blurayComId": "97945",
       "posterUrl": "https://images.static-bluray.com/products/20/8990_1_small.jpg",
       "watchDates": [
@@ -357,6 +389,7 @@
     },
     {
       "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
+      "year": "",
       "blurayComId": "22260",
       "posterUrl": "https://images.static-bluray.com/products/20/4250_1_small.jpg",
       "watchDates": [],
@@ -367,6 +400,7 @@
     },
     {
       "title": "End of Watch",
+      "year": "",
       "blurayComId": "128498",
       "posterUrl": "https://images.static-bluray.com/products/20/12177_1_small.jpg",
       "watchDates": [],
@@ -377,6 +411,7 @@
     },
     {
       "title": "The Fighter",
+      "year": "",
       "blurayComId": "27804",
       "posterUrl": "https://images.static-bluray.com/products/20/4808_1_small.jpg",
       "watchDates": [
@@ -389,6 +424,7 @@
     },
     {
       "title": "Frost/Nixon",
+      "year": "",
       "blurayComId": "19689",
       "posterUrl": "https://images.static-bluray.com/products/20/1754_1_small.jpg",
       "watchDates": [],
@@ -399,6 +435,7 @@
     },
     {
       "title": "Gattaca",
+      "year": "",
       "blurayComId": "18059",
       "posterUrl": "https://images.static-bluray.com/products/20/124_2_small.jpg",
       "watchDates": [
@@ -411,6 +448,7 @@
     },
     {
       "title": "Get Carter",
+      "year": "",
       "blurayComId": "161633",
       "posterUrl": "https://images.static-bluray.com/products/20/16239_2_small.jpg",
       "watchDates": [],
@@ -421,6 +459,7 @@
     },
     {
       "title": "The Girl with the Dragon Tattoo",
+      "year": "",
       "blurayComId": "59480",
       "posterUrl": "https://images.static-bluray.com/products/20/7382_2_small.jpg",
       "watchDates": [
@@ -433,6 +472,7 @@
     },
     {
       "title": "Gran Torino",
+      "year": "",
       "blurayComId": "19813",
       "posterUrl": "https://images.static-bluray.com/products/20/1878_1_small.jpg",
       "watchDates": [],
@@ -443,6 +483,7 @@
     },
     {
       "title": "Graveyard of Honor",
+      "year": "",
       "blurayComId": "484146",
       "posterUrl": "https://images.static-bluray.com/products/20/41937_1_small.jpg",
       "watchDates": [
@@ -455,6 +496,7 @@
     },
     {
       "title": "The Hateful Eight",
+      "year": "",
       "blurayComId": "355379",
       "posterUrl": "https://images.static-bluray.com/products/20/33432_3_small.jpg",
       "watchDates": [
@@ -467,6 +509,7 @@
     },
     {
       "title": "Henry: Portrait of a Serial Killer",
+      "year": "",
       "blurayComId": "20179",
       "posterUrl": "https://images.static-bluray.com/products/20/2244_1_small.jpg",
       "watchDates": [],
@@ -477,6 +520,7 @@
     },
     {
       "title": "The Hidden Fortress",
+      "year": "",
       "blurayComId": "146811",
       "posterUrl": "https://images.static-bluray.com/products/20/14416_1_small.jpg",
       "watchDates": [],
@@ -487,6 +531,7 @@
     },
     {
       "title": "Hiroshima",
+      "year": "",
       "blurayComId": "1284362",
       "posterUrl": "https://images.static-bluray.com/products/20/99314_2_small.jpg",
       "watchDates": [],
@@ -497,6 +542,7 @@
     },
     {
       "title": "House of the Dragon",
+      "year": "",
       "blurayComId": "1218290",
       "posterUrl": "https://images.static-bluray.com/products/20/92773_4_small.jpg",
       "watchDates": [],
@@ -507,6 +553,7 @@
     },
     {
       "title": "Human Planet",
+      "year": "",
       "blurayComId": "29387",
       "posterUrl": "https://images.static-bluray.com/products/20/5202_2_small.jpg",
       "watchDates": [],
@@ -517,6 +564,7 @@
     },
     {
       "title": "The Imitation Game",
+      "year": "",
       "blurayComId": "328915",
       "posterUrl": "https://images.static-bluray.com/products/20/29952_1_small.jpg",
       "watchDates": [],
@@ -527,6 +575,7 @@
     },
     {
       "title": "Interstellar",
+      "year": "",
       "blurayComId": "206156",
       "posterUrl": "https://images.static-bluray.com/products/20/20634_3_small.jpg",
       "watchDates": [
@@ -539,6 +588,7 @@
     },
     {
       "title": "Investigation of a Citizen Above Suspicion",
+      "year": "",
       "blurayComId": "164810",
       "posterUrl": "https://images.static-bluray.com/products/20/16609_2_small.jpg",
       "watchDates": [],
@@ -549,6 +599,7 @@
     },
     {
       "title": "It's Not Just You, Murray!",
+      "year": "",
       "blurayComId": "1258914",
       "posterUrl": "https://images.static-bluray.com/products/20/96545_1_small.jpg",
       "watchDates": [],
@@ -559,6 +610,7 @@
     },
     {
       "title": "It: Chapter Two",
+      "year": "",
       "blurayComId": "795499",
       "posterUrl": "https://images.static-bluray.com/products/20/63513_3_small.jpg",
       "watchDates": [
@@ -571,6 +623,7 @@
     },
     {
       "title": "Italianamerican",
+      "year": "",
       "blurayComId": "1233084",
       "posterUrl": "https://images.static-bluray.com/products/20/94100_1_small.jpg",
       "watchDates": [],
@@ -581,6 +634,7 @@
     },
     {
       "title": "The Killing of a Sacred Deer",
+      "year": "",
       "blurayComId": "727487",
       "posterUrl": "https://images.static-bluray.com/products/20/59559_3_small.jpg",
       "watchDates": [
@@ -593,6 +647,7 @@
     },
     {
       "title": "King of New York",
+      "year": "",
       "blurayComId": "18431",
       "posterUrl": "https://images.static-bluray.com/products/20/496_1_small.jpg",
       "watchDates": [
@@ -605,6 +660,7 @@
     },
     {
       "title": "La La Land",
+      "year": "",
       "blurayComId": "458490",
       "posterUrl": "https://images.static-bluray.com/products/20/39624_6_small.jpg",
       "watchDates": [
@@ -617,6 +673,7 @@
     },
     {
       "title": "Lady Vengeance",
+      "year": "",
       "blurayComId": "29002",
       "posterUrl": "https://images.static-bluray.com/products/20/5121_2_small.jpg",
       "watchDates": [],
@@ -627,6 +684,7 @@
     },
     {
       "title": "Lawrence of Arabia",
+      "year": "",
       "blurayComId": "18109",
       "posterUrl": "https://images.static-bluray.com/products/20/174_4_small.jpg",
       "watchDates": [],
@@ -637,6 +695,7 @@
     },
     {
       "title": "Light Sleeper",
+      "year": "",
       "blurayComId": "333407",
       "posterUrl": "https://images.static-bluray.com/products/20/30613_2_small.jpg",
       "watchDates": [
@@ -649,6 +708,7 @@
     },
     {
       "title": "The Long Goodbye",
+      "year": "",
       "blurayComId": "137492",
       "posterUrl": "https://images.static-bluray.com/products/20/12986_1_small.jpg",
       "watchDates": [],
@@ -659,6 +719,7 @@
     },
     {
       "title": "Lost",
+      "year": "",
       "blurayComId": "19752",
       "posterUrl": "https://images.static-bluray.com/products/20/1817_1_small.jpg",
       "watchDates": [],
@@ -669,6 +730,7 @@
     },
     {
       "title": "Mad Max",
+      "year": "",
       "blurayComId": "21989",
       "posterUrl": "https://images.static-bluray.com/products/20/4054_1_small.jpg",
       "watchDates": [],
@@ -679,6 +741,7 @@
     },
     {
       "title": "Mad Max 2: The Road Warrior",
+      "year": "",
       "blurayComId": "18304",
       "posterUrl": "https://images.static-bluray.com/products/20/369_6_small.jpg",
       "watchDates": [],
@@ -689,6 +752,7 @@
     },
     {
       "title": "Mad Max Beyond Thunderdome",
+      "year": "",
       "blurayComId": "107716",
       "posterUrl": "https://images.static-bluray.com/products/20/10162_1_small.jpg",
       "watchDates": [],
@@ -699,6 +763,7 @@
     },
     {
       "title": "Mad Max: Fury Road",
+      "year": "",
       "blurayComId": "234155",
       "posterUrl": "https://images.static-bluray.com/products/20/21313_5_small.jpg",
       "watchDates": [],
@@ -709,6 +774,7 @@
     },
     {
       "title": "Making",
+      "year": "",
       "blurayComId": "2094466",
       "posterUrl": "https://images.static-bluray.com/products/20/180024_1_small.jpg",
       "watchDates": [],
@@ -719,6 +785,7 @@
     },
     {
       "title": "Mean Streets",
+      "year": "",
       "blurayComId": "27157",
       "posterUrl": "https://images.static-bluray.com/products/20/4612_1_small.jpg",
       "watchDates": [],
@@ -729,6 +796,7 @@
     },
     {
       "title": "Memento",
+      "year": "",
       "blurayComId": "18043",
       "posterUrl": "https://images.static-bluray.com/products/20/108_1_small.jpg",
       "watchDates": [
@@ -741,6 +809,7 @@
     },
     {
       "title": "Memories of Murder",
+      "year": "",
       "blurayComId": "28415",
       "posterUrl": "https://images.static-bluray.com/products/20/4963_2_small.jpg",
       "watchDates": [],
@@ -751,6 +820,7 @@
     },
     {
       "title": "A Most Violent Year",
+      "year": "",
       "blurayComId": "330845",
       "posterUrl": "https://images.static-bluray.com/products/20/30197_2_small.jpg",
       "watchDates": [],
@@ -761,6 +831,7 @@
     },
     {
       "title": "Network",
+      "year": "",
       "blurayComId": "23828",
       "posterUrl": "https://images.static-bluray.com/products/20/4387_1_small.jpg",
       "watchDates": [
@@ -773,6 +844,7 @@
     },
     {
       "title": "Night Moves",
+      "year": "",
       "blurayComId": "196574",
       "posterUrl": "https://images.static-bluray.com/products/20/20000_1_small.jpg",
       "watchDates": [],
@@ -783,6 +855,7 @@
     },
     {
       "title": "Nosferatu",
+      "year": "",
       "blurayComId": "1632869",
       "posterUrl": "https://images.static-bluray.com/products/20/135780_4_small.jpg",
       "watchDates": [],
@@ -793,6 +866,7 @@
     },
     {
       "title": "O Lucky Malcolm!",
+      "year": "",
       "blurayComId": "1444224",
       "posterUrl": "https://images.static-bluray.com/products/20/115618_1_small.jpg",
       "watchDates": [],
@@ -803,6 +877,7 @@
     },
     {
       "title": "Oldboy",
+      "year": "",
       "blurayComId": "18412",
       "posterUrl": "https://images.static-bluray.com/products/20/477_3_small.jpg",
       "watchDates": [
@@ -815,6 +890,7 @@
     },
     {
       "title": "Once Upon a Time in Hollywood",
+      "year": "",
       "blurayComId": "811512",
       "posterUrl": "https://images.static-bluray.com/products/20/64988_6_small.jpg",
       "watchDates": [
@@ -827,6 +903,7 @@
     },
     {
       "title": "The Outlaw Josey Wales",
+      "year": "",
       "blurayComId": "27638",
       "posterUrl": "https://images.static-bluray.com/products/20/4786_1_small.jpg",
       "watchDates": [],
@@ -837,6 +914,7 @@
     },
     {
       "title": "Pale Rider",
+      "year": "",
       "blurayComId": "18751",
       "posterUrl": "https://images.static-bluray.com/products/20/816_1_small.jpg",
       "watchDates": [
@@ -849,6 +927,7 @@
     },
     {
       "title": "The Pianist",
+      "year": "",
       "blurayComId": "28471",
       "posterUrl": "https://images.static-bluray.com/products/20/4988_3_small.jpg",
       "watchDates": [],
@@ -859,6 +938,7 @@
     },
     {
       "title": "Planet Earth",
+      "year": "",
       "blurayComId": "18275",
       "posterUrl": "https://images.static-bluray.com/products/20/340_2_small.jpg",
       "watchDates": [],
@@ -869,6 +949,7 @@
     },
     {
       "title": "Requiem for a Dream",
+      "year": "",
       "blurayComId": "18234",
       "posterUrl": "https://images.static-bluray.com/products/20/299_1_small.jpg",
       "watchDates": [
@@ -881,6 +962,7 @@
     },
     {
       "title": "RocknRolla",
+      "year": "",
       "blurayComId": "19391",
       "posterUrl": "https://images.static-bluray.com/products/20/1456_1_small.jpg",
       "watchDates": [
@@ -893,6 +975,7 @@
     },
     {
       "title": "Rosemary's Baby",
+      "year": "",
       "blurayComId": "97935",
       "posterUrl": "https://images.static-bluray.com/products/20/8985_8_small.jpg",
       "watchDates": [],
@@ -903,6 +986,7 @@
     },
     {
       "title": "The Sacred Spirit",
+      "year": "",
       "blurayComId": "1566660",
       "posterUrl": "https://images.static-bluray.com/products/20/128954_1_small.jpg",
       "watchDates": [
@@ -915,6 +999,7 @@
     },
     {
       "title": "The Sacrifice",
+      "year": "",
       "blurayComId": "33044",
       "posterUrl": "https://images.static-bluray.com/products/20/5751_4_small.jpg",
       "watchDates": [],
@@ -925,6 +1010,7 @@
     },
     {
       "title": "Saint Maud",
+      "year": "",
       "blurayComId": "1199856",
       "posterUrl": "https://images.static-bluray.com/products/20/90983_2_small.jpg",
       "watchDates": [],
@@ -935,6 +1021,7 @@
     },
     {
       "title": "Sanjuro",
+      "year": "",
       "blurayComId": "20832",
       "posterUrl": "https://images.static-bluray.com/products/20/2897_1_small.jpg",
       "watchDates": [],
@@ -945,6 +1032,7 @@
     },
     {
       "title": "Satantango",
+      "year": "",
       "blurayComId": "359002",
       "posterUrl": "https://images.static-bluray.com/products/20/33670_3_small.jpg",
       "watchDates": [],
@@ -955,6 +1043,7 @@
     },
     {
       "title": "Session 9",
+      "year": "",
       "blurayComId": "112424",
       "posterUrl": "https://images.static-bluray.com/products/20/10870_1_small.jpg",
       "watchDates": [
@@ -967,6 +1056,7 @@
     },
     {
       "title": "Seven Samurai",
+      "year": "",
       "blurayComId": "24392",
       "posterUrl": "https://images.static-bluray.com/products/20/4399_3_small.jpg",
       "watchDates": [
@@ -979,6 +1069,7 @@
     },
     {
       "title": "The Shining",
+      "year": "",
       "blurayComId": "18398",
       "posterUrl": "https://images.static-bluray.com/products/20/463_8_small.jpg",
       "watchDates": [
@@ -991,6 +1082,7 @@
     },
     {
       "title": "Sicario",
+      "year": "",
       "blurayComId": "411321",
       "posterUrl": "https://images.static-bluray.com/products/20/36885_2_small.jpg",
       "watchDates": [],
@@ -1001,6 +1093,7 @@
     },
     {
       "title": "The Social Network",
+      "year": "",
       "blurayComId": "23439",
       "posterUrl": "https://images.static-bluray.com/products/20/4355_1_small.jpg",
       "watchDates": [],
@@ -1011,6 +1104,7 @@
     },
     {
       "title": "Solaris",
+      "year": "",
       "blurayComId": "28143",
       "posterUrl": "https://images.static-bluray.com/products/20/4891_2_small.jpg",
       "watchDates": [
@@ -1023,6 +1117,7 @@
     },
     {
       "title": "Stalker",
+      "year": "",
       "blurayComId": "96682",
       "posterUrl": "https://images.static-bluray.com/products/20/8870_2_small.jpg",
       "watchDates": [
@@ -1035,6 +1130,7 @@
     },
     {
       "title": "Stanley Kubrick: A Life in Pictures",
+      "year": "",
       "blurayComId": "235556",
       "posterUrl": "https://images.static-bluray.com/products/20/21417_1_small.jpg",
       "watchDates": [],
@@ -1045,6 +1141,7 @@
     },
     {
       "title": "Stray Dog",
+      "year": "",
       "blurayComId": "146823",
       "posterUrl": "https://images.static-bluray.com/products/20/14426_1_small.jpg",
       "watchDates": [],
@@ -1055,6 +1152,7 @@
     },
     {
       "title": "The Stylist",
+      "year": "",
       "blurayComId": "1418767",
       "posterUrl": "https://images.static-bluray.com/products/20/112615_1_small.jpg",
       "watchDates": [
@@ -1067,6 +1165,7 @@
     },
     {
       "title": "Sweeney Todd: The Demon Barber of Fleet Street",
+      "year": "",
       "blurayComId": "18862",
       "posterUrl": "https://images.static-bluray.com/products/20/927_1_small.jpg",
       "watchDates": [
@@ -1079,6 +1178,7 @@
     },
     {
       "title": "Sympathy for Mr. Vengeance",
+      "year": "",
       "blurayComId": "29043",
       "posterUrl": "https://images.static-bluray.com/products/20/5130_1_small.jpg",
       "watchDates": [
@@ -1091,6 +1191,7 @@
     },
     {
       "title": "Taxi Driver",
+      "year": "",
       "blurayComId": "18973",
       "posterUrl": "https://images.static-bluray.com/products/20/1038_5_small.jpg",
       "watchDates": [
@@ -1103,6 +1204,7 @@
     },
     {
       "title": "Tenebrae",
+      "year": "",
       "blurayComId": "28132",
       "posterUrl": "https://images.static-bluray.com/products/20/4889_6_small.jpg",
       "watchDates": [
@@ -1115,6 +1217,7 @@
     },
     {
       "title": "The Thing",
+      "year": "",
       "blurayComId": "18935",
       "posterUrl": "https://images.static-bluray.com/products/20/1000_6_small.jpg",
       "watchDates": [
@@ -1128,6 +1231,7 @@
     },
     {
       "title": "Throne of Blood",
+      "year": "",
       "blurayComId": "98711",
       "posterUrl": "https://images.static-bluray.com/products/20/9075_1_small.jpg",
       "watchDates": [],
@@ -1138,6 +1242,7 @@
     },
     {
       "title": "To Live and Die in L.A.",
+      "year": "",
       "blurayComId": "19841",
       "posterUrl": "https://images.static-bluray.com/products/20/1906_3_small.jpg",
       "watchDates": [],
@@ -1148,6 +1253,7 @@
     },
     {
       "title": "Touch of Evil",
+      "year": "",
       "blurayComId": "36357",
       "posterUrl": "https://images.static-bluray.com/products/20/6789_1_small.jpg",
       "watchDates": [
@@ -1160,6 +1266,7 @@
     },
     {
       "title": "Training Day",
+      "year": "",
       "blurayComId": "18014",
       "posterUrl": "https://images.static-bluray.com/products/20/79_1_small.jpg",
       "watchDates": [
@@ -1172,6 +1279,7 @@
     },
     {
       "title": "Unforgiven",
+      "year": "",
       "blurayComId": "18018",
       "posterUrl": "https://images.static-bluray.com/products/20/83_6_small.jpg",
       "watchDates": [],
@@ -1182,6 +1290,7 @@
     },
     {
       "title": "The Wages of Fear",
+      "year": "",
       "blurayComId": "27314",
       "posterUrl": "https://images.static-bluray.com/products/20/4697_1_small.jpg",
       "watchDates": [],
@@ -1192,6 +1301,7 @@
     },
     {
       "title": "What's a Nice Girl Like You Doing in a Place Like This?",
+      "year": "",
       "blurayComId": "1258913",
       "posterUrl": "https://images.static-bluray.com/products/20/96544_1_small.jpg",
       "watchDates": [],
@@ -1202,6 +1312,7 @@
     },
     {
       "title": "Whiplash",
+      "year": "",
       "blurayComId": "326080",
       "posterUrl": "https://images.static-bluray.com/products/20/29738_1_small.jpg",
       "watchDates": [
@@ -1214,6 +1325,7 @@
     },
     {
       "title": "The Wicker Man",
+      "year": "",
       "blurayComId": "36202",
       "posterUrl": "https://images.static-bluray.com/products/20/6748_1_small.jpg",
       "watchDates": [],
@@ -1224,6 +1336,7 @@
     },
     {
       "title": "The Wolf of Wall Street",
+      "year": "",
       "blurayComId": "147117",
       "posterUrl": "https://images.static-bluray.com/products/20/14482_1_small.jpg",
       "watchDates": [
@@ -1236,6 +1349,7 @@
     },
     {
       "title": "The Working Class Goes to Heaven",
+      "year": "",
       "blurayComId": "257291",
       "posterUrl": "https://images.static-bluray.com/products/20/23903_1_small.jpg",
       "watchDates": [],
@@ -1246,6 +1360,7 @@
     },
     {
       "title": "Yojimbo",
+      "year": "",
       "blurayComId": "20831",
       "posterUrl": "https://images.static-bluray.com/products/20/2896_1_small.jpg",
       "watchDates": [],
@@ -1256,6 +1371,7 @@
     },
     {
       "title": "Zodiac",
+      "year": "",
       "blurayComId": "18349",
       "posterUrl": "https://images.static-bluray.com/products/20/414_2_small.jpg",
       "watchDates": [
