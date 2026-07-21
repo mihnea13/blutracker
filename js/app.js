@@ -14,7 +14,10 @@ const S = {
   expanded: new Set(),
   search:  '',
   activeFilters: new Set(),
-  collapsed: new Set(['csect-done']),  // done section collapsed by default
+  collapsed: new Set(['csect-done']),
+  randomN: 1,
+  randomMaxRuntime: 999,
+  randomDecade: null,
   sort:    'az',   // az | za | year-desc | year-asc | runtime-desc | runtime-asc
   loading: true,
 };
@@ -178,7 +181,10 @@ function emptyState(icon, text) {
 function renderUnwatched(main) {
   main.innerHTML = '';
   const all = unwatched(); const movies = filterSort(all);
-  main.appendChild(makeToolbar(all.length, 'unwatched'));
+  const rndPickBtn = mk('button','toolbar__icon-btn');
+  rndPickBtn.title='Ce văd în seara asta?'; rndPickBtn.innerHTML='🎲';
+  rndPickBtn.onclick = openRandomPicker;
+  main.appendChild(makeToolbar(all.length, 'unwatched', [rndPickBtn]));
   if (!movies.length) { main.appendChild(emptyState('🎉', S.search?'Niciun rezultat.':'Toate filmele au fost vizionate!')); return; }
   const grid = mk('div', S.view==='grid'?'grid':'grid list');
   movies.forEach(m => {
@@ -199,6 +205,7 @@ function renderWatched(main) {
   const all = watched(); const movies = filterSort(all);
   main.appendChild(makeToolbar(all.length, 'watched'));
   if (!movies.length) { main.appendChild(emptyState('📼', S.search?'Niciun rezultat.':'Niciun film văzut.')); return; }
+  if (S.view === 'diary') { renderDiary(main, movies); return; }
   const grid = mk('div', S.view==='grid'?'grid':'grid list');
   movies.forEach(m => {
     const card  = movieCard(m);
@@ -843,6 +850,146 @@ function renderFilterChips() {
 }
 
 // ════════════════════════════════════════════════════
+// DIARY VIEW
+// ════════════════════════════════════════════════════
+function renderDiary(main, movies) {
+  // Expand watchHistory entries, sort by date desc
+  const entries = [];
+  movies.forEach(m => {
+    (m.watchHistory||[]).forEach(w => {
+      if (w.date && w.date > '') entries.push({...m, watchDate: w.date});
+    });
+  });
+  entries.sort((a,b) => b.watchDate.localeCompare(a.watchDate));
+
+  if (!entries.length) { main.appendChild(emptyState('📅','Nicio dată de vizionare înregistrată.')); return; }
+
+  let lastMonth = '';
+  entries.forEach(e => {
+    const month = e.watchDate.substring(0,7);
+    if (month !== lastMonth) {
+      const d = new Date(month+'-15T12:00:00');
+      const hdr = mk('div','diary-month-header',
+        d.toLocaleDateString('ro-RO',{month:'long',year:'numeric'})
+          .replace(/^[a-z]/, c=>c.toUpperCase()));
+      main.appendChild(hdr);
+      lastMonth = month;
+    }
+    const day = parseInt(e.watchDate.substring(8,10));
+    const row = mk('div','diary-row');
+    row.onclick = () => openFilmDetail(e.id);
+
+    const dayEl = mk('div','diary-day', String(day));
+    const poster = mk('div','diary-poster');
+    const img = mk('img'); img.alt=e.title; img.loading='lazy';
+    img.src = e.tmdbPosterUrl||e.posterUrl||posterPlaceholder(e.title);
+    img.onerror=()=>{img.src=posterPlaceholder(e.title);};
+    poster.appendChild(img);
+
+    const info = mk('div','diary-info');
+    info.appendChild(mk('div','diary-title',e.title));
+    const metaParts = [e.year, e.runtime?e.runtime+'m':'', e.voteAverage?'★ '+e.voteAverage:''].filter(Boolean);
+    info.appendChild(mk('div','diary-meta',metaParts.join(' · ')));
+    row.append(dayEl,poster,info);
+    main.appendChild(row);
+  });
+}
+
+// ════════════════════════════════════════════════════
+// RANDOM PICKER
+// ════════════════════════════════════════════════════
+function openRandomPicker() {
+  const decades = [...new Set(
+    list().filter(m=>m.year&&!m.watchHistory?.length)
+          .map(m=>Math.floor(parseInt(m.year)/10)*10)
+          .filter(d=>!isNaN(d))
+  )].sort();
+
+  renderRandomPickerModal(decades, []);
+}
+
+function renderRandomPickerModal(decades, results) {
+  const maxR = S.randomMaxRuntime;
+  const labelR = maxR >= 999 ? 'Orice durată' : maxR + ' min';
+  const decadeChips = decades.map(d => {
+    const active = S.randomDecade === d;
+    return '<button class="decade-chip'+(active?' decade-chip--active':'')+
+           '" onclick="setRandomDecade('+d+','+JSON.stringify(decades)+')">'+(d>0?d+'s':'?')+'</button>';
+  }).join('');
+
+  const resultHTML = results.length ? results.map(m => {
+    const poster = m.tmdbPosterUrl||m.posterUrl||'';
+    return '<div class="random-film-card">' +
+      '<div class="random-film-card__poster"><img src="'+esc(poster)+'" alt="'+esc(m.title)+'"></div>' +
+      '<div class="random-film-card__info">' +
+        '<div class="random-film-card__title">'+esc(m.title)+'</div>' +
+        '<div class="random-film-card__meta">'+ [m.year, m.runtime?m.runtime+'m':'', m.voteAverage?'★ '+m.voteAverage:''].filter(Boolean).join(' · ') +'</div>' +
+        '<button class="btn btn--primary btn--sm" style="margin-top:8px" onclick=\"closeModal();openMarkWatchedModal(\"+m.id+\")">▶ Marchează văzut</button>' +
+      '</div></div>';
+  }).join('') : '';
+
+  openModal('🎲 Ce văd în seara asta?',
+    '<div class="field"><label>Câte filme</label>' +
+      '<div class="random-n-row">' +
+        '<button class="random-n-btn" onclick="adjRandomN(-1)">−</button>' +
+        '<span class="random-n-val" id="rnd-n">'+S.randomN+'</span>' +
+        '<button class="random-n-btn" onclick="adjRandomN(1)">+</button>' +
+      '</div></div>' +
+    '<div class="field"><label>Durată maximă</label>' +
+      '<div class="range-wrap">' +
+        '<div class="range-label"><span>60 min</span><span class="range-val" id="rnd-r-lbl">'+labelR+'</span><span>4h+</span></div>' +
+        '<input type="range" id="rnd-runtime" min="60" max="300" step="30" value="'+(maxR>=999?300:maxR)+'" oninput="updateRuntimeLabel(this)">' +
+      '</div></div>' +
+    (decades.length ? '<div class="field"><label>Decadă (opțional)</label><div class="decade-chips">'+decadeChips+'</div></div>' : '') +
+    (resultHTML ? '<div class="random-results">'+resultHTML+'</div>' : ''),
+    '<button class="btn btn--ghost" onclick="closeModal()">Închide</button>' +
+    '<button class="btn btn--accent" onclick="doPickRandom()">🎲 Alege!</button>'
+  );
+}
+
+function adjRandomN(d) {
+  S.randomN = Math.max(1, Math.min(5, S.randomN + d));
+  $('#rnd-n') && ($('#rnd-n').textContent = S.randomN);
+}
+
+function updateRuntimeLabel(el) {
+  const v = parseInt(el.value);
+  S.randomMaxRuntime = v >= 300 ? 999 : v;
+  const lbl = $('#rnd-r-lbl');
+  if (lbl) lbl.textContent = v >= 300 ? 'Orice durată' : v + ' min';
+}
+
+function setRandomDecade(d, decades) {
+  S.randomDecade = S.randomDecade === d ? null : d;
+  const maxR = parseInt($('#rnd-runtime')?.value||300);
+  S.randomMaxRuntime = maxR >= 300 ? 999 : maxR;
+  renderRandomPickerModal(decades, []);
+}
+
+function doPickRandom() {
+  const maxR = parseInt($('#rnd-runtime')?.value||300);
+  S.randomMaxRuntime = maxR >= 300 ? 999 : maxR;
+  const decades = [...new Set(
+    list().filter(m=>m.year&&!m.watchHistory?.length)
+          .map(m=>Math.floor(parseInt(m.year)/10)*10).filter(d=>!isNaN(d))
+  )].sort();
+
+  let pool = unwatched();
+  if (S.randomMaxRuntime < 999) pool = pool.filter(m=>!m.runtime||m.runtime<=S.randomMaxRuntime);
+  if (S.randomDecade) pool = pool.filter(m=>m.year&&Math.floor(parseInt(m.year)/10)*10===S.randomDecade);
+
+  if (!pool.length) { showToast('Niciun film cu aceste criterii 😕','error'); return; }
+
+  const picks = [];
+  const copy = [...pool];
+  for (let i=0; i<S.randomN && copy.length; i++) {
+    const idx = Math.floor(Math.random()*copy.length);
+    picks.push(copy.splice(idx,1)[0]);
+  }
+  renderRandomPickerModal(decades, picks);
+}
+
+// ════════════════════════════════════════════════════
 // DRAWER
 // ════════════════════════════════════════════════════
 function openDrawer() {
@@ -861,14 +1008,14 @@ function closeDrawer() {
 function setView(v) {
   S.view = v;
   localStorage.setItem('bt_view', v);
-  $('#view-grid-btn')?.classList.toggle('view-btn--active', v === 'grid');
-  $('#view-list-btn')?.classList.toggle('view-btn--active', v === 'list');
+  syncViewButtons();
   render();
 }
 
 function syncViewButtons() {
   $('#view-grid-btn')?.classList.toggle('view-btn--active', S.view === 'grid');
   $('#view-list-btn')?.classList.toggle('view-btn--active', S.view === 'list');
+  $('#view-diary-btn')?.classList.toggle('view-btn--active', S.view === 'diary');
 }
 
 // ════════════════════════════════════════════════════
