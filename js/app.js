@@ -116,13 +116,6 @@ function makeToolbar(count, tab, extraBtns=[]) {
   // Extra buttons (e.g. Random picker)
   extraBtns.forEach(b => acts.appendChild(b));
 
-  // Sort button
-  const sortBtn = mk('button','toolbar__icon-btn');
-  sortBtn.title = 'Sortare';
-  sortBtn.innerHTML = '⇅';
-  sortBtn.onclick = () => openSortSheet(tab || S.tab);
-  acts.appendChild(sortBtn);
-
   bar.appendChild(acts);
   return bar;
 }

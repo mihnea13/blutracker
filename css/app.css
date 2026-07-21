@@ -107,7 +107,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
 }
 .nav__item--active { color: var(--accent); }
 .nav__icon  { font-size: 22px; }
-.nav__label { font-size: 10px; font-weight: 500; letter-spacing: .3px; text-transform: uppercase; }
+.nav__label { font-size: 11px; font-weight: 600; letter-spacing: .3px; text-transform: uppercase; }
 
 /* ── TOOLBAR ──────────────────────────────────────── */
 .toolbar {
@@ -116,7 +116,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
   position: sticky; top: 0; z-index: 10;
   background: linear-gradient(var(--bg) 85%, transparent);
 }
-.toolbar__count  { font-size: 13px; font-weight: 500; color: var(--text-2); letter-spacing: .2px; }
+.toolbar__count  { font-size: 15px; font-weight: 600; color: var(--text-2); letter-spacing: .1px; }
 .toolbar__actions { display: flex; gap: 8px; align-items: center; }
 
 /* ── GRID / LIST ──────────────────────────────────── */
@@ -156,14 +156,14 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
 .card__title   { font-size: 13px; font-weight: 600; line-height: 1.35;
                  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card__meta    { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.card__date    { font-size: 12px; color: var(--text-2); }
+.card__date    { font-size: 13px; color: #a0a0c4; }
 .card__actions { display: flex; flex-direction: column; gap: 6px; margin-top: 2px; }
 
 /* List mode overrides */
 .list .card       { display: flex; }
 .list .card__poster { aspect-ratio: unset; width: 64px; flex-shrink: 0; }
 .list .card__info   { flex: 1; padding: 10px 12px; justify-content: center; }
-.list .card__title  { font-size: 14px; -webkit-line-clamp: 1; }
+.list .card__title  { font-size: 16px; font-weight: 700; -webkit-line-clamp: 1; }
 .list .card__actions { flex-direction: row; }
 
 /* ── BADGES ───────────────────────────────────────── */
@@ -206,7 +206,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
   display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
 }
 .collapsible__name {
-  font-weight: 600; font-size: 15px;
+  font-weight: 700; font-size: 17px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .collapsible__meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -251,7 +251,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
   box-shadow: 0 0 10px rgba(77,214,128,.35);
 }
 
-.track-label  { flex: 1; font-size: 14px; }
+.track-label  { flex: 1; font-size: 15px; }
 .feat-star    { color: var(--accent); margin-right: 3px; }
 .track-date   { font-size: 12px; color: var(--text-2); flex-shrink: 0; }
 
@@ -268,7 +268,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   display: flex; align-items: flex-end; justify-content: center;
-  padding: 0 12px 0;
+  padding: 0;
   opacity: 0; pointer-events: none;
   transition: opacity .2s;
 }
@@ -278,7 +278,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px 20px 0 0;
-  width: calc(100% - 0px);
+  width: calc(100vw - 32px);   /* 16px margin each side, works on all phones */
   max-width: 460px;
   max-height: 82dvh;
   display: flex; flex-direction: column;
@@ -294,7 +294,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
   position: sticky; top: 0; background: var(--surface);
   border-radius: 20px 20px 0 0;
 }
-.modal__title    { font-size: 16px; font-weight: 700; }
+.modal__title    { font-size: 18px; font-weight: 700; }
 .modal__close    { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2);
                    display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text-2); }
 .modal__subtitle { font-size: 14px; color: var(--text-2); margin-bottom: 14px; }
@@ -440,7 +440,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
 .search-input:focus { border-color: var(--accent); }
 
 /* ── CARD META CHIPS ─────────────────────────────────────── */
-.card__year, .card__rt { font-size: 12px; color: #9898b8; font-weight: 500; }
+.card__year, .card__rt { font-size: 13px; color: #a0a0c4; font-weight: 500; }
 
 /* ── TOOLBAR ICON BUTTONS ────────────────────────────────── */
 .toolbar__icon-btn {
@@ -469,7 +469,7 @@ body.drawer-open .header__menu-btn span:nth-child(3) { transform: translateY(-7p
 .sort-option:last-child { border-bottom: none; }
 .sort-option:active { background: var(--surface-2); }
 .sort-option input[type="radio"] { display: none; }
-.sort-option__label { flex: 1; font-size: 15px; }
+.sort-option__label { flex: 1; font-size: 16px; }
 .sort-option__check { color: var(--accent); font-weight: 700; font-size: 16px; }
 .sort-option--active .sort-option__label { color: var(--accent); font-weight: 600; }
 
@@ -507,7 +507,7 @@ body.drawer-open #drawer { transform: translateX(0); }
 }
 .drawer__btn {
   width: 100%; display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 0; font-size: 15px; color: var(--text);
+  padding: 14px 0; font-size: 17px; color: var(--text);
   background: none; border: none; cursor: pointer;
   border-bottom: 1px solid var(--border);
   transition: color .15s;
@@ -520,9 +520,9 @@ body.drawer-open #drawer { transform: translateX(0); }
 /* ── VIEW TOGGLE ────────────────────────────────────────── */
 .view-toggle { display: flex; gap: 8px; }
 .view-btn {
-  flex: 1; padding: 9px 0;
+  flex: 1; padding: 11px 0;
   background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: var(--r-sm); font-size: 14px; font-weight: 500;
+  border-radius: var(--r-sm); font-size: 16px; font-weight: 500;
   color: var(--text-2); cursor: pointer; transition: all .15s;
 }
 .view-btn--active {
