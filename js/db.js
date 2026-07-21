@@ -260,3 +260,39 @@ function buildNewMovie(movie, seed) {
     addedAt:               ts(),
   };
 }
+
+/**
+ * Actualizează configurația discului (commentary + features)
+ * fără să reseteze trackurile deja bifate.
+ * - Dacă newCount > curent: adaugă trackuri noi (goale)
+ * - Dacă newCount < curent: șterge de la final (doar cele nevăzute)
+ * - hasGenericFeatures: setează toggle-ul
+ */
+async function dbUpdateDisc(id, newCommCount, hasGenericFeatures) {
+  const ref  = _db.collection('movies').doc(id);
+  const data = (await ref.get()).data();
+  const existing = data.commentaryTracks || [];
+  const curCount = existing.length;
+
+  let tracks = [...existing];
+
+  if (newCommCount > curCount) {
+    // Adaugă trackuri noi
+    for (let i = curCount; i < newCommCount; i++) {
+      tracks.push({ watched: false, watchDate: null });
+    }
+  } else if (newCommCount < curCount) {
+    // Scurtează — păstrează cele watched, taie de la final
+    tracks = tracks.slice(0, newCommCount);
+  }
+
+  const upd = {
+    commentaryTracks:   tracks,
+    hasGenericFeatures: hasGenericFeatures,
+  };
+  // Dacă features a fost dezactivat, resetează și watched-ul
+  if (!hasGenericFeatures) upd.genericFeaturesWatched = false;
+
+  await ref.update(upd);
+  return { ...data, ...upd };
+}

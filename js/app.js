@@ -143,8 +143,11 @@ function renderWatched(main) {
     hist.onclick = e => { e.stopPropagation(); openHistoryModal(m.id); };
     const add = mk('button', 'btn btn--primary btn--sm', '+ Vizionare');
     add.onclick = e => { e.stopPropagation(); openAddWatchModal(m.id); };
+    const disc = mk('button', 'btn btn--ghost btn--sm', '⚙ Disc');
+    disc.onclick = e => { e.stopPropagation(); openSetupDiscModal(m.id); };
     acts.appendChild(hist);
     acts.appendChild(add);
+    acts.appendChild(disc);
 
     grid.appendChild(card);
   });
@@ -469,6 +472,47 @@ function openHistoryModal(id) {
   );
 }
 
+// ── MODAL: Setup disc (pentru filme deja watched) ────────────
+
+function openSetupDiscModal(id) {
+  const m      = S.movies[id];
+  const tracks = m.commentaryTracks?.length || 0;
+  const hasFeat = m.hasGenericFeatures || false;
+
+  openModal(
+    '⚙ Configurează disc',
+    `<p class="modal__subtitle">${esc(m.title)}</p>
+     <div class="field">
+       <label>Commentary tracks</label>
+       <div class="num-row">
+         <button class="num-btn" onclick="adjNum('sd-comm',-1)">−</button>
+         <input type="number" id="sd-comm" value="${tracks}" min="0" max="20" class="num-input">
+         <button class="num-btn" onclick="adjNum('sd-comm', 1)">+</button>
+       </div>
+       <p style="font-size:12px;color:var(--text-2);margin-top:6px">Trackurile deja bifate sunt păstrate.</p>
+     </div>
+     <div class="field">
+       <div class="toggle-row">
+         <span class="toggle-label">Are extras / features</span>
+         <button class="toggle ${hasFeat ? 'toggle--on' : ''}" id="sd-feat-toggle" onclick="toggleBtn(this)"></button>
+       </div>
+     </div>`,
+    `<button class="btn btn--ghost" onclick="closeModal()">Anulează</button>
+     <button class="btn btn--accent" onclick="confirmSetupDisc('${id}')">✓ Salvează</button>`
+  );
+}
+
+async function confirmSetupDisc(id) {
+  const commN   = parseInt($('#sd-comm').value) || 0;
+  const hasFeat = $('#sd-feat-toggle').classList.contains('toggle--on');
+  closeModal();
+  try {
+    S.movies[id] = await dbUpdateDisc(id, commN, hasFeat);
+    render();
+    showToast('Disc configurat ✓', 'success');
+  } catch (e) { showToast('Eroare: ' + e.message, 'error'); }
+}
+
 // ── MODAL: Add special feature ───────────────────────
 
 function openAddFeatureModal(id) {
@@ -561,7 +605,6 @@ async function doSync() {
       S.movies = movies;
       showToast(`Sync OK — ${added} noi, ${updated} actualizate ✓`, 'success');
     } else {
-      // collection.json e gol → aplică doar seed-ul
       const { added, movies } = await dbSeedOnly(seedData, S.movies);
       S.movies = movies;
       showToast(`Seed importat — ${added} filme adăugate ✓`, 'success');
