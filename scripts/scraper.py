@@ -44,40 +44,47 @@ FEAT_WATCHED  = re.compile(r'#features_watched',  re.IGNORECASE)
 
 # ── LOGIN ─────────────────────────────────────────────────────
 def login(session: requests.Session) -> bool:
-    """Autentificare pe blu-ray.com"""
-    login_url = f"{BASE}/community/login.php"
-    
-    # Preluăm pagina de login pentru CSRF token dacă e nevoie
-    resp = session.get(login_url, headers=HEADERS, timeout=15)
+    # Preia homepage-ul și găsește formularul de login
+    resp = session.get(BASE, headers=HEADERS, timeout=15)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    
-    # Caută hidden fields în formularul de login
-    form_data = {
-        "username": USERNAME,
-        "password": PASSWORD,
-        "remember": "1",
-    }
-    
-    # Adaugă orice hidden input găsit în form
-    form = soup.find("form", {"id": "loginform"}) or soup.find("form", action=re.compile(r"login"))
-    if form:
-        for hidden in form.find_all("input", {"type": "hidden"}):
-            name = hidden.get("name")
-            if name and name not in form_data:
-                form_data[name] = hidden.get("value", "")
-    
-    post_url = f"{BASE}/community/login.php"
-    resp = session.post(post_url, data=form_data, headers=HEADERS, timeout=15, allow_redirects=True)
-    
-    # Verificare login reușit (caută username în pagina rezultantă)
+
+    # Caută formularul de login în pagină
+    form = (
+        soup.find("form", {"id": re.compile(r"login", re.I)})
+        or soup.find("form", {"action": re.compile(r"login", re.I)})
+        or soup.find("form", {"class": re.compile(r"login", re.I)})
+    )
+
+    if not form:
+        print("✗ Nu am găsit formularul de login în homepage.", file=sys.stderr)
+        return False
+
+    action = form.get("action", "")
+    if action.startswith("/"):
+        post_url = BASE + action
+    elif action.startswith("http"):
+        post_url = action
+    else:
+        post_url = BASE + "/" + action
+
+    print(f"  Login URL detectat: {post_url}")
+
+    # Colectează hidden fields
+    form_data = {"username": USERNAME, "password": PASSWORD, "remember": "1"}
+    for hidden in form.find_all("input", {"type": "hidden"}):
+        name = hidden.get("name")
+        if name:
+            form_data[name] = hidden.get("value", "")
+
+    resp = session.post(post_url, data=form_data, headers=HEADERS,
+                        timeout=15, allow_redirects=True)
+
     if USERNAME.lower() in resp.text.lower() or "logout" in resp.text.lower():
         print(f"✓ Login reușit ca {USERNAME}")
         return True
-    
+
     print("✗ Login eșuat. Verifică credențialele.", file=sys.stderr)
-    # Fallback: încearcă cu action diferit
-    # TODO: ajustează dacă blu-ray.com schimbă structura formularului
     return False
 
 
