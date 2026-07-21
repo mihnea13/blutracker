@@ -1,5 +1,5 @@
-// BluTracker v0.3
-const BT_VERSION = '0.3';
+// BluTracker v0.4
+const BT_VERSION = '0.4';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -17,7 +17,7 @@ const S = {
   collapsed: new Set(['csect-done']),
   randomN: 1,
   randomMaxRuntime: 999,
-  randomDecade: null,
+  randomDecades: new Set(),
   sort:    'az',   // az | za | year-desc | year-asc | runtime-desc | runtime-asc
   loading: true,
 };
@@ -912,7 +912,7 @@ function renderRandomPickerModal(decades, results) {
   const maxR = S.randomMaxRuntime;
   const labelR = maxR >= 999 ? 'Orice durată' : maxR + ' min';
   const decadeChips = decades.map(d => {
-    const active = S.randomDecade === d;
+    const active = S.randomDecades.has(d);
     return '<button class="decade-chip'+(active?' decade-chip--active':'')+
            '" onclick="setRandomDecade('+d+','+JSON.stringify(decades)+')">'+(d>0?d+'s':'?')+'</button>';
   }).join('');
@@ -960,7 +960,8 @@ function updateRuntimeLabel(el) {
 }
 
 function setRandomDecade(d, decades) {
-  S.randomDecade = S.randomDecade === d ? null : d;
+  if (S.randomDecades.has(d)) S.randomDecades.delete(d);
+  else S.randomDecades.add(d);
   const maxR = parseInt($('#rnd-runtime')?.value||300);
   S.randomMaxRuntime = maxR >= 300 ? 999 : maxR;
   renderRandomPickerModal(decades, []);
@@ -976,7 +977,7 @@ function doPickRandom() {
 
   let pool = unwatched();
   if (S.randomMaxRuntime < 999) pool = pool.filter(m=>!m.runtime||m.runtime<=S.randomMaxRuntime);
-  if (S.randomDecade) pool = pool.filter(m=>m.year&&Math.floor(parseInt(m.year)/10)*10===S.randomDecade);
+  if (S.randomDecades.size > 0) pool = pool.filter(m=>m.year&&S.randomDecades.has(Math.floor(parseInt(m.year)/10)*10));
 
   if (!pool.length) { showToast('Niciun film cu aceste criterii 😕','error'); return; }
 
@@ -1008,7 +1009,10 @@ function closeDrawer() {
 function setView(v) {
   S.view = v;
   localStorage.setItem('bt_view', v);
+  if (v === 'diary') S.tab = 'watched';
   syncViewButtons();
+  closeDrawer();
+  syncNav();
   render();
 }
 
