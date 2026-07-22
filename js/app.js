@@ -1529,7 +1529,7 @@ function makeActivityLogSection() {
 // true  = notificările se activează pentru acțiuni noi
 // Schimbă în GitHub: js/app.js → caută MILESTONES_TRACKING_ENABLED
 // ─────────────────────────────────────────────────────────────
-const MILESTONES_TRACKING_ENABLED = false;
+const MILESTONES_TRACKING_ENABLED = true;
 
 function getAchievementDefs(stats) {
   const monthsProductiv = Object.values(stats.monthMap||{}).filter(v=>v>=5).length;
