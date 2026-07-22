@@ -1,5 +1,5 @@
-// BluTracker v1.0
-const BT_VERSION = '1.0';
+// BluTracker v1.2
+const BT_VERSION = '1.2';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -923,8 +923,9 @@ function showToast(msg,type='') {
 // ════════════════════════════════════════════════════
 
 function openStats() {
+  if (document.body.classList.contains('stats-open')) { closeStats(); return; }
   document.body.classList.add('stats-open');
-  setTimeout(renderStats, 80);
+  setTimeout(renderStats, 100);
 }
 
 function closeStats() {
@@ -1512,7 +1513,13 @@ function makeActivityLogSection() {
 // ════════════════════════════════════════════════════
 // ACHIEVEMENTS — CALUP F
 // ════════════════════════════════════════════════════
-const MILESTONE_CUTOFF = '2099-01-01'; // STANDBY — schimbă la data dorită pentru activare
+// ─────────────────────────────────────────────────────────────
+// MILESTONE TRACKING FLAG
+// false = achievements vizibile dar nu se declanșează notificări
+// true  = notificările se activează pentru acțiuni noi
+// Schimbă în GitHub: js/app.js → caută MILESTONES_TRACKING_ENABLED
+// ─────────────────────────────────────────────────────────────
+const MILESTONES_TRACKING_ENABLED = false;
 
 function getAchievementDefs(stats) {
   const monthsProductiv = Object.values(stats.monthMap).filter(v=>v>=5).length;
@@ -1643,8 +1650,7 @@ async function loadAchievedMilestones() {
 
 function checkAndFireMilestones() {
   if (!S.achievedMilestones) return;
-  const today = new Date().toISOString().split('T')[0];
-  if (today < MILESTONE_CUTOFF) return;
+  if (!MILESTONES_TRACKING_ENABLED) return;
   const stats = computeStats();
   let changed = false;
   MILESTONES.forEach(m => {
