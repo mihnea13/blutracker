@@ -1,5 +1,5 @@
-// BluTracker v0.7b
-const BT_VERSION = '0.7b';
+// BluTracker v0.8
+const BT_VERSION = '0.8';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -18,6 +18,8 @@ const S = {
   randomN: 1,
   randomMaxRuntime: 999,
   randomDecades: new Set(),
+  activityLog: [],
+  lastUndo: null,
   sort:    'az',   // az | za | year-desc | year-asc | runtime-desc | runtime-asc
   loading: true,
 };
@@ -298,7 +300,10 @@ function commCard(m) {
   prog.append(dots, mk('span','track-count', nW+'/'+tracks.length));
   info.appendChild(prog);
 
-  hdr.append(poster, info);
+  const del = mk('button','comm-card__del','🗑');
+  del.title = 'Șterge film din colecție';
+  del.onclick = e => { e.stopPropagation(); openFilmDetail(m.id); };
+  hdr.append(poster, info, del);
   card.appendChild(hdr);
 
   if (isExpanded) {
@@ -476,8 +481,10 @@ function confirmDeleteModal(id) {
 async function doDelete(id) {
   closeModal();
   try {
+    const title = S.movies[id].title;
     await dbDeleteMovie(id);
     delete S.movies[id];
+    logAction('🗑', title, 'Șters din colecție', null); // no undo for delete
     render();
     showToast('Film șters ✓');
   } catch(e) { showToast('Eroare: '+e.message,'error'); }
@@ -575,9 +582,12 @@ async function refetchTmdb(id) { openRefetchModal(id); }
 async function prefetchTmdb() {
   if (!TMDB_API_KEY) return;
   const missing = Object.keys(S.movies).filter(id => !S.movies[id].tmdbId);
+  if (!missing.length) return; // all enriched, skip
+  console.log('TMDB prefetch:', missing.length, 'films to enrich');
   for (const id of missing) {
+    if (!S.movies[id]) continue; // film might have been deleted
     await enrichWithTmdb(id);
-    await new Promise(r => setTimeout(r, 300)); // 300ms între request-uri
+    await new Promise(r => setTimeout(r, 350));
   }
 }
 
@@ -641,7 +651,13 @@ function openAddWatchModal(id) {
 }
 async function confirmAddWatch(id) {
   const date=$('#aw-date').value||today(); closeModal();
-  try { S.movies[id]=await dbAddWatch(id,date); render(); showToast('Vizionare adăugată ✓','success'); }
+  try { 
+    S.movies[id]=await dbAddWatch(id,date);
+    const wh=S.movies[id].watchHistory;
+    logAction('✓', S.movies[id].title, 'Vizionare adăugată — '+fmtDate(date), async () => {
+      await doDeleteWatch(id, wh[wh.length-1]);
+    });
+    render(); showToast('Vizionare adăugată ✓','success'); }
   catch(e) { showToast('Eroare: '+e.message,'error'); }
 }
 
@@ -731,16 +747,37 @@ function adjNum(id,d) { const inp=document.getElementById(id); inp.value=Math.ma
 // ASYNC ACTIONS
 // ════════════════════════════════════════════════════
 async function doToggleCommentary(id,idx) {
-  try { S.movies[id]=await dbToggleCommentary(id,idx); render(); } catch(e){showToast('Eroare: '+e.message,'error');}
+  try {
+    const title = S.movies[id].title;
+    S.movies[id]=await dbToggleCommentary(id,idx);
+    const t = S.movies[id].commentaryTracks[idx];
+    logAction('🎙', title, 'Commentary '+(idx+1)+' '+(t.watched?'bifat ✓':'debifat'),
+      async () => { S.movies[id]=await dbToggleCommentary(id,idx); render(); });
+    render();
+  } catch(e){showToast('Eroare: '+e.message,'error');}
 }
 async function doAddCommentaryTrack(id) {
   try { S.movies[id]=await dbAddCommentaryTrack(id); render(); showToast('Track adăugat ✓','success'); } catch(e){showToast('Eroare: '+e.message,'error');}
 }
 async function doToggleGenericFeatures(id) {
-  try { S.movies[id]=await dbToggleGenericFeatures(id); render(); } catch(e){showToast('Eroare: '+e.message,'error');}
+  try {
+    const title = S.movies[id].title;
+    S.movies[id]=await dbToggleGenericFeatures(id);
+    const done = S.movies[id].genericFeaturesWatched;
+    logAction('🎞', title, 'Extras generice '+(done?'bifate ✓':'debifate'),
+      async () => { S.movies[id]=await dbToggleGenericFeatures(id); render(); });
+    render();
+  } catch(e){showToast('Eroare: '+e.message,'error');}
 }
 async function doToggleSpecialFeature(id,featId) {
-  try { S.movies[id]=await dbToggleSpecialFeature(id,featId); render(); } catch(e){showToast('Eroare: '+e.message,'error');}
+  try {
+    const title = S.movies[id].title;
+    S.movies[id]=await dbToggleSpecialFeature(id,featId);
+    const feat = (S.movies[id].specialFeatures||[]).find(f=>f.id===featId);
+    if (feat) logAction('★', title, '"'+feat.name+'" '+(feat.watched?'bifat ✓':'debifat'),
+      async () => { S.movies[id]=await dbToggleSpecialFeature(id,featId); render(); });
+    render();
+  } catch(e){showToast('Eroare: '+e.message,'error');}
 }
 
 // ════════════════════════════════════════════════════
@@ -1045,6 +1082,8 @@ function renderStats() {
 
   // Fun stats
   el.appendChild(makeFunStats(s));
+  // Activity log
+  el.appendChild(makeActivityLogSection());
 }
 
 // ── Hero ─────────────────────────────────────────────
@@ -1199,7 +1238,7 @@ function makeMonthlyChart(s) {
 
 // ── Heatmap ───────────────────────────────────────────
 function makeHeatmap(heatmapData) {
-  const CELL=14, GAP=3, ROWS=7, ns='http://www.w3.org/2000/svg';
+  const CELL=16, GAP=3, ROWS=7, ns='http://www.w3.org/2000/svg';
   const today=new Date();
   const start=new Date(today); start.setFullYear(start.getFullYear()-1);
   start.setDate(start.getDate()-start.getDay());
@@ -1331,6 +1370,20 @@ function makeFunStats(s) {
   const toGo = s.total - s.watched;
   if (toGo > 0) items.push({icon:'🎯',text:'Ești la <strong>'+toGo+' filme</strong> distanță de colecție 100% văzută.'});
   if (s.watchedPct === 100) items.push({icon:'🏆',text:'<strong>Colecție 100% văzută!</strong> Legendă.'});
+  
+  // Runtime stats
+  const avgRuntime = s.watched > 0 
+    ? Math.round(s.watchEvents.reduce((a,e)=>a+e.runtime,0) / Math.max(s.watchEvents.length,1))
+    : 0;
+  if (avgRuntime > 0) items.push({icon:'⏱',text:'Durată medie vizionată: <strong>'+avgRuntime+' minute</strong>.'});
+  
+  // Commentary dedication
+  const commPct = s.commTotal ? Math.round(s.commWatched/s.commTotal*100) : 0;
+  if (commPct > 0) items.push({icon:'🎓',text:'Ai văzut <strong>'+commPct+'%</strong> din toate commentary tracks disponibile.'});
+  if (s.fullDisc > 0) items.push({icon:'💿',text:'<strong>'+s.fullDisc+' disc'+(s.fullDisc>1?'uri':'')+' consumate 100%</strong> (watched + toate commentary-urile, minim 4 tracks).'});
+  
+  // Collector badge
+  if (s.total >= 100) items.push({icon:'📦',text:'Colecție de <strong>'+s.total+' titluri</strong> — cinefil serios.'});
 
   items.forEach(({icon,text}) => {
     const row = mk('div','fun-stat');
@@ -1338,6 +1391,108 @@ function makeFunStats(s) {
     wrap.appendChild(row);
   });
   sec.appendChild(wrap);
+  return sec;
+}
+
+
+// ════════════════════════════════════════════════════
+// ACTIVITY LOG
+// ════════════════════════════════════════════════════
+const MAX_LOG = 60;
+
+function logAction(icon, movieTitle, actionDesc, undoFn = null) {
+  const entry = {
+    id: String(Date.now()),
+    ts: new Date().toISOString(),
+    icon, movieTitle, actionDesc
+  };
+  S.activityLog.unshift({...entry, undoFn});
+  S.lastUndo = undoFn ? {fn: undoFn, desc: actionDesc, title: movieTitle} : null;
+  if (S.activityLog.length > MAX_LOG) S.activityLog.length = MAX_LOG;
+  // Persist (best-effort, no await)
+  const toSave = S.activityLog.slice(0,MAX_LOG).map(({undoFn:_,...e})=>e);
+  firebase.firestore().collection('config').doc('activityLog')
+    .set({entries: toSave}).catch(()=>{});
+}
+
+async function loadActivityLog() {
+  try {
+    const doc = await firebase.firestore().collection('config').doc('activityLog').get();
+    if (doc.exists) {
+      const entries = doc.data().entries || [];
+      // Merge with any in-memory entries (keep undoFn for recent actions)
+      const inMemIds = new Set(S.activityLog.map(e=>e.id));
+      const remote = entries.filter(e=>!inMemIds.has(e.id)).map(e=>({...e,undoFn:null}));
+      S.activityLog = [...S.activityLog, ...remote].slice(0,MAX_LOG);
+    }
+  } catch(e) {}
+}
+
+async function undoLast() {
+  if (!S.lastUndo?.fn) { showToast('Nimic de anulat.'); return; }
+  try {
+    await S.lastUndo.fn();
+    showToast('Anulat: ' + S.lastUndo.title + ' — ' + S.lastUndo.desc, 'success');
+    S.lastUndo = null;
+    S.movies = await dbLoadMovies();
+    render();
+  } catch(e) { showToast('Eroare la anulare: ' + e.message, 'error'); }
+}
+
+function fmtRelTime(isoStr) {
+  const diff = Date.now() - new Date(isoStr).getTime();
+  const min = Math.floor(diff/60000);
+  const h = Math.floor(min/60);
+  const d = Math.floor(h/24);
+  if (min < 2) return 'acum';
+  if (min < 60) return 'acum ' + min + ' min';
+  if (h < 24) return 'acum ' + h + 'h';
+  if (d < 7) return d === 1 ? 'ieri' : 'acum ' + d + ' zile';
+  return new Date(isoStr).toLocaleDateString('ro-RO');
+}
+
+function makeActivityLogSection() {
+  const sec = mk('div','stats-section');
+  const title = mk('div','stats-section-title');
+  title.innerHTML = '📋 Activitate recentă';
+  
+  const undoBtn = mk('button','btn btn--ghost btn--sm');
+  undoBtn.style.cssText='margin-left:auto;font-size:12px;';
+  undoBtn.textContent = '↩ Anulează ultima';
+  undoBtn.disabled = !S.lastUndo;
+  undoBtn.onclick = undoLast;
+  title.appendChild(undoBtn);
+  sec.appendChild(title);
+
+  if (!S.activityLog.length) {
+    const empty = mk('div','log-empty','Nicio activitate înregistrată în această sesiune.');
+    sec.appendChild(empty);
+    return sec;
+  }
+
+  const list = mk('div');
+  S.activityLog.slice(0,30).forEach(entry => {
+    const row = mk('div','log-entry');
+    const icon = mk('div','log-icon', entry.icon);
+    const body = mk('div','log-body');
+    const t = mk('div','log-title', entry.movieTitle);
+    const a = mk('div','log-action', entry.actionDesc);
+    const tm = mk('div','log-time', fmtRelTime(entry.ts));
+    body.append(t, a, tm);
+    row.append(icon, body);
+    if (entry.undoFn) {
+      const ud = mk('div','log-undo');
+      const b = mk('button','log-undo-btn','↩');
+      b.onclick = async () => {
+        try { await entry.undoFn(); entry.undoFn=null;
+          S.movies = await dbLoadMovies(); render(); showToast('Anulat ✓','success');
+        } catch(e) { showToast('Eroare: '+e.message,'error'); }
+      };
+      ud.appendChild(b); row.appendChild(ud);
+    }
+    list.appendChild(row);
+  });
+  sec.appendChild(list);
   return sec;
 }
 
@@ -1576,6 +1731,7 @@ async function initApp() {
     S.movies = await dbLoadMovies();
     if (!Object.keys(S.movies).length) { showToast('Prima rulare — se importă datele…'); await doSync(); }
     else prefetchTmdb(); // Enrich în fundal la fiecare pornire
+    loadActivityLog();
   } catch(e) { showToast('Firebase error: '+e.message,'error'); console.error(e); }
 
   S.loading=false;
