@@ -1,5 +1,5 @@
-// BluTracker v1.3
-const BT_VERSION = '1.3';
+// BluTracker v1.4
+const BT_VERSION = '1.4';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -961,7 +961,7 @@ function computeStats() {
   // Monthly (last 18 months)
   const monthMap = {};
   const now = new Date();
-  for (let i=17;i>=0;i--) {
+  for (let i=11;i>=0;i--) {
     const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
     monthMap[d.toISOString().substring(0,7)] = 0;
   }
@@ -1041,7 +1041,12 @@ function renderStats() {
 
   const addSection = (fn, name) => {
     try { const sec = fn(s); if(sec) el.appendChild(sec); }
-    catch(e) { console.error('Stats section error ('+name+'):', e); }
+    catch(e) {
+      console.error('Stats section error ('+name+'):', e);
+      const err=mk('div','stats-section');
+      err.innerHTML='<p style="color:var(--red);font-size:13px">⚠ '+name+': '+esc(e.message)+'</p>';
+      el.appendChild(err);
+    }
   };
 
   // Hero cards
@@ -1225,7 +1230,7 @@ function makeMonthlyChart(s) {
   const maxVal = Math.max(...entries.map(([,v])=>v),1);
   const wrap = mk('div','bar-v-wrap');
   const labelsEl = mk('div','bar-v-labels');
-  const MO = ['G','F','M','A','M','I','I','A','S','O','N','D'];
+  const MO = ['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec'];
   entries.forEach(([month,count]) => {
     const col = mk('div','bar-v-col');
     const bar = mk('div','bar-v-bar'+(count===0?' bar-v-bar--zero':''));
@@ -1300,22 +1305,30 @@ function makeRuntimeChart(s) {
 // ── Directors chart ───────────────────────────────────
 function makeDirectorsChart(s) {
   const wrap = mk('div');
-  // Sort by watched count (most watched first)
-  const dirs = [...s.directors].sort((a,b)=>b.watched-a.watched);
-  const maxWatched = Math.max(...dirs.map(d=>d.watched), 1);
+  const dirs = [...s.directors].sort((a,b)=>b.total-a.total); // sort by collection size
+  const maxTotal = Math.max(...dirs.map(d=>d.total), 1);
   dirs.forEach(d => {
     const row = mk('div','director-row');
     const nm  = mk('div','director-name', d.name);
     const track = mk('div','director-track');
     const fill  = mk('div','director-fill');
+    fill.style.width = '100%'; // fill the entire track
+    fill.style.background = 'transparent';
     track.appendChild(fill);
     const v = mk('div','director-val', d.watched+'/'+d.total);
     v.title = d.watched+' văzute din '+d.total+' în colecție';
     row.append(nm, track, v);
     wrap.appendChild(row);
-    // Animate after paint
+    // CSS gradient: purple=watched, dim=rest of collection, transparent=beyond
+    const wPct = (d.watched/maxTotal*100).toFixed(1);
+    const tPct = (d.total/maxTotal*100).toFixed(1);
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      fill.style.width = (d.watched/maxWatched*100)+'%';
+      fill.style.background =
+        'linear-gradient(90deg,'+
+        '#7c6fcd '+wPct+'%,'+
+        'rgba(255,255,255,0.09) '+wPct+'%,'+
+        'rgba(255,255,255,0.09) '+tPct+'%,'+
+        'transparent '+tPct+'%)';
     }));
   });
   return wrap;
