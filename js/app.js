@@ -1,5 +1,5 @@
-// BluTracker v1.4
-const BT_VERSION = '1.4';
+// BluTracker v1.5
+const BT_VERSION = '1.5';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -1532,8 +1532,8 @@ function makeActivityLogSection() {
 const MILESTONES_TRACKING_ENABLED = false;
 
 function getAchievementDefs(stats) {
-  const monthsProductiv = Object.values(stats.monthMap).filter(v=>v>=5).length;
-  const decadesExplored = Object.entries(stats.decades)
+  const monthsProductiv = Object.values(stats.monthMap||{}).filter(v=>v>=5).length;
+  const decadesExplored = Object.entries(stats.decadeMap||{})
     .filter(([k,v])=>k!=='?'&&v.watched>0).length;
 
   const defs = [
@@ -1564,7 +1564,7 @@ function getAchievementDefs(stats) {
   ];
 
   // Per-decade achievements (dynamic)
-  Object.entries(stats.decades).filter(([k])=>k!=='?').sort().forEach(([decade,data])=>{
+  Object.entries(stats.decadeMap||{}).filter(([k])=>k!=='?').sort().forEach(([decade,data])=>{
     defs.push({
       id:'dec_'+decade, icon:'📽', name:'Ani '+decade+'s',
       desc:'Văzute din '+decade+'s: '+data.watched+'/'+data.total,
