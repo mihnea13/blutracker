@@ -1,5 +1,5 @@
-// BluTracker v0.8
-const BT_VERSION = '0.8';
+// BluTracker v1.0
+const BT_VERSION = '1.0';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -18,6 +18,7 @@ const S = {
   randomN: 1,
   randomMaxRuntime: 999,
   randomDecades: new Set(),
+  achievedMilestones: null,
   activityLog: [],
   lastUndo: null,
   sort:    'az',   // az | za | year-desc | year-asc | runtime-desc | runtime-asc
@@ -657,7 +658,7 @@ async function confirmAddWatch(id) {
     logAction('✓', S.movies[id].title, 'Vizionare adăugată — '+fmtDate(date), async () => {
       await doDeleteWatch(id, wh[wh.length-1]);
     });
-    render(); showToast('Vizionare adăugată ✓','success'); }
+    render(); showToast('Vizionare adăugată ✓','success'); setTimeout(checkAndFireMilestones,500); }
   catch(e) { showToast('Eroare: '+e.message,'error'); }
 }
 
@@ -1082,6 +1083,8 @@ function renderStats() {
 
   // Fun stats
   el.appendChild(makeFunStats(s));
+  // Achievements
+  el.appendChild(makeAchievementsSection(s));
   // Activity log
   el.appendChild(makeActivityLogSection());
 }
@@ -1093,7 +1096,7 @@ function makeStatsHero(s) {
     { val: s.watched + ' / ' + s.total, lbl: 'filme văzute (' + s.watchedPct + '%)', accent: true },
     { val: s.totalDays + 'z ' + (s.totalHours%24) + 'h', lbl: 'timp total' },
     { val: s.commWatched + ' / ' + s.commTotal, lbl: 'commentary tracks' },
-    { val: s.watchEvents.length, lbl: 'sesiuni de vizionare' },
+    { val: s.watchEvents.length, lbl: 'vizionări totale (cu rewatches)' },
   ];
   cards.forEach(c => {
     const card = mk('div','stats-hero-card'+(c.accent?' stats-hero-card--accent':''));
@@ -1300,13 +1303,22 @@ function makeDirectorsChart(s) {
   const maxVal = Math.max(...s.directors.map(d=>d.total),1);
   s.directors.forEach(d => {
     const row = mk('div','director-row');
-    const nm = mk('div','director-name',d.name);
+    const nm = mk('div','director-name', d.name);
     const track = mk('div','director-track');
-    const fill = mk('div','director-fill'); fill.style.width='0%';
-    track.appendChild(fill);
+    // Grey = total in collection, colored = watched
+    const fillBg = mk('div','director-fill-bg'); fillBg.style.width='0%';
+    const fillFg = mk('div','director-fill');    fillFg.style.width='0%';
+    track.append(fillBg, fillFg);
     const v = mk('div','director-val', d.watched+'/'+d.total);
-    row.append(nm,track,v); wrap.appendChild(row);
-    setTimeout(()=>{ fill.style.width=(d.total/maxVal*100)+'%'; },120);
+    v.title = d.watched + ' văzute din ' + d.total + ' în colecție';
+    row.append(nm, track, v);
+    wrap.appendChild(row);
+    const pTotal   = d.total/maxVal*100;
+    const pWatched = d.watched/d.total*pTotal; // watched as fraction of total bar
+    setTimeout(()=>{
+      fillBg.style.width = pTotal+'%';
+      fillFg.style.width = pWatched+'%';
+    }, 120);
   });
   return wrap;
 }
@@ -1494,6 +1506,165 @@ function makeActivityLogSection() {
   });
   sec.appendChild(list);
   return sec;
+}
+
+
+// ════════════════════════════════════════════════════
+// ACHIEVEMENTS — CALUP F
+// ════════════════════════════════════════════════════
+const MILESTONE_CUTOFF = '2099-01-01'; // STANDBY — schimbă la data dorită pentru activare
+
+function getAchievementDefs(stats) {
+  const monthsProductiv = Object.values(stats.monthMap).filter(v=>v>=5).length;
+  const decadesExplored = Object.entries(stats.decades)
+    .filter(([k,v])=>k!=='?'&&v.watched>0).length;
+
+  const defs = [
+    { id:'watched', icon:'🎬', name:'Cineast în formare', desc:'Filme văzute',
+      val:stats.watched,
+      levels:[{t:'🥉',n:1},{t:'🥈',n:10},{t:'🥇',n:25},{t:'💎',n:50}] },
+    { id:'rewatches', icon:'🔄', name:'Văzut și iar văzut', desc:'Vizionări totale cu rewatches',
+      val:stats.watchEvents.length,
+      levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:25},{t:'⭐',n:50},{t:'♾️',n:100}] },
+    { id:'productive', icon:'📅', name:'Luna productivă', desc:'Luni cu 5+ filme văzute',
+      val:monthsProductiv,
+      levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:20}] },
+    { id:'comm_pct', icon:'🎙', name:'Audiofil', desc:'% commentary tracks văzute',
+      val:stats.commTotal?Math.round(stats.commWatched/stats.commTotal*100):0,
+      levels:[{t:'🥉',n:10},{t:'🥈',n:25},{t:'🥇',n:50},{t:'💎',n:75},{t:'⭐',n:100}], suffix:'%' },
+    { id:'comm_serious', icon:'🎓', name:'Commentary serios', desc:'Filme cu 4+ tracks toate bifate',
+      val:stats.fullDisc,
+      levels:[{t:'🥉',n:1},{t:'🥈',n:3},{t:'🥇',n:5},{t:'💎',n:10}] },
+    { id:'decades_exp', icon:'🗓', name:'Explorator de epoci', desc:'Decade diferite explorate',
+      val:decadesExplored,
+      levels:[{t:'🥉',n:2},{t:'🥈',n:4},{t:'🥇',n:6},{t:'💎',n:8}] },
+    { id:'features', icon:'🌟', name:'Features hunter', desc:'Features speciale văzute',
+      val:stats.specialWatched,
+      levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:25}] },
+    { id:'collection', icon:'📦', name:'Colecționar', desc:'Titluri în colecție',
+      val:stats.total,
+      levels:[{t:'🥉',n:25},{t:'🥈',n:50},{t:'🥇',n:100},{t:'💎',n:200},{t:'⭐',n:500}] },
+  ];
+
+  // Per-decade achievements (dynamic)
+  Object.entries(stats.decades).filter(([k])=>k!=='?').sort().forEach(([decade,data])=>{
+    defs.push({
+      id:'dec_'+decade, icon:'📽', name:'Ani '+decade+'s',
+      desc:'Văzute din '+decade+'s: '+data.watched+'/'+data.total,
+      val:data.watched, small:true,
+      levels:[{t:'🥉',n:5},{t:'🥈',n:10},{t:'🥇',n:25}],
+    });
+  });
+
+  return defs.map(a=>{
+    let curLvl=-1;
+    a.levels.forEach((l,i)=>{ if(a.val>=l.n) curLvl=i; });
+    const nextLvl = curLvl<a.levels.length-1 ? a.levels[curLvl+1] : null;
+    const pct = nextLvl ? Math.min(100,Math.round(a.val/nextLvl.n*100)) : 100;
+    const tier = curLvl>=0 ? a.levels[curLvl].t : null;
+    const cls = !tier?'--locked':tier==='💎'||tier==='⭐'||tier==='♾️'?'--diamond':tier==='🥇'?'--gold':'';
+    return {...a, curLvl, curTier:tier, nextLvl, pct, cls};
+  });
+}
+
+function makeAchCard(a) {
+  const card = mk('div','ach-card ach-card'+a.cls);
+  const icon = mk('div','ach-icon',a.icon);
+  const body = mk('div','ach-body');
+  const hdr  = mk('div','ach-header');
+  hdr.append(mk('div','ach-name',a.name), mk('div','ach-tier',a.curTier||'🔒'));
+  if (!a.small) body.appendChild(mk('div','ach-desc',a.desc));
+  const track = mk('div','ach-progress-track');
+  const fill  = mk('div','ach-progress-fill'); fill.style.width='0%';
+  track.appendChild(fill);
+  const lbl = mk('div','ach-progress-label');
+  const sx = a.suffix||'';
+  lbl.textContent = a.nextLvl
+    ? a.val+sx+' / '+a.nextLvl.n+sx+' → '+a.nextLvl.t
+    : a.val+sx+' — MAX '+a.curTier;
+  body.append(hdr, track, lbl);
+  card.append(icon, body);
+  setTimeout(()=>{ fill.style.width=a.pct+'%'; }, 150);
+  return card;
+}
+
+function makeAchievementsSection(stats) {
+  const achs = getAchievementDefs(stats);
+  const sec  = mk('div','stats-section');
+  const ttl  = mk('div','stats-section-title'); ttl.innerHTML='🏆 Achievements';
+  sec.appendChild(ttl);
+
+  const unlocked = achs.filter(a=>a.curTier).length;
+  sec.appendChild(mk('div','ach-summary', unlocked+'/'+achs.length+' deblocate'));
+
+  // Main achievements grid
+  const grid = mk('div','ach-grid');
+  achs.filter(a=>!a.small).forEach(a=>grid.appendChild(makeAchCard(a)));
+  sec.appendChild(grid);
+
+  // Per-decade (compact)
+  const dec = achs.filter(a=>a.small);
+  if (dec.length) {
+    sec.appendChild(mk('div','ach-subsection-title','📅 Per decadă'));
+    const dg = mk('div','ach-grid');
+    dec.forEach(a=>dg.appendChild(makeAchCard(a)));
+    sec.appendChild(dg);
+  }
+  return sec;
+}
+
+// ── MILESTONES ─────────────────────────────────────────────
+const MILESTONES = [
+  {id:'w_first', icon:'🎬', title:'Primul film! 🎬', desc:'Prima vizionare înregistrată.', check:s=>s.watched>=1},
+  {id:'w_10',    icon:'🍿', title:'Abia te-ai încălzit 🍿', desc:'10 filme văzute.', check:s=>s.watched>=10},
+  {id:'w_25',    icon:'⚡', title:'Un sfert din drum ⚡', desc:'25 filme văzute.', check:s=>s.watched>=25},
+  {id:'w_50pct', icon:'🏁', title:'Jumătatea drumului 🏁', desc:'50% din colecție văzută.', check:s=>s.watchedPct>=50},
+  {id:'w_100pct',icon:'🏆', title:'Colecție completă. Legendă. 🏆', desc:'Ai văzut tot!', check:s=>s.watchedPct>=100},
+  {id:'rw_first',icon:'🔄', title:'Nu te-ai săturat? Bine! 🔄', desc:'Prima re-vizionare.', check:s=>s.watchEvents.length>s.watched&&s.watched>0},
+  {id:'rw_5',    icon:'🔄', title:'Se vede că ai favorite 🔄', desc:'5 re-vizionări totale (extra față de prima vizionare).', check:s=>s.watchEvents.length>=s.watched+5},
+  {id:'c_first', icon:'🎙', title:'Ai auzit și ce au de zis 🎙', desc:'Primul commentary track bisat.', check:s=>s.commWatched>=1},
+  {id:'c_4plus', icon:'🎓', title:'Cinefil serios 🎓', desc:'Ai terminat toate tracks la un film cu minim 4 commentaries.', check:s=>s.fullDisc>=1},
+  {id:'c_5film', icon:'🎓', title:'Commentary dedicat 🎓', desc:'5 filme cu toate comentariile văzute.', check:s=>s.fullDisc>=5},
+  {id:'pm_first',icon:'📅', title:'Luna productivă 📅', desc:'5+ filme vizionate într-o singură lună.', check:s=>Object.values(s.monthMap).some(v=>v>=5)},
+  {id:'f_first', icon:'★',  title:'Dincolo de film ★', desc:'Primul feature special terminat.', check:s=>s.specialWatched>=1},
+  {id:'f_10',    icon:'🌟', title:'Features completionist 🌟', desc:'10 features speciale văzute.', check:s=>s.specialWatched>=10},
+  {id:'disc_100',icon:'💿', title:'Zero neexplorat 💿', desc:'Disc 100% complet (watched + 4+ commentary).', check:s=>s.fullDisc>=1},
+  {id:'col_50',  icon:'📦', title:'Cincizeci 📦', desc:'50 de titluri în colecție.', check:s=>s.total>=50},
+  {id:'col_100', icon:'💯', title:'Trei cifre. Respect. 💯', desc:'100 de titluri în colecție.', check:s=>s.total>=100},
+];
+
+async function loadAchievedMilestones() {
+  S.achievedMilestones = new Set();
+  try {
+    const doc = await firebase.firestore().collection('config').doc('milestones').get();
+    if (doc.exists) (doc.data().achieved||[]).forEach(id=>S.achievedMilestones.add(id));
+  } catch(e) {}
+}
+
+function checkAndFireMilestones() {
+  if (!S.achievedMilestones) return;
+  const today = new Date().toISOString().split('T')[0];
+  if (today < MILESTONE_CUTOFF) return;
+  const stats = computeStats();
+  let changed = false;
+  MILESTONES.forEach(m => {
+    if (!S.achievedMilestones.has(m.id) && m.check(stats)) {
+      S.achievedMilestones.add(m.id);
+      showMilestoneToast(m);
+      changed = true;
+    }
+  });
+  if (changed) firebase.firestore().collection('config').doc('milestones')
+    .set({achieved:[...S.achievedMilestones], ts:new Date().toISOString()}).catch(()=>{});
+}
+
+function showMilestoneToast(m) {
+  const t = mk('div','toast toast--milestone');
+  t.innerHTML = '<span class="ms-icon">'+m.icon+'</span>'+
+    '<div><div class="ms-title">'+esc(m.title)+'</div>'+
+    '<div class="ms-desc">'+esc(m.desc)+'</div></div>';
+  $('#toasts').appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 7000);
 }
 
 // ════════════════════════════════════════════════════
@@ -1732,6 +1903,7 @@ async function initApp() {
     if (!Object.keys(S.movies).length) { showToast('Prima rulare — se importă datele…'); await doSync(); }
     else prefetchTmdb(); // Enrich în fundal la fiecare pornire
     loadActivityLog();
+    loadAchievedMilestones();
   } catch(e) { showToast('Firebase error: '+e.message,'error'); console.error(e); }
 
   S.loading=false;
