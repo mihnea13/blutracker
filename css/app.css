@@ -787,15 +787,20 @@ input[type=range] {
   position: fixed;
   inset: 0;
   background: var(--bg);
-  z-index: 160;
-  transform: translateY(100%);
-  transition: transform .35s cubic-bezier(.2,.9,.4,1);
+  z-index: 170;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .25s ease, visibility 0s linear .25s;
 }
-body.stats-open #stats-panel { transform: translateY(0); }
+body.stats-open #stats-panel {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .25s ease, visibility 0s;
+}
 
 .stats-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -874,18 +879,12 @@ body.stats-open #stats-panel { transform: translateY(0); }
 /* Directors */
 .director-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .director-name { width: 130px; font-size: 14px; color: var(--text); font-weight: 600; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.director-track { flex: 1; height: 18px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
-.director-fill-bg {
-  position: absolute; top: 0; left: 0; height: 100%;
-  background: var(--surface-2); border-radius: 4px;
-  transition: width .9s ease;
-}
+.director-track { flex: 1; height: 20px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
 .director-fill {
-  position: absolute; top: 0; left: 0; height: 100%;
+  height: 100%; width: 0%;
   background: linear-gradient(90deg, #7c6fcd, #9d8fe8);
-  border-radius: 4px; transition: width .9s ease .15s;
+  border-radius: 4px; transition: width 1s ease; display: block;
 }
-.director-track { overflow: hidden; }
 .director-val { width: 36px; font-size: 14px; color: var(--text); font-weight: 700; text-align: right; }
 
 /* Fun stats */
@@ -899,7 +898,7 @@ body.stats-open #stats-panel { transform: translateY(0); }
 
 /* Features progress */
 .feat-progress { margin-bottom: 12px; }
-.feat-progress-label { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-2); margin-bottom: 7px; font-weight: 600; letter-spacing: .1px; }
+.feat-progress-label { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-2); margin-bottom: 7px; font-weight: 600; }
 .feat-progress-track { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
 .feat-progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .9s ease; }
 
@@ -937,7 +936,7 @@ body.stats-open #stats-panel { transform: translateY(0); }
 .bar-h-fill { background: linear-gradient(90deg, var(--accent), #e8b520); }
 .bar-h-fill-sub { background: var(--surface-2); }
 .runtime-fill { background: linear-gradient(90deg, var(--green), #3dc878); }
-.director-fill { background: linear-gradient(90deg, #7c6fcd, #9d8fe8); }
+
 .feat-progress-fill { background: linear-gradient(90deg, var(--accent), #e8b520); }
 .bar-v-bar { background: linear-gradient(180deg, #e8b520, var(--accent)); }
 
@@ -990,3 +989,16 @@ body.stats-open #stats-panel { transform: translateY(0); }
   from { opacity:0; transform:translateX(24px) scale(.92); }
   to   { opacity:1; transform:translateX(0) scale(1); }
 }
+
+/* ── STATS TEXT NORMALIZATION (universal) ──────────────────── */
+/* All stat labels at 14px */
+.bar-h-label, .runtime-label, .director-name,
+.bar-v-label, .feat-progress-label span,
+.ach-desc, .log-action, .log-time { font-size: 14px; }
+
+/* All stat values bold */
+.bar-h-val, .runtime-val, .director-val { font-size: 14px; font-weight: 700; color: var(--text); }
+
+/* Ach progress label consistent */
+.ach-progress-label { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+.ach-name { font-size: 13px; font-weight: 700; }

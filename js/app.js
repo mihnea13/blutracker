@@ -1,5 +1,5 @@
-// BluTracker v1.2
-const BT_VERSION = '1.2';
+// BluTracker v1.3
+const BT_VERSION = '1.3';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -923,12 +923,16 @@ function showToast(msg,type='') {
 // ════════════════════════════════════════════════════
 
 function openStats() {
-  if (document.body.classList.contains('stats-open')) { closeStats(); return; }
+  const panel = $('#stats-panel');
+  if (!panel) return;
+  if (panel.classList.contains('visible')) { closeStats(); return; }
+  panel.classList.add('visible');
   document.body.classList.add('stats-open');
-  setTimeout(renderStats, 100);
+  setTimeout(renderStats, 80);
 }
 
 function closeStats() {
+  $('#stats-panel')?.classList.remove('visible');
   document.body.classList.remove('stats-open');
 }
 
@@ -1031,63 +1035,58 @@ function renderStats() {
   const el = $('#stats-content');
   if (!el) return;
   el.innerHTML = '';
-  const s = computeStats();
+  let s;
+  try { s = computeStats(); }
+  catch(e) { el.innerHTML='<div class="empty"><p class="empty__text">Eroare la calcul statistici: '+esc(String(e.message))+'</p></div>'; console.error('computeStats error:',e); return; }
+
+  const addSection = (fn, name) => {
+    try { const sec = fn(s); if(sec) el.appendChild(sec); }
+    catch(e) { console.error('Stats section error ('+name+'):', e); }
+  };
 
   // Hero cards
-  el.appendChild(makeStatsHero(s));
+  try { el.appendChild(makeStatsHero(s)); } catch(e) { console.error('hero error:',e); }
 
-  // Donuts
-  const ds = mk('div','stats-section');
-  ds.appendChild(mk('div','stats-section-title','Progres colecție'));
-  const dw = mk('div','chart-wrap');
-  dw.appendChild(makeDonutsRow(s));
-  ds.appendChild(dw); el.appendChild(ds);
+  addSection(s => {
+    const sec=mk('div','stats-section');
+    sec.appendChild(mk('div','stats-section-title','Progres colecție'));
+    const w=mk('div','chart-wrap'); w.appendChild(makeDonutsRow(s)); sec.appendChild(w); return sec;
+  }, 'donuts');
 
-  // Decade chart
-  const decs = mk('div','stats-section');
-  decs.appendChild(mk('div','stats-section-title','Distribuție pe decadă'));
-  const decw = mk('div','chart-wrap');
-  decw.appendChild(makeDecadeChart(s));
-  decs.appendChild(decw); el.appendChild(decs);
+  addSection(s => {
+    const sec=mk('div','stats-section');
+    sec.appendChild(mk('div','stats-section-title','Distribuție pe decadă'));
+    const w=mk('div','chart-wrap'); w.appendChild(makeDecadeChart(s)); sec.appendChild(w); return sec;
+  }, 'decade');
 
-  // Monthly
-  const ms = mk('div','stats-section');
-  ms.appendChild(mk('div','stats-section-title','Activitate lunară (18 luni)'));
-  el.appendChild(ms);
-  el.appendChild(makeMonthlyChart(s));
+  addSection(s => {
+    const sec=mk('div','stats-section');
+    sec.appendChild(mk('div','stats-section-title','Activitate lunară (18 luni)'));
+    sec.appendChild(makeMonthlyChart(s)); return sec;
+  }, 'monthly');
 
-  // Heatmap
-  const hs = mk('div','stats-section');
-  hs.appendChild(mk('div','stats-section-title','Calendar activitate (12 luni)'));
-  const hw = mk('div','heatmap-wrap');
-  hw.appendChild(makeHeatmap(s.heatmap));
-  hs.appendChild(hw); el.appendChild(hs);
+  addSection(s => {
+    const sec=mk('div','stats-section');
+    sec.appendChild(mk('div','stats-section-title','Calendar activitate (12 luni)'));
+    const w=mk('div','heatmap-wrap'); w.appendChild(makeHeatmap(s.heatmap)); sec.appendChild(w); return sec;
+  }, 'heatmap');
 
-  // Runtime
-  const rs = mk('div','stats-section');
-  rs.appendChild(mk('div','stats-section-title','Distribuție durată'));
-  const rw = mk('div','chart-wrap');
-  rw.appendChild(makeRuntimeChart(s));
-  rs.appendChild(rw); el.appendChild(rs);
+  addSection(s => {
+    const sec=mk('div','stats-section');
+    sec.appendChild(mk('div','stats-section-title','Distribuție durată'));
+    const w=mk('div','chart-wrap'); w.appendChild(makeRuntimeChart(s)); sec.appendChild(w); return sec;
+  }, 'runtime');
 
-  // Directors
-  if (s.directors.length) {
-    const dir = mk('div','stats-section');
-    dir.appendChild(mk('div','stats-section-title','Top regizori'));
-    const dw2 = mk('div','chart-wrap');
-    dw2.appendChild(makeDirectorsChart(s));
-    dir.appendChild(dw2); el.appendChild(dir);
-  }
+  if (s.directors.length) addSection(s => {
+    const sec=mk('div','stats-section');
+    sec.appendChild(mk('div','stats-section-title','Top regizori'));
+    const w=mk('div','chart-wrap'); w.appendChild(makeDirectorsChart(s)); sec.appendChild(w); return sec;
+  }, 'directors');
 
-  // Features
-  el.appendChild(makeFeaturesStats(s));
-
-  // Fun stats
-  el.appendChild(makeFunStats(s));
-  // Achievements
-  el.appendChild(makeAchievementsSection(s));
-  // Activity log
-  el.appendChild(makeActivityLogSection());
+  addSection(makeFeaturesStats, 'features');
+  addSection(makeFunStats, 'funstats');
+  addSection(makeAchievementsSection, 'achievements');
+  addSection(()=>makeActivityLogSection(), 'activitylog');
 }
 
 // ── Hero ─────────────────────────────────────────────
@@ -1301,25 +1300,23 @@ function makeRuntimeChart(s) {
 // ── Directors chart ───────────────────────────────────
 function makeDirectorsChart(s) {
   const wrap = mk('div');
-  const maxVal = Math.max(...s.directors.map(d=>d.total),1);
-  s.directors.forEach(d => {
+  // Sort by watched count (most watched first)
+  const dirs = [...s.directors].sort((a,b)=>b.watched-a.watched);
+  const maxWatched = Math.max(...dirs.map(d=>d.watched), 1);
+  dirs.forEach(d => {
     const row = mk('div','director-row');
-    const nm = mk('div','director-name', d.name);
+    const nm  = mk('div','director-name', d.name);
     const track = mk('div','director-track');
-    // Grey = total in collection, colored = watched
-    const fillBg = mk('div','director-fill-bg'); fillBg.style.width='0%';
-    const fillFg = mk('div','director-fill');    fillFg.style.width='0%';
-    track.append(fillBg, fillFg);
+    const fill  = mk('div','director-fill');
+    track.appendChild(fill);
     const v = mk('div','director-val', d.watched+'/'+d.total);
-    v.title = d.watched + ' văzute din ' + d.total + ' în colecție';
+    v.title = d.watched+' văzute din '+d.total+' în colecție';
     row.append(nm, track, v);
     wrap.appendChild(row);
-    const pTotal   = d.total/maxVal*100;
-    const pWatched = d.watched/d.total*pTotal; // watched as fraction of total bar
-    setTimeout(()=>{
-      fillBg.style.width = pTotal+'%';
-      fillFg.style.width = pWatched+'%';
-    }, 120);
+    // Animate after paint
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      fill.style.width = (d.watched/maxWatched*100)+'%';
+    }));
   });
   return wrap;
 }
