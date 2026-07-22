@@ -1,5 +1,5 @@
-// BluTracker v1.5
-const BT_VERSION = '1.5';
+// BluTracker v1.6
+const BT_VERSION = '1.6';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';

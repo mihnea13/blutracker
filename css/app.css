@@ -943,27 +943,28 @@ body.stats-open #stats-panel {
    ACHIEVEMENTS (Calup F)
 ══════════════════════════════════════════════════ */
 .ach-summary {
-  font-size: 13px; color: var(--text-2);
-  padding: 0 0 14px; font-weight: 500;
+  font-size: 14px; color: var(--text-2);
+  padding: 0 0 14px; font-weight: 600;
 }
 .ach-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  display: flex; flex-direction: column; gap: 8px;
 }
 .ach-card {
   background: var(--surface); border: 1.5px solid var(--border);
-  border-radius: 12px; padding: 12px;
-  display: flex; gap: 10px; align-items: flex-start;
+  border-radius: 12px; padding: 14px 16px;
+  display: flex; gap: 14px; align-items: center;
   transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box; width: 100%;
 }
 .ach-card--locked { opacity: .4; }
 .ach-card--gold   { border-color: var(--amber); }
 .ach-card--diamond { border-color: var(--accent); box-shadow: 0 0 10px rgba(212,160,23,.2); }
-.ach-icon { font-size: 24px; flex-shrink: 0; line-height: 1; padding-top: 2px; }
+.ach-icon { font-size: 28px; flex-shrink: 0; line-height: 1; }
 .ach-body { flex: 1; min-width: 0; }
 .ach-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; }
 .ach-name  { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ach-tier  { font-size: 17px; flex-shrink: 0; margin-left: 4px; }
-.ach-desc  { font-size: 11px; color: var(--text-2); margin-bottom: 6px; line-height: 1.4; }
+.ach-tier  { font-size: 20px; flex-shrink: 0; margin-left: 4px; }
+.ach-desc  { font-size: 13px; color: var(--text-2); margin-bottom: 8px; line-height: 1.4; }
 .ach-progress-track { height: 5px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
 .ach-progress-fill  { height: 100%; background: linear-gradient(90deg, var(--accent), #e8c030); border-radius: 3px; transition: width 1s ease; }
 .ach-progress-label { font-size: 10px; color: var(--text-3); margin-top: 4px; }
@@ -1006,5 +1007,30 @@ body.stats-open #stats-panel {
 .log-action { font-size: 14px; color: var(--text-2); }
 .log-time   { font-size: 12px; color: var(--text-3); margin-top: 3px; }
 /* Achievements */
-.ach-progress-label { font-size: 11px; color: var(--text-3); margin-top: 4px; }
-.ach-name { font-size: 13px; font-weight: 700; }
+.ach-progress-label { font-size: 12px; color: var(--text-2); margin-top: 5px; }
+.ach-name { font-size: 15px; font-weight: 700; }
+
+
+/* ══════════════════════════════════════════════════
+   STATS TEXT OVERRIDE — must be last in file
+   All stats labels/values: 15px for readability
+══════════════════════════════════════════════════ */
+.bar-h-label,
+.runtime-label,
+.director-name,
+.feat-progress-label,
+.log-action { font-size: 15px !important; color: var(--text-2); font-weight: 500; }
+
+.bar-h-val,
+.runtime-val,
+.director-val { font-size: 15px !important; font-weight: 700; color: var(--text); }
+
+.director-name { font-size: 15px !important; width: 130px; font-weight: 700; color: var(--text); flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.director-val  { width: 40px !important; }
+
+.bar-v-label { font-size: 11px !important; color: var(--text-2); font-weight: 600; }
+.log-time    { font-size: 12px !important; color: var(--text-3); }
+.feat-progress-label { display: flex !important; justify-content: space-between !important; margin-bottom: 6px !important; }
+
+.ach-name { font-size: 15px !important; font-weight: 700; }
+.ach-progress-label { font-size: 12px !important; color: var(--text-2); margin-top: 5px; }
