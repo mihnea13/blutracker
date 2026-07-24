@@ -1,4 +1,4 @@
-═══ BluTracker Scraper Run — 2026-07-24T14:59:33.596740Z ═══
+═══ BluTracker Scraper Run — 2026-07-24T15:30:48.904031Z ═══
 
 1. Login...
   ✓ Login reusit
@@ -42,8 +42,7 @@
      - Planet Earth
      - Planet Earth
 
-   An rezolvat prin fetch suplimentar (2):
-     - Alien³ → an confirmat 1992 [letter=A]
+   An rezolvat prin fetch suplimentar (1):
      - Graveyard of Honor → an confirmat 2002 [letter=G]
 
 3. Watch dates + comments...
@@ -58,7 +57,7 @@
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
   117 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 60.5s
+  Durata rulare: 55.3s
 
 ── LISTA COMPLETA FILME (117) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
@@ -68,7 +67,7 @@
   Alien: Resurrection  id=19890
   Alien: Romulus  id=1680691
   Aliens  id=19888
-  Alien³ (1992)  id=19889
+  Alien³  id=19889
   American Boy: A Profile of Steven Prince  id=1258916
   American Gangster  id=18714 [watched: 2026-04-18]
   American History X  id=19474 [watched: 2025-03-02]

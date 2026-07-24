@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-24T15:00:34.061317Z",
+  "lastUpdated": "2026-07-24T15:31:44.153221Z",
   "movies": [
     {
       "title": "Alien",
@@ -58,7 +58,7 @@
     },
     {
       "title": "Alien³",
-      "year": "1992",
+      "year": "",
       "blurayComId": "19889",
       "posterUrl": "https://images.static-bluray.com/products/20/1954_6_small.jpg",
       "watchDates": [],
