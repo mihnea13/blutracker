@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-24T14:36:43.898340Z",
+  "lastUpdated": "2026-07-24T15:00:34.061317Z",
   "movies": [
     {
       "title": "Alien",
@@ -50,6 +50,17 @@
       "year": "",
       "blurayComId": "19888",
       "posterUrl": "https://images.static-bluray.com/products/20/1953_6_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Alien³",
+      "year": "1992",
+      "blurayComId": "19889",
+      "posterUrl": "https://images.static-bluray.com/products/20/1954_6_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -323,17 +334,6 @@
       "userComment": "#features_Towatch #commentary_Towatch"
     },
     {
-      "title": "Code Geass: Lelouch of the Rebellion",
-      "year": "",
-      "blurayComId": "139239",
-      "posterUrl": "https://images.static-bluray.com/products/20/13193_1_small.jpg",
-      "watchDates": [],
-      "watchedCount": 0,
-      "hasFeatures": false,
-      "featuresWatched": false,
-      "userComment": ""
-    },
-    {
       "title": "The Coffee Table",
       "year": "",
       "blurayComId": "1801182",
@@ -528,6 +528,17 @@
       "userComment": ""
     },
     {
+      "title": "Graveyard of Honor",
+      "year": "2002",
+      "blurayComId": "297326",
+      "posterUrl": "https://images.static-bluray.com/products/20/26578_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Hateful Eight",
       "year": "",
       "blurayComId": "355379",
@@ -567,28 +578,6 @@
       "year": "",
       "blurayComId": "1284362",
       "posterUrl": "https://images.static-bluray.com/products/20/99314_2_small.jpg",
-      "watchDates": [],
-      "watchedCount": 0,
-      "hasFeatures": false,
-      "featuresWatched": false,
-      "userComment": ""
-    },
-    {
-      "title": "House of the Dragon",
-      "year": "",
-      "blurayComId": "1218290",
-      "posterUrl": "https://images.static-bluray.com/products/20/92773_4_small.jpg",
-      "watchDates": [],
-      "watchedCount": 0,
-      "hasFeatures": false,
-      "featuresWatched": false,
-      "userComment": ""
-    },
-    {
-      "title": "Human Planet",
-      "year": "",
-      "blurayComId": "29387",
-      "posterUrl": "https://images.static-bluray.com/products/20/5202_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -744,17 +733,6 @@
       "year": "",
       "blurayComId": "137492",
       "posterUrl": "https://images.static-bluray.com/products/20/12986_1_small.jpg",
-      "watchDates": [],
-      "watchedCount": 0,
-      "hasFeatures": false,
-      "featuresWatched": false,
-      "userComment": ""
-    },
-    {
-      "title": "Lost",
-      "year": "",
-      "blurayComId": "19752",
-      "posterUrl": "https://images.static-bluray.com/products/20/1817_1_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -963,17 +941,6 @@
       "year": "",
       "blurayComId": "28471",
       "posterUrl": "https://images.static-bluray.com/products/20/4988_3_small.jpg",
-      "watchDates": [],
-      "watchedCount": 0,
-      "hasFeatures": false,
-      "featuresWatched": false,
-      "userComment": ""
-    },
-    {
-      "title": "Planet Earth",
-      "year": "",
-      "blurayComId": "18275",
-      "posterUrl": "https://images.static-bluray.com/products/20/340_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,

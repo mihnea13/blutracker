@@ -1,24 +1,24 @@
-═══ BluTracker Scraper Run — 2026-07-24T14:35:35.399388Z ═══
+═══ BluTracker Scraper Run — 2026-07-24T14:59:33.596740Z ═══
 
 1. Login...
   ✓ Login reusit
 
 2. Colectie (litera cu litera)...
-  A: +13 filme
+  A: +14 filme
   B: +9 filme
-  C: +9 filme
+  C: +8 filme
   D: +5 filme
   E: +1 filme
   F: +2 filme
-  G: +5 filme
-  H: +6 filme
+  G: +6 filme
+  H: +4 filme
   I: +6 filme
   K: +2 filme
-  L: +6 filme
+  L: +5 filme
   M: +9 filme
   N: +3 filme
   O: +4 filme
-  P: +3 filme
+  P: +2 filme
   R: +3 filme
   S: +18 filme
   T: +7 filme
@@ -27,31 +27,40 @@
   Y: +1 filme
   Z: +1 filme
 
-   Total filme retinute: 120
+   Total filme retinute: 117
    Total link-uri /Titlu/ID/ vazute in HTML: 244
 
-   Filtrate ca duplicate (4):
-     - Alien³ () [letter=A]
-     - Alien³ () [letter=A]
-     - Graveyard of Honor () [letter=G]
-     - Graveyard of Honor () [letter=G]
+   Filtrate ca seriale TV (10):
+     - Code Geass: Lelouch of the Rebellion
+     - Code Geass: Lelouch of the Rebellion
+     - House of the Dragon
+     - House of the Dragon
+     - Human Planet
+     - Human Planet
+     - Lost
+     - Lost
+     - Planet Earth
+     - Planet Earth
+
+   An rezolvat prin fetch suplimentar (2):
+     - Alien³ → an confirmat 1992 [letter=A]
+     - Graveyard of Honor → an confirmat 2002 [letter=G]
 
 3. Watch dates + comments...
 
-  Fetch watch dates pentru 120 filme...
-    20/120 procesate (9 cu date)...
-    40/120 procesate (19 cu date)...
-    60/120 procesate (27 cu date)...
-    80/120 procesate (32 cu date)...
-    100/120 procesate (41 cu date)...
-    120/120 procesate (52 cu date)...
-  Done: 52/120 filme cu watch dates
+  Fetch watch dates pentru 117 filme...
+    20/117 procesate (8 cu date)...
+    40/117 procesate (19 cu date)...
+    60/117 procesate (27 cu date)...
+    80/117 procesate (33 cu date)...
+    100/117 procesate (43 cu date)...
+  Done: 52/117 filme cu watch dates
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
-  120 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 68.5s
+  117 filme  |  52 cu watch dates  |  2 cu features tags
+  Durata rulare: 60.5s
 
-── LISTA COMPLETA FILME (120) ──
+── LISTA COMPLETA FILME (117) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
   A Most Violent Year  id=330845
   Alien  id=19887
@@ -59,6 +68,7 @@
   Alien: Resurrection  id=19890
   Alien: Romulus  id=1680691
   Aliens  id=19888
+  Alien³ (1992)  id=19889
   American Boy: A Profile of Steven Prince  id=1258916
   American Gangster  id=18714 [watched: 2026-04-18]
   American History X  id=19474 [watched: 2025-03-02]
@@ -75,7 +85,6 @@
   Che: Part Two  id=318911
   Chinatown  id=20192 [watched: 2026-04-17]
   Cinema Paradiso  id=25740 [watched: 2025-05-23]
-  Code Geass: Lelouch of the Rebellion  id=139239
   Cold Light of Day  id=330598 [watched: 2025-07-07]
   Dark City  id=18690 [watched: 2025-09-16]
   Dogville  id=97945 [watched: 2026-02-01]
@@ -86,10 +95,9 @@
   Get Carter  id=161633
   Gran Torino  id=19813
   Graveyard of Honor  id=484146 [watched: 2025-05-26]
+  Graveyard of Honor (2002)  id=297326
   Henry: Portrait of a Serial Killer  id=20179
   Hiroshima  id=1284362
-  House of the Dragon  id=1218290
-  Human Planet  id=29387
   Interstellar  id=206156 [watched: 2025-08-17]
   Investigation of a Citizen Above Suspicion  id=164810
   It's Not Just You, Murray!  id=1258914
@@ -100,7 +108,6 @@
   Lady Vengeance  id=29002
   Lawrence of Arabia  id=18109
   Light Sleeper  id=333407 [watched: 2026-03-01]
-  Lost  id=19752
   Mad Max  id=21989
   Mad Max 2: The Road Warrior  id=18304
   Mad Max Beyond Thunderdome  id=107716
@@ -116,7 +123,6 @@
   Oldboy  id=18412 [watched: 2025-07-30]
   Once Upon a Time in Hollywood  id=811512 [watched: 2025-04-07]
   Pale Rider  id=18751 [watched: 2025-07-29]
-  Planet Earth  id=18275
   Prometheus  id=63701
   Requiem for a Dream  id=18234 [watched: 2025-04-21]
   RocknRolla  id=19391 [watched: 2026-04-26]
