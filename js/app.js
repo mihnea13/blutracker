@@ -1,5 +1,5 @@
-// BluTracker v1.9
-const BT_VERSION = '1.9';
+// BluTracker v2.0
+const BT_VERSION = '2.0';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -10,7 +10,8 @@ const BT_VERSION = '1.9';
 const S = {
   movies:  {},
   tab:     'unwatched',
-  view:    localStorage.getItem('bt_view') || 'grid',
+  view:    (localStorage.getItem('bt_view')==='diary' ? 'grid' : localStorage.getItem('bt_view')) || 'grid',
+  diaryMode: false,
   expanded: new Set(),
   search:  '',
   activeFilters: new Set(),
@@ -231,7 +232,7 @@ function renderWatched(main) {
   const all = watched(); const movies = filterSort(all);
   main.appendChild(makeToolbar(all.length, 'watched'));
   if (!movies.length) { main.appendChild(emptyState('📼', S.search?'Niciun rezultat.':'Niciun film văzut.')); return; }
-  if (S.view === 'diary') { renderDiary(main, movies); return; }
+  if (S.diaryMode) { renderDiary(main, movies); return; }
   const grid = mk('div', S.view==='grid'?'grid':'grid list');
   movies.forEach(m => {
     const card  = movieCard(m);
@@ -1052,6 +1053,7 @@ function pickRandom() {
 function toggle(key) { S.expanded.has(key)?S.expanded.delete(key):S.expanded.add(key); }
 function switchTab(tab) {
   S.tab=tab;
+  S.diaryMode = false; // navigarea prin bara de jos arata mereu lista alfabetica normala
   S.activeFilters.clear();
   syncFilterBadge();
   render();
@@ -1699,7 +1701,7 @@ function makeActivityLogSection() {
 // true  = notificările se activează pentru acțiuni noi
 // Schimbă în GitHub: js/app.js → caută MILESTONES_TRACKING_ENABLED
 // ─────────────────────────────────────────────────────────────
-const MILESTONES_TRACKING_ENABLED = false;
+const MILESTONES_TRACKING_ENABLED = true;
 
 function getAchievementDefs(stats) {
   const monthsProductiv = Object.values(stats.monthMap||{}).filter(v=>v>=5).length;
@@ -1756,6 +1758,8 @@ function getAchievementDefs(stats) {
 
 function makeAchCard(a) {
   const card = mk('div','ach-card ach-card'+a.cls);
+  card.style.cursor = 'pointer';
+  card.onclick = () => openAchievementHistory(a.id);
   const icon = mk('div','ach-icon',a.icon);
   const body = mk('div','ach-body');
   const hdr  = mk('div','ach-header');
@@ -1834,29 +1838,159 @@ async function loadAchievedMilestones() {
   } catch(e) {}
 }
 
+async function loadAchievementHistory() {
+  S.achievementHistory = {};
+  try {
+    const doc = await firebase.firestore().collection('config').doc('achievementHistory').get();
+    if (doc.exists) S.achievementHistory = doc.data().history || {};
+  } catch(e) {}
+}
+
+/**
+ * Ruleaza O SINGURA DATA (verificat prin flag-ul baselineApplied in Firestore):
+ * marcheaza tot ce e deja atins — milestones si nivele de achievement — ca "deja
+ * cunoscut", FARA sa declanseze toast-uri de celebrare. Asta evita un "potop"
+ * de notificari retroactive cand se activeaza tracking-ul pe o colectie deja avansata.
+ */
+async function ensureMilestoneBaseline() {
+  try {
+    const ref = firebase.firestore().collection('config').doc('milestones');
+    const doc = await ref.get();
+    const data = doc.exists ? doc.data() : {};
+    if (data.baselineApplied) return; // deja aplicat candva, nu se repeta
+
+    const stats = computeStats();
+
+    // Baseline milestones (one-time toasts)
+    const achieved = new Set(data.achieved || []);
+    MILESTONES.forEach(m => { if (m.check(stats)) achieved.add(m.id); });
+    await ref.set({ achieved:[...achieved], baselineApplied:true, ts:new Date().toISOString() });
+    S.achievedMilestones = achieved;
+
+    // Baseline achievement history (nivele deja atinse, data necunoscuta -> null)
+    const achs = getAchievementDefs(stats);
+    const hist = {};
+    achs.forEach(a => {
+      const h = {};
+      for (let i=0;i<=a.curLvl;i++) h[String(i)] = null; // "atins candva inainte de activare"
+      if (Object.keys(h).length) hist[a.id] = h;
+    });
+    S.achievementHistory = hist;
+    await firebase.firestore().collection('config').doc('achievementHistory').set({ history: hist });
+
+    console.log('Milestone baseline aplicat:', achieved.size, 'praguri deja marcate silentios.');
+  } catch(e) { console.warn('Eroare baseline milestones:', e); }
+}
+
+// Coada de milestone-uri de afisat — daca se declanseaza mai multe simultan,
+// se afiseaza pe rand, nu toate deodata
+let _milestoneQueue = [];
+
 function checkAndFireMilestones() {
   if (!S.achievedMilestones) return;
   if (!MILESTONES_TRACKING_ENABLED) return;
   const stats = computeStats();
   let changed = false;
+
   MILESTONES.forEach(m => {
     if (!S.achievedMilestones.has(m.id) && m.check(stats)) {
       S.achievedMilestones.add(m.id);
-      showMilestoneToast(m);
+      _milestoneQueue.push(m);
+      logAction('🏆', m.title, m.desc, null);
       changed = true;
     }
   });
-  if (changed) firebase.firestore().collection('config').doc('milestones')
-    .set({achieved:[...S.achievedMilestones], ts:new Date().toISOString()}).catch(()=>{});
+  if (changed) {
+    firebase.firestore().collection('config').doc('milestones')
+      .set({achieved:[...S.achievedMilestones], ts:new Date().toISOString()}, {merge:true}).catch(()=>{});
+  }
+
+  // Verifica si nivele noi de achievement (tiered), inregistreaza data atingerii
+  checkAchievementLevelUps(stats);
+
+  if (_milestoneQueue.length && !document.body.classList.contains('milestone-visible')) {
+    showNextMilestone();
+  }
 }
 
-function showMilestoneToast(m) {
-  const t = mk('div','toast toast--milestone');
-  t.innerHTML = '<span class="ms-icon">'+m.icon+'</span>'+
-    '<div><div class="ms-title">'+esc(m.title)+'</div>'+
-    '<div class="ms-desc">'+esc(m.desc)+'</div></div>';
-  $('#toasts').appendChild(t);
-  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 7000);
+function checkAchievementLevelUps(stats) {
+  if (!S.achievementHistory) return;
+  const achs = getAchievementDefs(stats);
+  const today = new Date().toISOString().split('T')[0];
+  let changed = false;
+
+  achs.forEach(a => {
+    if (a.curLvl < 0) return;
+    const hist = S.achievementHistory[a.id] || {};
+    for (let i=0; i<=a.curLvl; i++) {
+      const k = String(i);
+      if (!(k in hist)) { hist[k] = today; changed = true; }
+    }
+    S.achievementHistory[a.id] = hist;
+  });
+
+  if (changed) {
+    firebase.firestore().collection('config').doc('achievementHistory')
+      .set({history: S.achievementHistory}).catch(()=>{});
+  }
+}
+
+function openAchievementHistory(achId) {
+  const stats = computeStats();
+  const achs = getAchievementDefs(stats);
+  const a = achs.find(x=>x.id===achId);
+  if (!a) return;
+  const hist = (S.achievementHistory||{})[achId] || {};
+
+  const rows = a.levels.map((lvl,i) => {
+    const reached = i <= a.curLvl;
+    const date = hist[String(i)];
+    const dateLabel = reached ? (date ? fmtDate(date) : 'anterior activării') : '🔒 blocat';
+    return '<div class="ach-hist-row'+(reached?'':' ach-hist-row--locked')+'">'+
+      '<span class="ach-hist-tier">'+lvl.t+'</span>'+
+      '<span class="ach-hist-desc">'+lvl.n+(a.suffix||'')+'</span>'+
+      '<span class="ach-hist-date">'+esc(dateLabel)+'</span>'+
+    '</div>';
+  }).join('');
+
+  openModal(a.icon+' '+a.name,
+    '<p style="font-size:13px;color:var(--text-2);margin-bottom:14px">'+esc(a.desc)+'</p>'+
+    '<div class="ach-hist-list">'+rows+'</div>'+
+    '<p style="font-size:11px;color:var(--text-3);margin-top:14px;line-height:1.5">'+
+    'Datele reflectă momentul detectării progresului, nu neapărat data exactă istorică '+
+    '(relevant pentru corecții retroactive în masă).</p>',
+    '<button class="btn btn--ghost" onclick="closeModal()">Închide</button>');
+}
+
+function showNextMilestone() {
+  const m = _milestoneQueue.shift();
+  if (!m) { document.body.classList.remove('milestone-visible'); return; }
+
+  let overlay = $('#milestone-overlay');
+  if (!overlay) {
+    overlay = mk('div',''); overlay.id = 'milestone-overlay';
+    document.body.appendChild(overlay);
+  }
+  const remaining = _milestoneQueue.length;
+  overlay.innerHTML =
+    '<div class="milestone-card">' +
+      '<div class="milestone-icon-big">'+m.icon+'</div>' +
+      '<div class="milestone-title-big">'+esc(m.title)+'</div>' +
+      '<div class="milestone-desc-big">'+esc(m.desc)+'</div>' +
+      (remaining>0 ? '<div class="milestone-queue-note">+'+remaining+' alte praguri atinse</div>' : '') +
+      '<button class="btn btn--accent btn--full" onclick="closeMilestoneOverlay()">✓ Super!</button>' +
+    '</div>';
+  document.body.classList.add('milestone-visible');
+  requestAnimationFrame(()=> overlay.classList.add('visible'));
+}
+
+function closeMilestoneOverlay() {
+  const overlay = $('#milestone-overlay');
+  if (overlay) overlay.classList.remove('visible');
+  setTimeout(()=>{
+    if (_milestoneQueue.length) showNextMilestone();
+    else document.body.classList.remove('milestone-visible');
+  }, 300);
 }
 
 // ════════════════════════════════════════════════════
@@ -2123,6 +2257,7 @@ function doPickRandom() {
 // ════════════════════════════════════════════════════
 function openDrawer() {
   document.body.classList.add('drawer-open');
+  syncViewButtons();
   // Update sort label
   const allOpts = [...SORT_OPTIONS.all, ...SORT_OPTIONS.watched];
   const found = allOpts.find(o => o.value === S.sort);
@@ -2135,20 +2270,27 @@ function closeDrawer() {
 }
 
 function setView(v) {
+  // Doar grid/list — Jurnal e complet separat, vezi openDiaryView()
   S.view = v;
   localStorage.setItem('bt_view', v);
-  if (v === 'diary') S.tab = 'watched';
+  syncViewButtons();
+  closeDrawer();
+  setTimeout(render, 50);
+}
+
+function openDiaryView() {
+  S.tab = 'watched';
+  S.diaryMode = true;
   syncViewButtons();
   syncNav();
   closeDrawer();
-  // Small delay so drawer CSS transition completes on iOS before render
   setTimeout(render, 50);
 }
 
 function syncViewButtons() {
-  $('#view-grid-btn')?.classList.toggle('view-btn--active', S.view === 'grid');
-  $('#view-list-btn')?.classList.toggle('view-btn--active', S.view === 'list');
-  $('#view-diary-btn')?.classList.toggle('view-btn--active', S.view === 'diary');
+  $('#view-grid-btn')?.classList.toggle('view-btn--active', !S.diaryMode && S.view === 'grid');
+  $('#view-list-btn')?.classList.toggle('view-btn--active', !S.diaryMode && S.view === 'list');
+  $('#view-diary-btn')?.classList.toggle('view-btn--active', S.diaryMode);
 }
 
 // ════════════════════════════════════════════════════
@@ -2176,7 +2318,9 @@ async function initApp() {
     if (!Object.keys(S.movies).length) { showToast('Prima rulare — se importă datele…'); await doSync(); }
     else prefetchTmdb(); // Enrich în fundal la fiecare pornire
     loadActivityLog();
-    loadAchievedMilestones();
+    await loadAchievedMilestones();
+    await loadAchievementHistory();
+    await ensureMilestoneBaseline();
   } catch(e) { showToast('Firebase error: '+e.message,'error'); console.error(e); }
 
   S.loading=false;

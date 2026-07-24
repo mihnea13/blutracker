@@ -8,7 +8,7 @@ Scrie doua fisiere in data/:
   scraper_log.txt    — log detaliat al rularii (pentru debug, committed pe GitHub)
 """
 
-import json, os, re, sys, time
+import json, os, re, sys, time, unicodedata
 from datetime import datetime
 from pathlib import Path
 import requests
@@ -144,7 +144,10 @@ def parse_letter_page(s: requests.Session, html: str, seen_ids: set, letter: str
             log_detail["filtered_tv"].append(f"{title} ({year})" if year else title)
             continue
 
-        norm = re.sub(r'[^a-z0-9]', '', title.lower())
+        # NFKD descompune caractere unicode (ex: "³" superscript -> "3" normal),
+        # esential pentru ca "Alien³" si "Alien" sa nu se coliziona la normalizare
+        title_decomposed = unicodedata.normalize('NFKD', title)
+        norm = re.sub(r'[^a-z0-9]', '', title_decomposed.lower())
         key = norm + '|' + year
 
         if key in seen_ids:

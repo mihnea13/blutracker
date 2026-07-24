@@ -253,7 +253,10 @@ async function dbSeedOnly(seedData, existingMovies) {
 // ── HELPERS ──────────────────────────────────────────────────
 
 function normTitle(t) {
-  return (t || '').toLowerCase()
+  return (t || '')
+    .normalize('NFKD')              // descompune caractere unicode: "³" → "3", diacritice → litera+accent separat
+    .replace(/[\u0300-\u036f]/g, '') // elimina semnele diacritice ramase dupa descompunere
+    .toLowerCase()
     .replace(/[^a-z0-9]/g, '')
     .replace(/^the/, '');
 }
