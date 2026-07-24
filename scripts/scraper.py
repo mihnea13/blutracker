@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-BluTracker — blu-ray.com scraper (final cu watch dates)
+BluTracker — blu-ray.com scraper (cu logging persistat)
 Env vars: BLURAY_USERNAME, BLURAY_PASSWORD, BLURAY_PROFILE_ID
+
+Scrie doua fisiere in data/:
+  collection.json   — datele filmelor (folosit de PWA)
+  scraper_log.txt    — log detaliat al rularii (pentru debug, committed pe GitHub)
 """
 
 import json, os, re, sys, time
@@ -14,6 +18,7 @@ USERNAME   = os.environ.get("BLURAY_USERNAME",   "")
 PASSWORD   = os.environ.get("BLURAY_PASSWORD",   "")
 PROFILE_ID = os.environ.get("BLURAY_PROFILE_ID", "")
 OUT_FILE   = Path(__file__).parent.parent / "data" / "collection.json"
+LOG_FILE   = Path(__file__).parent.parent / "data" / "scraper_log.txt"
 
 HEADERS = {
     "User-Agent": (
@@ -32,19 +37,31 @@ XHR_HEADERS = {
 FEAT_TOWATCH = re.compile(r'#features_towatch', re.IGNORECASE)
 FEAT_WATCHED = re.compile(r'#features_watched', re.IGNORECASE)
 TV_RX        = re.compile(
-    r'\(TV Series\)'         # explicit marker
-    r'|\(TV Mini.?Series\)'  # mini-series
-    r'|\(Season\s+\d'        # "(Season 1"
-    r'|:\s+Season\s+\d'      # ": Season 1"
-    r'|\(Complete Series\)'  # box sets
-    r'|\(Seasons?\s+\d'      # "(Seasons 1-3"
-    r'|\(TV\)',               # "(TV)" alone
+    r'\(TV Series\)'
+    r'|\(TV Mini.?Series\)'
+    r'|\(Season\s+\d'
+    r'|:\s+Season\s+\d'
+    r'|\(Complete Series\)'
+    r'|\(Seasons?\s+\d'
+    r'|\(TV\)',
     re.IGNORECASE
 )
 MOVIE_URL_RX = re.compile(r'https://www\.blu-ray\.com/([A-Za-z0-9][^/"?]+)/(\d{4,})/')
 
+# ── LOG BUFFER ─────────────────────────────────────────────────
+# Fiecare linie printata merge si in acest buffer, salvat la final in scraper_log.txt.
+LOG_LINES = []
 
-# ── LOGIN ─────────────────────────────────────────────────────
+def log(msg=""):
+    """Printeaza normal SI adauga la logul persistat."""
+    print(msg)
+    LOG_LINES.append(msg)
+
+
+def is_excluded(title: str) -> bool:
+    return bool(TV_RX.search(title))
+
+
 def login(s: requests.Session) -> bool:
     s.get("https://forum.blu-ray.com/login.php", timeout=15)
     s.post("https://forum.blu-ray.com/login.php",
@@ -53,34 +70,47 @@ def login(s: requests.Session) -> bool:
                  "do": "login", "cookieuser": "1", "s": "", "securitytoken": "guest"},
            timeout=15, allow_redirects=True)
     ok = "bbuserid" in s.cookies
-    print(f"  {'✓' if ok else '✗'} Login {'reusit' if ok else 'esuat'}")
+    log(f"  {'✓' if ok else '✗'} Login {'reusit' if ok else 'esuat'}")
     return ok
 
 
 # ── PARSE ONE LETTER PAGE ─────────────────────────────────────
-def parse_letter_page(html: str, seen_ids: set) -> list[dict]:
+def parse_letter_page(html: str, seen_ids: set, letter: str, log_detail: dict) -> list[dict]:
+    """
+    log_detail acumuleaza detalii pentru scraper_log.txt:
+      - filtered_tv: titluri respinse ca seriale TV
+      - filtered_dup: titluri respinse ca duplicate (release_id sau titlu+an deja vazut)
+    """
     soup = BeautifulSoup(html, "html.parser")
     movies = []
+    raw_links_found = 0
+
     for a in soup.find_all("a", href=True):
         href = a.get("href", "")
         m = MOVIE_URL_RX.search(href)
         if not m:
             continue
+        raw_links_found += 1
         release_id = m.group(2)
         if release_id in seen_ids:
             continue
+
         title_raw = (a.get("alt") or a.get("title") or a.get_text()).strip()
-        # Extract year BEFORE stripping - critical for accurate TMDB matching
         year_m = re.search(r'\((\d{4})\)\s*$', title_raw)
         year = year_m.group(1) if year_m else ""
         title = re.sub(r'\s*\(\d{4}\)\s*$', '', title_raw).strip()
-        if not title or TV_RX.search(title):
+
+        if not title:
             continue
-        # Deduplica pe titlu+an normalizat (nu doar titlu — filme cu titlu identic
-        # dar an diferit, ex. "Graveyard of Honor" 1975 vs 2002, sunt filme distincte)
+        if is_excluded(title):
+            log_detail["filtered_tv"].append(f"{title} ({year})" if year else title)
+            continue
+
         norm = re.sub(r'[^a-z0-9]', '', title.lower()) + '|' + year
         if norm in seen_ids:
+            log_detail["filtered_dup"].append(f"{title} ({year}) [letter={letter}]")
             continue
+
         img = a.find("img")
         poster = (img.get("src") or img.get("data-src") or "") if img else ""
         seen_ids.add(release_id)
@@ -96,36 +126,41 @@ def parse_letter_page(html: str, seen_ids: set) -> list[dict]:
             "featuresWatched": False,
             "userComment":     "",
         })
+
+    log_detail["raw_links_seen"] = log_detail.get("raw_links_seen", 0) + raw_links_found
     return movies
 
 
 # ── GET COLLECTION (litera cu litera) ─────────────────────────
-def get_owned_collection(s: requests.Session) -> list[dict]:
+def get_owned_collection(s: requests.Session) -> tuple[list[dict], dict]:
     all_movies = []
     seen_ids   = set()
+    log_detail = {"filtered_tv": [], "filtered_dup": [], "raw_links_seen": 0, "per_letter": {}}
+
     for letter in list("ABCDEFGHIJKLMNOPQRSTUVWXYZ") + ["0"]:
         url = (f"https://www.blu-ray.com/community/collection.php"
                f"?u={PROFILE_ID}&action=hybrid&letter={letter}")
         try:
             resp = s.get(url, timeout=15)
             if resp.status_code != 200:
+                log(f"  {letter}: HTTP {resp.status_code}, skip")
+                log_detail["per_letter"][letter] = f"HTTP {resp.status_code}"
                 continue
-            batch = parse_letter_page(resp.text, seen_ids)
+            batch = parse_letter_page(resp.text, seen_ids, letter, log_detail)
+            log_detail["per_letter"][letter] = len(batch)
             if batch:
-                print(f"  {letter}: +{len(batch)} filme")
+                log(f"  {letter}: +{len(batch)} filme")
                 all_movies.extend(batch)
         except Exception as e:
-            print(f"  {letter}: eroare {e}")
+            log(f"  {letter}: eroare {e}")
+            log_detail["per_letter"][letter] = f"ERROR: {e}"
         time.sleep(0.4)
-    return all_movies
+
+    return all_movies, log_detail
 
 
 # ── FETCH PROPERTIES (watch dates + comment) ─────────────────
 def fetch_properties(s: requests.Session, release_id: str) -> dict:
-    """
-    Apeleaza action=properties pentru un film — returneaza watch dates si comment.
-    URL descoperit via DevTools: collection.php?action=properties&p=RELEASE_ID&u=UID
-    """
     try:
         r = s.get(
             "https://www.blu-ray.com/community/collection.php",
@@ -139,7 +174,6 @@ def fetch_properties(s: requests.Session, release_id: str) -> dict:
         c = data.get("c", {})
         p_data = data.get("p", {})
 
-        # c.watched == 1 inseamna ca filmul e efectiv marcat ca vazut de user
         is_watched = int(c.get("watched") or 0) == 1
 
         watch_dates = []
@@ -160,13 +194,13 @@ def fetch_properties(s: requests.Session, release_id: str) -> dict:
             "userComment":     comment[:500],
             "posterUrl":       poster,
         }
-    except Exception as e:
+    except Exception:
         return {}
 
 
 # ── ENRICH ALL MOVIES WITH PROPERTIES ────────────────────────
 def enrich_with_properties(s: requests.Session, movies: list[dict]) -> None:
-    print(f"\n  Fetch watch dates pentru {len(movies)} filme...")
+    log(f"\n  Fetch watch dates pentru {len(movies)} filme...")
     ok_count = 0
     for i, movie in enumerate(movies):
         props = fetch_properties(s, movie["blurayComId"])
@@ -175,33 +209,51 @@ def enrich_with_properties(s: requests.Session, movies: list[dict]) -> None:
             if props.get("watchDates"):
                 ok_count += 1
         if (i + 1) % 20 == 0:
-            print(f"    {i+1}/{len(movies)} procesate ({ok_count} cu date)...")
+            log(f"    {i+1}/{len(movies)} procesate ({ok_count} cu date)...")
         time.sleep(0.25)
-    print(f"  Done: {ok_count}/{len(movies)} filme cu watch dates")
+    log(f"  Done: {ok_count}/{len(movies)} filme cu watch dates")
 
 
 # ── MAIN ─────────────────────────────────────────────────────
 def main():
+    run_start = datetime.utcnow()
+    log(f"═══ BluTracker Scraper Run — {run_start.isoformat()}Z ═══\n")
+
     if not all([USERNAME, PASSWORD, PROFILE_ID]):
-        print("Lipsesc: BLURAY_USERNAME, BLURAY_PASSWORD, BLURAY_PROFILE_ID", file=sys.stderr)
+        log("EROARE: Lipsesc BLURAY_USERNAME, BLURAY_PASSWORD, BLURAY_PROFILE_ID")
+        _flush_log()
         sys.exit(1)
 
     s = requests.Session()
     s.headers.update(HEADERS)
 
-    print("1. Login...")
+    log("1. Login...")
     if not login(s):
+        log("EROARE: Login esuat — verifica credentialele in GitHub Secrets.")
+        _flush_log()
         sys.exit(1)
 
-    print("2. Colectie (litera cu litera)...")
-    movies = get_owned_collection(s)
-    print(f"   Total: {len(movies)} filme")
+    log("\n2. Colectie (litera cu litera)...")
+    movies, log_detail = get_owned_collection(s)
+    log(f"\n   Total filme retinute: {len(movies)}")
+    log(f"   Total link-uri /Titlu/ID/ vazute in HTML: {log_detail['raw_links_seen']}")
+
+    if log_detail["filtered_tv"]:
+        log(f"\n   Filtrate ca seriale TV ({len(log_detail['filtered_tv'])}):")
+        for t in log_detail["filtered_tv"]:
+            log(f"     - {t}")
+
+    if log_detail["filtered_dup"]:
+        log(f"\n   Filtrate ca duplicate ({len(log_detail['filtered_dup'])}):")
+        for t in log_detail["filtered_dup"]:
+            log(f"     - {t}")
 
     if not movies:
-        print("EROARE: Niciun film gasit.", file=sys.stderr)
+        log("\nEROARE: Niciun film gasit.")
+        _flush_log()
         sys.exit(1)
 
-    print("3. Watch dates + comments...")
+    log("\n3. Watch dates + comments...")
     enrich_with_properties(s, movies)
 
     output = {
@@ -212,8 +264,29 @@ def main():
 
     watched_n = sum(1 for m in movies if m["watchDates"])
     feat_n    = sum(1 for m in movies if m["hasFeatures"])
-    print(f"\n✓ Salvat: {OUT_FILE}")
-    print(f"  {len(movies)} filme  |  {watched_n} cu watch dates  |  {feat_n} cu features tags")
+    duration  = (datetime.utcnow() - run_start).total_seconds()
+
+    log(f"\n✓ Salvat: {OUT_FILE}")
+    log(f"  {len(movies)} filme  |  {watched_n} cu watch dates  |  {feat_n} cu features tags")
+    log(f"  Durata rulare: {duration:.1f}s")
+
+    # Listeaza toate titlurile finale, alfabetic, pentru verificare rapida
+    log(f"\n── LISTA COMPLETA FILME ({len(movies)}) ──")
+    for m in sorted(movies, key=lambda x: x["title"].lower()):
+        yr = f" ({m['year']})" if m["year"] else ""
+        wd = f" [watched: {','.join(m['watchDates'])}]" if m["watchDates"] else ""
+        log(f"  {m['title']}{yr}  id={m['blurayComId']}{wd}")
+
+    _flush_log()
+
+
+def _flush_log():
+    """Scrie tot bufferul de log in scraper_log.txt (suprascrie la fiecare rulare)."""
+    try:
+        LOG_FILE.write_text("\n".join(LOG_LINES) + "\n", encoding="utf-8")
+        print(f"\n[Log salvat: {LOG_FILE}]")
+    except Exception as e:
+        print(f"[Nu s-a putut salva logul: {e}]")
 
 
 if __name__ == "__main__":

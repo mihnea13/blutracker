@@ -1,5 +1,5 @@
-// BluTracker v1.8
-const BT_VERSION = '1.8';
+// BluTracker v1.9
+const BT_VERSION = '1.9';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -1699,7 +1699,7 @@ function makeActivityLogSection() {
 // true  = notificările se activează pentru acțiuni noi
 // Schimbă în GitHub: js/app.js → caută MILESTONES_TRACKING_ENABLED
 // ─────────────────────────────────────────────────────────────
-const MILESTONES_TRACKING_ENABLED = true;
+const MILESTONES_TRACKING_ENABLED = false;
 
 function getAchievementDefs(stats) {
   const monthsProductiv = Object.values(stats.monthMap||{}).filter(v=>v>=5).length;
@@ -1950,16 +1950,47 @@ function syncFilterBadge() {
 // DIARY VIEW
 // ════════════════════════════════════════════════════
 function renderDiary(main, movies) {
-  // Expand watchHistory entries, sort by date desc
+  // Separa watchHistory entries: cu data valida vs fara data
   const entries = [];
+  const noDateFilms = [];
   movies.forEach(m => {
-    (m.watchHistory||[]).forEach(w => {
-      if (w.date && w.date > '') entries.push({...m, watchDate: w.date});
+    const wh = m.watchHistory || [];
+    let hasValidDate = false;
+    wh.forEach(w => {
+      if (w.date && w.date > '') { entries.push({...m, watchDate: w.date}); hasValidDate = true; }
     });
+    // Film e in "fara data" doar daca NICIUNA din vizionarile lui n-are data valida
+    if (wh.length && !hasValidDate) noDateFilms.push(m);
   });
   entries.sort((a,b) => b.watchDate.localeCompare(a.watchDate));
 
-  if (!entries.length) { main.appendChild(emptyState('📅','Nicio dată de vizionare înregistrată.')); return; }
+  if (!entries.length && !noDateFilms.length) {
+    main.appendChild(emptyState('📅','Nicio dată de vizionare înregistrată.')); return;
+  }
+
+  // Sectiune "Fara data" - mereu prima, editabila direct
+  if (noDateFilms.length) {
+    const hdr = mk('div','diary-month-header','⚠ Fără dată înregistrată ('+noDateFilms.length+')');
+    hdr.style.color = 'var(--amber)';
+    main.appendChild(hdr);
+    noDateFilms.sort((a,b)=>sortTitle(a.title).localeCompare(sortTitle(b.title))).forEach(m => {
+      const row = mk('div','diary-row');
+      row.onclick = () => openFilmDetail(m.id);
+      const dayEl = mk('div','diary-day','?');
+      const poster = mk('div','diary-poster');
+      const img = mk('img'); img.alt=m.title; img.loading='lazy';
+      img.src = m.tmdbPosterUrl||m.posterUrl||posterPlaceholder(m.title);
+      img.onerror=()=>{img.src=posterPlaceholder(m.title);};
+      poster.appendChild(img);
+      const info = mk('div','diary-info');
+      info.appendChild(mk('div','diary-title',m.title));
+      info.appendChild(mk('div','diary-meta','Tap pentru a edita data vizionării'));
+      row.append(dayEl,poster,info);
+      main.appendChild(row);
+    });
+  }
+
+  if (!entries.length) return;
 
   let lastMonth = '';
   entries.forEach(e => {

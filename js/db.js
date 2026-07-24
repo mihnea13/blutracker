@@ -138,11 +138,21 @@ async function dbSync(collectionData, seedData, existingMovies) {
   let ops = 0;
   const flushBatch = async () => { await batch.commit(); batch = _db.batch(); ops = 0; };
 
-  // Lookup-uri
-  const byBlurayId = {}, byNorm = {};
+  // Filme excluse manual (sterse de user) — nu se re-adauga la sync
+  let excludedIds = new Set();
+  try {
+    const exDoc = await _db.collection('config').doc('excludedIds').get();
+    if (exDoc.exists) excludedIds = new Set(exDoc.data().ids || []);
+  } catch(e) {}
+
+  // Lookup PRIMAR: blurayComId (sigur, unic)
+  // Lookup FALLBACK: titlu+an normalizat (evita coliziunea intre filme cu titlu identic
+  // dar an diferit, ex. "Graveyard of Honor" 1975 vs 2002 — fiecare isi pastreaza cheia proprie)
+  const byBlurayId = {}, byTitleYear = {};
   Object.entries(existingMovies).forEach(([docId, m]) => {
     if (m.blurayComId) byBlurayId[m.blurayComId] = docId;
-    byNorm[normTitle(m.title)] = docId;
+    const key = normTitle(m.title) + '|' + (m.year || '');
+    if (!(key in byTitleYear)) byTitleYear[key] = docId; // primul castiga, nu se suprascrie
   });
 
   // Seed lookup
@@ -150,12 +160,15 @@ async function dbSync(collectionData, seedData, existingMovies) {
   (seedData || []).forEach(s => { seedMap[normTitle(s.title)] = s; });
 
   const result = { ...existingMovies };
-  let added = 0, updated = 0;
+  let added = 0, updated = 0, skipped = 0;
   const addedTitles = [];
 
   for (const movie of (collectionData.movies || [])) {
+    if (movie.blurayComId && excludedIds.has(movie.blurayComId)) { skipped++; continue; }
+
     const norm = normTitle(movie.title);
-    const existingId = byBlurayId[movie.blurayComId] || byNorm[norm];
+    const titleYearKey = norm + '|' + (movie.year || '');
+    const existingId = byBlurayId[movie.blurayComId] || byTitleYear[titleYearKey];
     const seed = seedMap[norm];
 
     if (!existingId) {
@@ -167,15 +180,17 @@ async function dbSync(collectionData, seedData, existingMovies) {
       added++;
       addedTitles.push(movie.title);
     } else {
-      // Film existent — actualizare minimală
+      // Film existent — actualizare minimala, INCLUSIV blurayComId
+      // (esential: fara asta, matching-ul viitor tot pica pe titlu, fragil)
       const ref = moviesRef.doc(existingId);
+      const ex = existingMovies[existingId];
       const upd = {
         isOwned: true,
         lastSynced: ts(),
+        blurayComId: movie.blurayComId || ex.blurayComId || '',
         ...(movie.posterUrl ? { posterUrl: movie.posterUrl } : {}),
       };
-      // Aplică seed commentary dacă nu există încă
-      const ex = existingMovies[existingId];
+      // Aplica seed commentary daca nu exista inca
       if (seed && (!ex.commentaryTracks || !ex.commentaryTracks.length)) {
         upd.commentaryTracks = seed.commentaryTracks.map(t => ({
           watched: t.watched, watchDate: null,
@@ -191,7 +206,7 @@ async function dbSync(collectionData, seedData, existingMovies) {
   }
 
   if (ops > 0) await flushBatch();
-  return { added, updated, addedTitles, movies: result };
+  return { added, updated, skipped, addedTitles, movies: result };
 }
 
 /**
@@ -325,9 +340,22 @@ async function dbSaveTmdb(id, tmdb) {
 
 /**
  * Sterge definitiv un film din Firestore.
+ * Daca filmul are blurayComId, il adauga la lista de excluse,
+ * ca sa nu fie re-adaugat automat la urmatorul sync cu blu-ray.com.
  */
 async function dbDeleteMovie(id) {
-  await _db.collection('movies').doc(id).delete();
+  const ref = _db.collection('movies').doc(id);
+  const doc = await ref.get();
+  const data = doc.data();
+  await ref.delete();
+
+  if (data?.blurayComId) {
+    try {
+      await _db.collection('config').doc('excludedIds').set({
+        ids: firebase.firestore.FieldValue.arrayUnion(data.blurayComId)
+      }, { merge: true });
+    } catch(e) { console.warn('Nu s-a putut salva exclusion list:', e); }
+  }
 }
 
 /**
@@ -341,4 +369,25 @@ async function dbEditWatchDate(id, idx, newDate) {
   wh[idx] = { ...wh[idx], date: newDate };
   await ref.update({ watchHistory: wh });
   return { ...data, watchHistory: wh };
+}
+
+/**
+ * Elimina un blurayComId din lista de excluse — filmul va putea
+ * fi re-adaugat la urmatorul sync daca mai exista pe blu-ray.com.
+ */
+async function dbUnexclude(blurayComId) {
+  if (!blurayComId) return;
+  await _db.collection('config').doc('excludedIds').set({
+    ids: firebase.firestore.FieldValue.arrayRemove(blurayComId)
+  }, { merge: true });
+}
+
+/**
+ * Returneaza lista curenta de blurayComId excluse (pentru afisare in UI).
+ */
+async function dbGetExcludedIds() {
+  try {
+    const doc = await _db.collection('config').doc('excludedIds').get();
+    return doc.exists ? (doc.data().ids || []) : [];
+  } catch(e) { return []; }
 }

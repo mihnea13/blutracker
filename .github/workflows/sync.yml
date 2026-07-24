@@ -31,10 +31,10 @@ jobs:
           BLURAY_PROFILE_ID: ${{ secrets.BLURAY_PROFILE_ID }}
         run: python scripts/scraper.py
 
-      - name: Commit collection.json (if changed)
+      - name: Commit collection.json + log (if changed)
         run: |
           git config user.name  "BluTracker Bot"
           git config user.email "bot@blutracker.local"
-          git add data/collection.json
+          git add data/collection.json data/scraper_log.txt
           git diff --cached --quiet || git commit -m "chore: sync collection [skip ci]"
           git push
