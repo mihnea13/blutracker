@@ -76,8 +76,9 @@ def parse_letter_page(html: str, seen_ids: set) -> list[dict]:
         title = re.sub(r'\s*\(\d{4}\)\s*$', '', title_raw).strip()
         if not title or TV_RX.search(title):
             continue
-        # Deduplica si pe titlu normalizat
-        norm = re.sub(r'[^a-z0-9]', '', title.lower())
+        # Deduplica pe titlu+an normalizat (nu doar titlu — filme cu titlu identic
+        # dar an diferit, ex. "Graveyard of Honor" 1975 vs 2002, sunt filme distincte)
+        norm = re.sub(r'[^a-z0-9]', '', title.lower()) + '|' + year
         if norm in seen_ids:
             continue
         img = a.find("img")

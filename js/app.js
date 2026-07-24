@@ -1,5 +1,5 @@
-// BluTracker v1.6
-const BT_VERSION = '1.6';
+// BluTracker v1.8
+const BT_VERSION = '1.8';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -14,6 +14,9 @@ const S = {
   expanded: new Set(),
   search:  '',
   activeFilters: new Set(),
+  filterDecades: new Set(),
+  filterRuntimeMin: 0,
+  filterRuntimeMax: 999,
   collapsed: new Set(['csect-done']),
   randomN: 1,
   randomMaxRuntime: 999,
@@ -95,6 +98,11 @@ const commStatus = m => {
 };
 const pendingComm = () => withComm().filter(m=>(m.commentaryTracks||[]).some(t=>!t.watched));
 
+// Strip leading "The"/"A"/"An" for alphabetical sorting (display unaffected)
+function sortTitle(title) {
+  return (title||'').replace(/^(the|a|an)\s+/i, '').toLowerCase();
+}
+
 function filterSort(arr) {
   let out = arr;
   // Text search
@@ -108,8 +116,23 @@ function filterSort(arr) {
   for (const f of tabF) {
     if (S.activeFilters.has(f.id)) out = out.filter(f.fn);
   }
+  // Advanced: decade (OR logic across selected decades)
+  if (S.filterDecades.size > 0) {
+    out = out.filter(m => {
+      const yr = parseInt(m.year);
+      if (isNaN(yr)) return false;
+      return S.filterDecades.has(Math.floor(yr/10)*10);
+    });
+  }
+  // Advanced: runtime range
+  if (S.filterRuntimeMin > 0 || S.filterRuntimeMax < 999) {
+    out = out.filter(m => {
+      if (!m.runtime) return false;
+      return m.runtime >= S.filterRuntimeMin && m.runtime <= S.filterRuntimeMax;
+    });
+  }
   switch (S.sort) {
-    case 'za':           return out.sort((a,b)=>b.title.localeCompare(a.title));
+    case 'za':           return out.sort((a,b)=>sortTitle(b.title).localeCompare(sortTitle(a.title)));
     case 'year-desc':    return out.sort((a,b)=>(b.year||'0').localeCompare(a.year||'0'));
     case 'year-asc':     return out.sort((a,b)=>(a.year||'9999').localeCompare(b.year||'9999'));
     case 'runtime-desc': return out.sort((a,b)=>(b.runtime||0)-(a.runtime||0));
@@ -118,7 +141,7 @@ function filterSort(arr) {
     case 'first-watch-asc':  return out.sort((a,b)=>firstDate(a).localeCompare(firstDate(b)));
     case 'watch-count-desc': return out.sort((a,b)=>(b.watchHistory?.length||0)-(a.watchHistory?.length||0));
     case 'watch-count-asc':  return out.sort((a,b)=>(a.watchHistory?.length||0)-(b.watchHistory?.length||0));
-    default:             return out.sort((a,b)=>a.title.localeCompare(b.title));
+    default:             return out.sort((a,b)=>sortTitle(a.title).localeCompare(sortTitle(b.title)));
   }
 }
 
@@ -328,57 +351,113 @@ function commCard(m) {
 // ════════════════════════════════════════════════════
 // TAB: FEATURES
 // ════════════════════════════════════════════════════
+const allFeatDone = m => (!m.hasGenericFeatures||m.genericFeaturesWatched) && (m.specialFeatures||[]).every(f=>f.watched);
+
 function renderFeatures(main) {
   main.innerHTML = '';
   main.appendChild(makeToolbar(withFeat().length, 'features'));
-  const allFeat = withFeat();
-  if (!allFeat.length) { main.appendChild(emptyState('🎞','Niciun film cu features.\nDin tab-ul Văzute → ⚙ Disc pe fiecare film.')); return; }
-  const movies = [...allFeat].sort((a,b)=>{
-    const da=allFeatDone(a)?1:0, db=allFeatDone(b)?1:0;
-    return da-db || a.title.localeCompare(b.title);
+  const all = filterSort(withFeat());
+  if (!all.length) { main.appendChild(emptyState('🎞', S.search?'Niciun rezultat.':'Niciun film cu features.\nDin tab-ul Văzute → ⚙ Disc pe fiecare film.')); return; }
+
+  const featStatus = m => {
+    const spec = m.specialFeatures||[];
+    const genOK = !m.hasGenericFeatures || m.genericFeaturesWatched;
+    const specDone = spec.filter(f=>f.watched).length;
+    if (genOK && specDone===spec.length) return 'done';
+    if ((m.hasGenericFeatures&&m.genericFeaturesWatched) || specDone>0) return 'partial';
+    return 'pending';
+  };
+
+  const GROUPS = [
+    { key:'fsect-pending', label:'Niciun feature bifat', dotCls:'status-dot--pending', filter:m=>featStatus(m)==='pending' },
+    { key:'fsect-partial', label:'Parțial bifate',        dotCls:'status-dot--partial', filter:m=>featStatus(m)==='partial' },
+    { key:'fsect-done',    label:'Complet bifate',        dotCls:'status-dot--done',    filter:m=>featStatus(m)==='done' },
+  ];
+
+  GROUPS.forEach(g => {
+    const movies = all.filter(g.filter);
+    if (!movies.length) return;
+    const isOpen = !S.collapsed.has(g.key);
+    const section = mk('div','comm-section'+(isOpen?' comm-section--open':''));
+    const hdr = mk('div','comm-section-hdr');
+    hdr.innerHTML =
+      '<div class="comm-section-left">'+
+        '<span class="status-dot '+g.dotCls+'"></span>'+
+        '<span class="comm-section-label">'+esc(g.label)+'</span>'+
+      '</div>'+
+      '<div class="comm-section-right">'+
+        '<span class="comm-section-count">'+movies.length+'</span>'+
+        '<span class="comm-section-arrow">›</span>'+
+      '</div>';
+    hdr.onclick = () => { S.collapsed.has(g.key)?S.collapsed.delete(g.key):S.collapsed.add(g.key); render(); };
+    section.appendChild(hdr);
+    const body = mk('div','comm-section-body');
+    if (isOpen) movies.forEach(m => body.appendChild(featCard(m)));
+    section.appendChild(body);
+    main.appendChild(section);
   });
-  movies.forEach(m => main.appendChild(featSection(m)));
 }
 
-const allFeatDone = m => (!m.hasGenericFeatures||m.genericFeaturesWatched) && (m.specialFeatures||[]).every(f=>f.watched);
+function featCard(m) {
+  const spec = m.specialFeatures||[];
+  const genDone = !m.hasGenericFeatures || m.genericFeaturesWatched;
+  const specDone = spec.filter(f=>f.watched).length;
+  const totalItems = (m.hasGenericFeatures?1:0) + spec.length;
+  const doneItems  = (genDone&&m.hasGenericFeatures?1:0) + specDone;
+  const key = 'fcard-'+m.id;
+  const isExpanded = S.expanded.has(key);
 
-function featSection(m) {
-  const done = allFeatDone(m), spec = m.specialFeatures||[];
-  const key = `feat-${m.id}`, open = S.expanded.has(key);
-  const section = mk('div',`collapsible${open?' collapsible--open':''}`);
-  const header  = mk('div','collapsible__header');
-  header.innerHTML = `
-    <div class="collapsible__title">
-      <span class="status-dot status-dot--${done?'done':'pending'}"></span>
-      <span class="collapsible__name">${esc(m.title)}</span>
-    </div>
-    <div class="collapsible__meta">
-      <span class="badge badge--${done?'green':'amber'}">${done?'Complet ✓':'Pending'}</span>
-      <span class="caret">${open?'▲':'▼'}</span>
-    </div>`;
-  header.onclick = () => { toggle(key); render(); };
-  const body = mk('div','collapsible__body');
-  if (open) {
+  const card = mk('div','comm-card'+(isExpanded?' comm-card--expanded':''));
+  const hdr = mk('div','comm-card__header');
+  hdr.onclick = () => { toggle(key); render(); };
+
+  const poster = mk('div','comm-card__poster');
+  const img = mk('img'); img.alt=m.title; img.loading='lazy';
+  img.src = m.tmdbPosterUrl||m.posterUrl||posterPlaceholder(m.title);
+  img.onerror=()=>{img.src=posterPlaceholder(m.title);};
+  poster.appendChild(img);
+
+  const info = mk('div','comm-card__info');
+  info.appendChild(mk('div','comm-card__title', m.title));
+  if (m.year||m.runtime) info.appendChild(mk('div','comm-card__meta',
+    [m.year, m.runtime?m.runtime+'m':''].filter(Boolean).join(' · ')));
+
+  const prog = mk('div','comm-card__progress');
+  const dots = mk('div','track-dots');
+  if (m.hasGenericFeatures) dots.appendChild(mk('span','track-dot'+(m.genericFeaturesWatched?' track-dot--on':'')));
+  spec.forEach(f=>dots.appendChild(mk('span','track-dot'+(f.watched?' track-dot--on':''))));
+  prog.append(dots, mk('span','track-count', doneItems+'/'+totalItems));
+  info.appendChild(prog);
+
+  const del = mk('button','comm-card__del','🗑');
+  del.title='Șterge film din colecție';
+  del.onclick = e => { e.stopPropagation(); openFilmDetail(m.id); };
+  hdr.append(poster, info, del);
+  card.appendChild(hdr);
+
+  if (isExpanded) {
+    const expand = mk('div','comm-card__expand');
     if (m.hasGenericFeatures) {
-      const row = mk('div',`track-row${m.genericFeaturesWatched?' track-row--watched':''}`);
-      const chk = mk('button',`track-check${m.genericFeaturesWatched?' track-check--on':''}`,m.genericFeaturesWatched?'✓':'');
-      chk.onclick = () => doToggleGenericFeatures(m.id);
+      const row = mk('div','track-row'+(m.genericFeaturesWatched?' track-row--watched':''));
+      const chk = mk('button','track-check'+(m.genericFeaturesWatched?' track-check--on':''),m.genericFeaturesWatched?'✓':'');
+      chk.onclick = e => { e.stopPropagation(); doToggleGenericFeatures(m.id); };
       row.append(chk, mk('span','track-label','🎬 Extras generice'));
-      body.appendChild(row);
+      expand.appendChild(row);
     }
     spec.forEach(f => {
-      const row = mk('div',`track-row track-row--special${f.watched?' track-row--watched':''}`);
-      const chk = mk('button',`track-check${f.watched?' track-check--on':''}`,f.watched?'✓':'');
-      chk.onclick = () => doToggleSpecialFeature(m.id,f.id);
-      const lbl = mk('span','track-label'); lbl.innerHTML = `<span class="feat-star">★</span> ${esc(f.name)}`;
-      const dt  = mk('span','track-date', f.watchDate?fmtDate(f.watchDate):'');
-      row.append(chk,lbl,dt); body.appendChild(row);
+      const row = mk('div','track-row track-row--special'+(f.watched?' track-row--watched':''));
+      const chk = mk('button','track-check'+(f.watched?' track-check--on':''),f.watched?'✓':'');
+      chk.onclick = e => { e.stopPropagation(); doToggleSpecialFeature(m.id,f.id); };
+      const lbl = mk('span','track-label'); lbl.innerHTML='<span class="feat-star">★</span> '+esc(f.name);
+      row.append(chk, lbl, mk('span','track-date', f.watchDate?fmtDate(f.watchDate):''));
+      expand.appendChild(row);
     });
     const addBtn = mk('button','btn btn--ghost btn--sm track-add-btn','+ Feature special');
-    addBtn.onclick = () => openAddFeatureModal(m.id);
-    body.appendChild(addBtn);
+    addBtn.onclick = e => { e.stopPropagation(); openAddFeatureModal(m.id); };
+    expand.appendChild(addBtn);
+    card.appendChild(expand);
   }
-  section.append(header,body); return section;
+  return card;
 }
 
 // ════════════════════════════════════════════════════
@@ -435,12 +514,20 @@ function refetchBtn(id) {
 function renderDetailModal(id) {
   const m        = S.movies[id];
   const poster   = m.tmdbPosterUrl || m.posterUrl || posterPlaceholder(m.title);
-  const wCount   = m.watchHistory?.length || 0;
-  const lastDate = wCount
-    ? [...m.watchHistory].sort((a,b)=>b.date.localeCompare(a.date))[0]?.date
-    : null;
+  const history  = [...(m.watchHistory||[])].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const commN    = (m.commentaryTracks||[]).length;
   const pendingN = (m.commentaryTracks||[]).filter(t=>!t.watched).length;
+
+  const historyRows = history.map((w,i) => {
+    const idx = m.watchHistory.indexOf(w); // original index for edit/delete
+    return '<div class="wh-row">'+
+      '<button class="wh-date-btn" onclick="openEditWatchDate(\''+id+'\','+idx+')">'+
+        '<span class="wh-date">'+(fmtDate(w.date)||'— fără dată —')+'</span>'+
+        '<span class="wh-edit-icon">✎</span>'+
+      '</button>'+
+      '<button class="wh-del-btn" onclick="confirmDeleteWatchEntry(\''+id+'\','+idx+')" title="Șterge">✕</button>'+
+    '</div>';
+  }).join('');
 
   const body = `
     <div class="detail-poster"><img src="${esc(poster)}" alt="${esc(m.title)}" onerror="this.src='${posterPlaceholder(m.title)}'"></div>
@@ -452,21 +539,68 @@ function renderDetailModal(id) {
     ${m.directors?.length ? `<div class="detail-director">${esc(m.directors.join(', '))}</div>` : ''}
     ${m.overview ? `<p class="detail-overview">${esc(m.overview)}</p>` : (!m.tmdbId&&TMDB_API_KEY?'<p class="detail-loading">Se caută informații…</p>':'')}
     <div class="detail-section">
-      <div class="detail-stat">${wCount ? `Văzut <strong>${wCount}×</strong>${lastDate&&lastDate>''?` · ultimul: ${fmtDate(lastDate)}`:''}` : '<em style="color:var(--text-2)">Nevăzut</em>'}</div>
-      ${commN ? `<div class="detail-stat">🎙 ${commN-pendingN}/${commN} commentary</div>` : ''}
+      ${history.length ? `
+        <div class="detail-stat" style="margin-bottom:8px">Vizionări (${history.length}):</div>
+        <div class="wh-list">${historyRows}</div>
+      ` : '<div class="detail-stat"><em style="color:var(--text-2)">Nevăzut</em></div>'}
+      ${commN ? `<div class="detail-stat" style="margin-top:10px">🎙 ${commN-pendingN}/${commN} commentary</div>` : ''}
     </div>
     <div class="detail-actions-row">
       <button class="btn btn--ghost btn--sm" onclick="closeModal();openSetupDiscModal('${id}')">⚙ Disc</button>
       ${commN ? `<button class="btn btn--ghost btn--sm" onclick="closeModal();S.tab='commentaries';S.expanded.add('comm-${id}');render()">🎙 Comentarii</button>` : ''}
-      ${m.hasGenericFeatures||(m.specialFeatures?.length>0) ? `<button class="btn btn--ghost btn--sm" onclick="closeModal();S.tab='features';S.expanded.add('feat-${id}');render()">🎞 Extras</button>` : ''}
+      ${m.hasGenericFeatures||(m.specialFeatures?.length>0) ? `<button class="btn btn--ghost btn--sm" onclick="closeModal();S.tab='features';S.expanded.add('fcard-${id}');render()">🎞 Extras</button>` : ''}
     </div>
-    ${!wCount ? `<button class="btn btn--primary btn--full" style="margin-top:10px" onclick="closeModal();openMarkWatchedModal('${id}')">▶ Marchează văzut</button>` : `<button class="btn btn--ghost btn--sm" style="margin-top:6px" onclick="closeModal();openAddWatchModal('${id}')">+ Vizionare nouă</button>`}
+    ${!history.length ? `<button class="btn btn--primary btn--full" style="margin-top:10px" onclick="closeModal();openMarkWatchedModal('${id}')">▶ Marchează văzut</button>` : `<button class="btn btn--ghost btn--sm" style="margin-top:6px" onclick="closeModal();openAddWatchModal('${id}')">+ Vizionare nouă</button>`}
     <div class="detail-danger">
       ${m.tmdbId ? '<button class="btn btn--ghost btn--sm" style="margin-bottom:6px;width:100%" onclick="refetchTmdb(&quot;'+id+'&quot;)">🔄 Re-fetch TMDB</button>' : ''}
       <button class="btn btn--danger btn--full" onclick="confirmDeleteModal('${id}')">🗑 Șterge din colecție</button>
     </div>`;
 
   openModal(m.title, body, '');
+}
+
+function openEditWatchDate(id, idx) {
+  const m = S.movies[id];
+  const entry = m.watchHistory[idx];
+  if (!entry) return;
+  openModal('Editează data',
+    `<p class="modal__subtitle">${esc(m.title)}</p>
+     <div class="field"><label>Data vizionării</label><input type="date" id="ewd-date" value="${entry.date||today()}"></div>`,
+    `<button class="btn btn--ghost" onclick="renderDetailModal('${id}')">Anulează</button>
+     <button class="btn btn--accent" onclick="confirmEditWatchDate('${id}',${idx})">✓ Salvează</button>`);
+}
+
+async function confirmEditWatchDate(id, idx) {
+  const newDate = $('#ewd-date').value;
+  if (!newDate) { showToast('Introdu o dată.','error'); return; }
+  try {
+    S.movies[id] = await dbEditWatchDate(id, idx, newDate);
+    logAction('✎', S.movies[id].title, 'Dată vizionare editată → '+fmtDate(newDate), null);
+    renderDetailModal(id);
+    showToast('Dată actualizată ✓','success');
+  } catch(e) { showToast('Eroare: '+e.message,'error'); }
+}
+
+function confirmDeleteWatchEntry(id, idx) {
+  const m = S.movies[id];
+  const entry = m.watchHistory[idx];
+  if (!entry) return;
+  openModal('Șterge vizionare',
+    `<p>Ștergi vizionarea din <strong>${fmtDate(entry.date)||'—'}</strong>?</p>`,
+    `<button class="btn btn--ghost" onclick="renderDetailModal('${id}')">Anulează</button>
+     <button class="btn btn--danger" onclick="doDeleteWatchEntry('${id}',${idx})">🗑 Șterge</button>`);
+}
+
+async function doDeleteWatchEntry(id, idx) {
+  const m = S.movies[id];
+  const entry = m.watchHistory[idx];
+  try {
+    S.movies[id] = await dbRemoveWatch(id, entry);
+    logAction('🗑', S.movies[id].title, 'Vizionare ștearsă ('+ (fmtDate(entry.date)||'—') +')', null);
+    renderDetailModal(id);
+    render();
+    showToast('Vizionare ștearsă ✓','success');
+  } catch(e) { showToast('Eroare: '+e.message,'error'); }
 }
 
 function confirmDeleteModal(id) {
@@ -625,18 +759,30 @@ function openMarkWatchedModal(id) {
      </div>
      <div class="field"><div class="toggle-row">
        <span class="toggle-label">Are extras / features</span>
-       <button class="toggle" id="mw-feat-toggle" onclick="toggleBtn(this)"></button>
-     </div></div>`,
+       <button class="toggle" id="mw-feat-toggle" onclick="toggleFeatInline(this)"></button>
+     </div></div>
+     <div class="field" id="mw-special-wrap" style="display:none">
+       <label>Feature special (opțional)</label>
+       <input type="text" id="mw-special-name" placeholder="ex: Heart of Darkness (1991)">
+     </div>`,
     `<button class="btn btn--ghost" onclick="closeModal()">Anulează</button>
      <button class="btn btn--accent" onclick="confirmMarkWatched('${id}')">✓ Confirmă</button>`);
 }
 
+function toggleFeatInline(btn) {
+  btn.classList.toggle('toggle--on');
+  const wrap = $('#mw-special-wrap');
+  if (wrap) wrap.style.display = btn.classList.contains('toggle--on') ? '' : 'none';
+}
+
 async function confirmMarkWatched(id) {
   const date=($('#mw-date').value||today()), commN=parseInt($('#mw-comm').value)||0, hasFeat=$('#mw-feat-toggle').classList.contains('toggle--on');
+  const specialName = ($('#mw-special-name')?.value||'').trim();
   closeModal(); showToast('Se salvează…');
   try {
     let data = await dbAddWatch(id, date);
     if (commN>0||hasFeat) data = await dbSetExtras(id, commN, hasFeat);
+    if (hasFeat && specialName) data = await dbAddSpecialFeature(id, specialName);
     S.movies[id]=data; render(); showToast(`${S.movies[id].title} — văzut 🎬`,'success');
   } catch(e) { showToast('Eroare: '+e.message,'error'); }
 }
@@ -841,12 +987,14 @@ async function syncFromFile() {
     ]);
     const colData=await colResp.json(), seedData=await seedResp.json();
     if (colData.movies?.length) {
-      const {added,updated,movies}=await dbSync(colData,seedData,S.movies);
+      const {added,updated,addedTitles,movies}=await dbSync(colData,seedData,S.movies);
       S.movies=movies;
+      (addedTitles||[]).forEach(title => logAction('📦', title, 'Adăugat în colecție (sync blu-ray.com)', null));
       showToast(`Sync OK — ${added} noi, ${updated} actualizate ✓`,'success');
     } else {
-      const {added,movies}=await dbSeedOnly(seedData,S.movies);
+      const {added,addedTitles,movies}=await dbSeedOnly(seedData,S.movies);
       S.movies=movies;
+      (addedTitles||[]).forEach(title => logAction('📦', title, 'Adăugat din seed', null));
       showToast(`Seed importat — ${added} filme ✓`,'success');
     }
     render();
@@ -905,7 +1053,7 @@ function toggle(key) { S.expanded.has(key)?S.expanded.delete(key):S.expanded.add
 function switchTab(tab) {
   S.tab=tab;
   S.activeFilters.clear();
-  renderFilterChips();
+  syncFilterBadge();
   render();
 }
 // toggleView removed — use setView() via drawer
@@ -1066,13 +1214,13 @@ function renderStats() {
 
   addSection(s => {
     const sec=mk('div','stats-section');
-    sec.appendChild(mk('div','stats-section-title','Activitate lunară (18 luni)'));
+    sec.appendChild(mk('div','stats-section-title','Activitate lunară (12 luni)'));
     sec.appendChild(makeMonthlyChart(s)); return sec;
   }, 'monthly');
 
   addSection(s => {
     const sec=mk('div','stats-section');
-    sec.appendChild(mk('div','stats-section-title','Calendar activitate (12 luni)'));
+    sec.appendChild(mk('div','stats-section-title','Calendar activitate (3 luni)'));
     const w=mk('div','heatmap-wrap'); w.appendChild(makeHeatmap(s.heatmap)); sec.appendChild(w); return sec;
   }, 'heatmap');
 
@@ -1235,6 +1383,10 @@ function makeMonthlyChart(s) {
     const col = mk('div','bar-v-col');
     const bar = mk('div','bar-v-bar'+(count===0?' bar-v-bar--zero':''));
     bar.style.height='0px';
+    if (count > 0) {
+      bar.style.cursor = 'pointer';
+      bar.onclick = () => openMonthFilmsModal(month, s.watchEvents);
+    }
     col.appendChild(bar); wrap.appendChild(col);
     setTimeout(()=>{ bar.style.height = (count/maxVal*88)+'px'; },120);
     const lbl = mk('div','bar-v-label', MO[parseInt(month.substring(5,7))-1]);
@@ -1244,14 +1396,31 @@ function makeMonthlyChart(s) {
   return container;
 }
 
+function openMonthFilmsModal(monthKey, watchEvents) {
+  const films = watchEvents.filter(e => e.date.substring(0,7) === monthKey)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  const d = new Date(monthKey+'-15T12:00:00');
+  const monthName = d.toLocaleDateString('ro-RO',{month:'long',year:'numeric'});
+  const rows = films.map(f =>
+    '<div class="month-film-row">'+
+      '<span class="month-film-date">'+fmtDate(f.date)+'</span>'+
+      '<span class="month-film-title">'+esc(f.title)+'</span>'+
+      (f.runtime?'<span class="month-film-rt">'+f.runtime+'m</span>':'')+
+    '</div>'
+  ).join('');
+  openModal('📅 '+monthName.charAt(0).toUpperCase()+monthName.slice(1),
+    '<div class="month-films-list">'+rows+'</div>',
+    '<button class="btn btn--ghost" onclick="closeModal()">Închide</button>');
+}
+
 // ── Heatmap ───────────────────────────────────────────
 function makeHeatmap(heatmapData) {
-  const CELL=16, GAP=3, ROWS=7, ns='http://www.w3.org/2000/svg';
+  const CELL=24, GAP=4, ROWS=7, ns='http://www.w3.org/2000/svg';
   const today=new Date();
-  const start=new Date(today); start.setFullYear(start.getFullYear()-1);
+  const start=new Date(today); start.setMonth(start.getMonth()-3);
   start.setDate(start.getDate()-start.getDay());
   const cols=Math.ceil((today-start)/(7*24*3600000))+1;
-  const W=cols*(CELL+GAP)+1, H=ROWS*(CELL+GAP)+22;
+  const W=cols*(CELL+GAP)+1, H=ROWS*(CELL+GAP)+26;
   const svg=document.createElementNS(ns,'svg');
   svg.setAttribute('viewBox','0 0 '+W+' '+H);
   svg.style.cssText='width:'+W+'px;min-width:'+W+'px;display:block;';
@@ -1263,8 +1432,9 @@ function makeHeatmap(heatmapData) {
   while(cur<=today) {
     if(row===0 && cur.getMonth()!==lastM) {
       const t=document.createElementNS(ns,'text');
-      t.setAttribute('x',col*(CELL+GAP)); t.setAttribute('y',10);
-      t.setAttribute('font-size','8'); t.setAttribute('fill','var(--text-3)');
+      t.setAttribute('x',col*(CELL+GAP)); t.setAttribute('y',12);
+      t.setAttribute('font-size','11'); t.setAttribute('fill','var(--text-2)');
+      t.setAttribute('font-weight','600');
       t.textContent=MO[cur.getMonth()]; svg.appendChild(t);
       lastM=cur.getMonth();
     }
@@ -1272,9 +1442,9 @@ function makeHeatmap(heatmapData) {
     const cnt=heatmapData[ds]||0;
     const lvl=cnt===0?0:cnt===1?1:cnt<=3?2:3;
     const rect=document.createElementNS(ns,'rect');
-    rect.setAttribute('x',col*(CELL+GAP)); rect.setAttribute('y',row*(CELL+GAP)+14);
+    rect.setAttribute('x',col*(CELL+GAP)); rect.setAttribute('y',row*(CELL+GAP)+18);
     rect.setAttribute('width',CELL); rect.setAttribute('height',CELL);
-    rect.setAttribute('rx',2); rect.setAttribute('fill',COLORS[lvl]);
+    rect.setAttribute('rx',4); rect.setAttribute('fill',COLORS[lvl]);
     svg.appendChild(rect);
     cur.setDate(cur.getDate()+1); row++;
     if(row===7){row=0;col++;}
@@ -1539,16 +1709,16 @@ function getAchievementDefs(stats) {
   const defs = [
     { id:'watched', icon:'🎬', name:'Cineast în formare', desc:'Filme văzute',
       val:stats.watched,
-      levels:[{t:'🥉',n:1},{t:'🥈',n:10},{t:'🥇',n:25},{t:'💎',n:50}] },
+      levels:[{t:'🥉',n:50},{t:'🥈',n:150},{t:'🥇',n:400},{t:'💎',n:1000}] },
     { id:'rewatches', icon:'🔄', name:'Văzut și iar văzut', desc:'Vizionări totale cu rewatches',
       val:stats.watchEvents.length,
-      levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:25},{t:'⭐',n:50},{t:'♾️',n:100}] },
+      levels:[{t:'🥉',n:1},{t:'🥈',n:10},{t:'🥇',n:30},{t:'💎',n:75},{t:'⭐',n:150},{t:'♾️',n:300}] },
     { id:'productive', icon:'📅', name:'Luna productivă', desc:'Luni cu 5+ filme văzute',
       val:monthsProductiv,
       levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:20}] },
-    { id:'comm_pct', icon:'🎙', name:'Audiofil', desc:'% commentary tracks văzute',
-      val:stats.commTotal?Math.round(stats.commWatched/stats.commTotal*100):0,
-      levels:[{t:'🥉',n:10},{t:'🥈',n:25},{t:'🥇',n:50},{t:'💎',n:75},{t:'⭐',n:100}], suffix:'%' },
+    { id:'comm_pct', icon:'🎙', name:'Audiofil', desc:'Commentary tracks văzute (număr)',
+      val:stats.commWatched,
+      levels:[{t:'🥉',n:10},{t:'🥈',n:50},{t:'🥇',n:150},{t:'💎',n:300},{t:'⭐',n:500}] },
     { id:'comm_serious', icon:'🎓', name:'Commentary serios', desc:'Filme cu 4+ tracks toate bifate',
       val:stats.fullDisc,
       levels:[{t:'🥉',n:1},{t:'🥈',n:3},{t:'🥇',n:5},{t:'💎',n:10}] },
@@ -1560,7 +1730,7 @@ function getAchievementDefs(stats) {
       levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:25}] },
     { id:'collection', icon:'📦', name:'Colecționar', desc:'Titluri în colecție',
       val:stats.total,
-      levels:[{t:'🥉',n:25},{t:'🥈',n:50},{t:'🥇',n:100},{t:'💎',n:200},{t:'⭐',n:500}] },
+      levels:[{t:'🥉',n:50},{t:'🥈',n:150},{t:'🥇',n:300},{t:'💎',n:500},{t:'⭐',n:1000}] },
   ];
 
   // Per-decade achievements (dynamic)
@@ -1633,13 +1803,17 @@ function makeAchievementsSection(stats) {
 // ── MILESTONES ─────────────────────────────────────────────
 const MILESTONES = [
   {id:'w_first', icon:'🎬', title:'Primul film! 🎬', desc:'Prima vizionare înregistrată.', check:s=>s.watched>=1},
-  {id:'w_10',    icon:'🍿', title:'Abia te-ai încălzit 🍿', desc:'10 filme văzute.', check:s=>s.watched>=10},
-  {id:'w_25',    icon:'⚡', title:'Un sfert din drum ⚡', desc:'25 filme văzute.', check:s=>s.watched>=25},
+  {id:'w_50',    icon:'🍿', title:'Abia te-ai încălzit 🍿', desc:'50 filme văzute.', check:s=>s.watched>=50},
+  {id:'w_150',   icon:'⚡', title:'Un start serios ⚡', desc:'150 filme văzute.', check:s=>s.watched>=150},
+  {id:'w_400',   icon:'🎓', title:'Cinefil confirmat 🎓', desc:'400 filme văzute.', check:s=>s.watched>=400},
   {id:'w_50pct', icon:'🏁', title:'Jumătatea drumului 🏁', desc:'50% din colecție văzută.', check:s=>s.watchedPct>=50},
   {id:'w_100pct',icon:'🏆', title:'Colecție completă. Legendă. 🏆', desc:'Ai văzut tot!', check:s=>s.watchedPct>=100},
   {id:'rw_first',icon:'🔄', title:'Nu te-ai săturat? Bine! 🔄', desc:'Prima re-vizionare.', check:s=>s.watchEvents.length>s.watched&&s.watched>0},
-  {id:'rw_5',    icon:'🔄', title:'Se vede că ai favorite 🔄', desc:'5 re-vizionări totale (extra față de prima vizionare).', check:s=>s.watchEvents.length>=s.watched+5},
+  {id:'rw_10',   icon:'🔄', title:'Se vede că ai favorite 🔄', desc:'10 re-vizionări totale.', check:s=>s.watchEvents.length>=s.watched+10},
+  {id:'rw_30',   icon:'🔄', title:'Colecție trăită, nu decorativă 🎬', desc:'30 re-vizionări totale.', check:s=>s.watchEvents.length>=s.watched+30},
   {id:'c_first', icon:'🎙', title:'Ai auzit și ce au de zis 🎙', desc:'Primul commentary track bisat.', check:s=>s.commWatched>=1},
+  {id:'c_50',    icon:'🎙', title:'Audiofil în devenire 🎙', desc:'50 commentary tracks văzute.', check:s=>s.commWatched>=50},
+  {id:'c_150',   icon:'🎙', title:'Audiofil convins 🎙', desc:'150 commentary tracks văzute.', check:s=>s.commWatched>=150},
   {id:'c_4plus', icon:'🎓', title:'Cinefil serios 🎓', desc:'Ai terminat toate tracks la un film cu minim 4 commentaries.', check:s=>s.fullDisc>=1},
   {id:'c_5film', icon:'🎓', title:'Commentary dedicat 🎓', desc:'5 filme cu toate comentariile văzute.', check:s=>s.fullDisc>=5},
   {id:'pm_first',icon:'📅', title:'Luna productivă 📅', desc:'5+ filme vizionate într-o singură lună.', check:s=>Object.values(s.monthMap).some(v=>v>=5)},
@@ -1647,7 +1821,9 @@ const MILESTONES = [
   {id:'f_10',    icon:'🌟', title:'Features completionist 🌟', desc:'10 features speciale văzute.', check:s=>s.specialWatched>=10},
   {id:'disc_100',icon:'💿', title:'Zero neexplorat 💿', desc:'Disc 100% complet (watched + 4+ commentary).', check:s=>s.fullDisc>=1},
   {id:'col_50',  icon:'📦', title:'Cincizeci 📦', desc:'50 de titluri în colecție.', check:s=>s.total>=50},
-  {id:'col_100', icon:'💯', title:'Trei cifre. Respect. 💯', desc:'100 de titluri în colecție.', check:s=>s.total>=100},
+  {id:'col_150', icon:'📦', title:'O sută cincizeci 📦', desc:'150 de titluri în colecție.', check:s=>s.total>=150},
+  {id:'col_300', icon:'💯', title:'Trei sute. Respect. 💯', desc:'300 de titluri în colecție.', check:s=>s.total>=300},
+  {id:'col_1000',icon:'👑', title:'Colecție de nețintuit 👑', desc:'1000 de titluri în colecție.', check:s=>s.total>=1000},
 ];
 
 async function loadAchievedMilestones() {
@@ -1692,33 +1868,82 @@ function showMilestoneToast(m) {
 function openSearch() {
   document.body.classList.add('search-open');
   setTimeout(() => { $('#search-input')?.focus(); }, 300);
-  renderFilterChips();
 }
 
 function closeSearch() {
   S.search = '';
-  S.activeFilters.clear();
   document.body.classList.remove('search-open','has-search');
   const inp = $('#search-input');
   if (inp) inp.value = '';
   render();
 }
 
-function renderFilterChips() {
-  const container = $('#filter-chips');
-  if (!container) return;
-  const filters = TAB_FILTERS[S.tab] || [];
-  container.innerHTML = '';
-  filters.forEach(f => {
-    const chip = mk('button', 'chip-filter' + (S.activeFilters.has(f.id) ? ' chip-filter--active' : ''), f.label);
-    chip.onclick = () => {
-      if (S.activeFilters.has(f.id)) S.activeFilters.delete(f.id);
-      else S.activeFilters.add(f.id);
-      renderFilterChips();
-      render();
-    };
-    container.appendChild(chip);
-  });
+function openFiltersModal() {
+  const tabF = TAB_FILTERS[S.tab] || [];
+  const decades = [...new Set(list().map(m=>{
+    const yr = parseInt(m.year); return isNaN(yr)?null:Math.floor(yr/10)*10;
+  }).filter(d=>d!==null))].sort();
+
+  const chipsHTML = tabF.map(f => {
+    const active = S.activeFilters.has(f.id);
+    return '<button class="chip-filter'+(active?' chip-filter--active':'')+'" onclick="toggleActiveFilter(\''+f.id+'\')">'+f.label+'</button>';
+  }).join('');
+
+  const decadeChips = decades.map(d => {
+    const active = S.filterDecades.has(d);
+    return '<button class="decade-chip'+(active?' decade-chip--active':'')+'" onclick="toggleFilterDecade('+d+')">'+d+'s</button>';
+  }).join('');
+
+  openModal('🎚 Filtrează',
+    (tabF.length ? `<div class="field"><label>Rapid</label><div class="filter-chips-modal">${chipsHTML}</div></div>` : '') +
+    (decades.length ? `<div class="field"><label>Decadă (selecție multiplă)</label><div class="decade-chips">${decadeChips}</div></div>` : '') +
+    `<div class="field"><label>Durată</label>
+       <div class="range-wrap">
+         <div class="range-label"><span>Min: <span id="fadv-min-lbl">${S.filterRuntimeMin}</span>m</span>
+                                     <span>Max: <span id="fadv-max-lbl">${S.filterRuntimeMax>=999?'∞':S.filterRuntimeMax+'m'}</span></span></div>
+         <input type="range" min="0" max="300" step="15" value="${S.filterRuntimeMin}"
+                oninput="updateFilterRuntime('min',this.value)">
+         <input type="range" min="0" max="300" step="15" value="${S.filterRuntimeMax>=999?300:S.filterRuntimeMax}"
+                oninput="updateFilterRuntime('max',this.value)" style="margin-top:4px">
+       </div>
+     </div>`,
+    `<button class="btn btn--ghost" onclick="resetAllFilters()">Resetează tot</button>
+     <button class="btn btn--accent" onclick="closeModal();syncFilterBadge();render()">✓ Aplică</button>`);
+}
+
+function toggleActiveFilter(id) {
+  if (S.activeFilters.has(id)) S.activeFilters.delete(id);
+  else S.activeFilters.add(id);
+  openFiltersModal(); // re-render with updated state
+}
+
+function toggleFilterDecade(d) {
+  if (S.filterDecades.has(d)) S.filterDecades.delete(d);
+  else S.filterDecades.add(d);
+  openFiltersModal();
+}
+
+function updateFilterRuntime(which, val) {
+  val = parseInt(val);
+  if (which==='min') { S.filterRuntimeMin = val; $('#fadv-min-lbl').textContent = val; }
+  else { S.filterRuntimeMax = val>=300?999:val; $('#fadv-max-lbl').textContent = val>=300?'∞':val+'m'; }
+}
+
+function resetAllFilters() {
+  S.activeFilters.clear();
+  S.filterDecades.clear();
+  S.filterRuntimeMin = 0;
+  S.filterRuntimeMax = 999;
+  closeModal();
+  syncFilterBadge();
+  render();
+}
+
+function syncFilterBadge() {
+  const active = S.activeFilters.size > 0 || S.filterDecades.size > 0 ||
+                 S.filterRuntimeMin > 0 || S.filterRuntimeMax < 999;
+  const dot = $('#filter-active-dot');
+  if (dot) dot.style.display = active ? 'block' : 'none';
 }
 
 // ════════════════════════════════════════════════════
@@ -1901,6 +2126,7 @@ async function initApp() {
   $$('.nav__item').forEach(btn=>btn.addEventListener('click',()=>switchTab(btn.dataset.tab)));
   $('#btn-menu').addEventListener('click', openDrawer);
   $('#btn-stats')?.addEventListener('click', openStats);
+  $('#btn-filter')?.addEventListener('click', openFiltersModal);
   $('#btn-search').addEventListener('click', () => {
     if (document.body.classList.contains('search-open')) closeSearch();
     else openSearch();

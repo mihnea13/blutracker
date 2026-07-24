@@ -151,6 +151,7 @@ async function dbSync(collectionData, seedData, existingMovies) {
 
   const result = { ...existingMovies };
   let added = 0, updated = 0;
+  const addedTitles = [];
 
   for (const movie of (collectionData.movies || [])) {
     const norm = normTitle(movie.title);
@@ -164,6 +165,7 @@ async function dbSync(collectionData, seedData, existingMovies) {
       batch.set(ref, doc);
       result[ref.id] = doc;
       added++;
+      addedTitles.push(movie.title);
     } else {
       // Film existent — actualizare minimală
       const ref = moviesRef.doc(existingId);
@@ -189,7 +191,7 @@ async function dbSync(collectionData, seedData, existingMovies) {
   }
 
   if (ops > 0) await flushBatch();
-  return { added, updated, movies: result };
+  return { added, updated, addedTitles, movies: result };
 }
 
 /**
@@ -206,6 +208,7 @@ async function dbSeedOnly(seedData, existingMovies) {
 
   const result = { ...existingMovies };
   let added = 0;
+  const addedTitles = [];
 
   for (const s of (seedData || [])) {
     if (byNorm[normTitle(s.title)]) continue; // deja există
@@ -226,9 +229,10 @@ async function dbSeedOnly(seedData, existingMovies) {
     await ref.set(doc);
     result[ref.id] = doc;
     added++;
+    addedTitles.push(s.title);
   }
 
-  return { added, movies: result };
+  return { added, addedTitles, movies: result };
 }
 
 // ── HELPERS ──────────────────────────────────────────────────
@@ -324,4 +328,17 @@ async function dbSaveTmdb(id, tmdb) {
  */
 async function dbDeleteMovie(id) {
   await _db.collection('movies').doc(id).delete();
+}
+
+/**
+ * Editeaza data unei intrari specifice din watchHistory (dupa index).
+ */
+async function dbEditWatchDate(id, idx, newDate) {
+  const ref = _db.collection('movies').doc(id);
+  const data = (await ref.get()).data();
+  const wh = [...(data.watchHistory||[])];
+  if (!wh[idx]) throw new Error('Intrare inexistenta');
+  wh[idx] = { ...wh[idx], date: newDate };
+  await ref.update({ watchHistory: wh });
+  return { ...data, watchHistory: wh };
 }
