@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-21T20:15:13.326107Z",
+  "lastUpdated": "2026-07-24T14:21:03.111430Z",
   "movies": [
     {
       "title": "Alien",
@@ -142,6 +142,17 @@
       "userComment": ""
     },
     {
+      "title": "Prometheus",
+      "year": "",
+      "blurayComId": "63701",
+      "posterUrl": "https://images.static-bluray.com/products/20/7695_3_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Babadook",
       "year": "",
       "blurayComId": "327369",
@@ -244,6 +255,28 @@
       "year": "",
       "blurayComId": "17942",
       "posterUrl": "https://images.static-bluray.com/products/20/7_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Che: Part One",
+      "year": "",
+      "blurayComId": "20406",
+      "posterUrl": "https://images.static-bluray.com/products/20/2471_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Che: Part Two",
+      "year": "",
+      "blurayComId": "318911",
+      "posterUrl": "https://images.static-bluray.com/products/20/28245_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -662,7 +695,7 @@
       "title": "La La Land",
       "year": "",
       "blurayComId": "458490",
-      "posterUrl": "https://images.static-bluray.com/products/20/39624_6_small.jpg",
+      "posterUrl": "https://images.static-bluray.com/products/20/39624_7_small.jpg",
       "watchDates": [
         "2025-03-09"
       ],
@@ -1085,6 +1118,17 @@
       "year": "",
       "blurayComId": "411321",
       "posterUrl": "https://images.static-bluray.com/products/20/36885_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Sinners",
+      "year": "",
+      "blurayComId": "1897027",
+      "posterUrl": "https://images.static-bluray.com/products/20/161880_4_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
