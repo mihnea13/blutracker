@@ -47,9 +47,29 @@ TV_RX        = re.compile(
     re.IGNORECASE
 )
 MOVIE_URL_RX = re.compile(r'https://www\.blu-ray\.com/([A-Za-z0-9][^/"?]+)/(\d{4,})/')
+YEAR_IN_TITLE_TAG_RX = re.compile(r'\((\d{4})\)')
+
+# ── LISTA MANUALA DE SERIALE TV ────────────────────────────────
+# Pagina de listare (collection.php?action=hybrid&letter=X) nu include
+# marcajul "(TV Series)" in atributul alt/title al link-ului pentru toate
+# intrarile — unele scapa de regex-ul TV_RX. Adauga aici orice serial nou
+# care ajunge gresit in colectie (titlu exact, minuscule):
+KNOWN_TV_TITLES = {
+    "code geass: lelouch of the rebellion",
+    "house of the dragon",
+    "human planet",
+    "lost",
+    "planet earth",
+}
+
+def is_excluded(title: str) -> bool:
+    if TV_RX.search(title):
+        return True
+    if title.lower().strip() in KNOWN_TV_TITLES:
+        return True
+    return False
 
 # ── LOG BUFFER ─────────────────────────────────────────────────
-# Fiecare linie printata merge si in acest buffer, salvat la final in scraper_log.txt.
 LOG_LINES = []
 
 def log(msg=""):
@@ -58,8 +78,25 @@ def log(msg=""):
     LOG_LINES.append(msg)
 
 
-def is_excluded(title: str) -> bool:
-    return bool(TV_RX.search(title))
+def fetch_year_from_page(s: requests.Session, href: str) -> str:
+    """
+    Fetch pagina individuala a filmului pentru a extrage anul, atunci cand
+    pagina de listare nu il include (cazul "Graveyard of Honor ()").
+    Anul apare sigur in <title> sau meta og:title al paginii individuale.
+    """
+    try:
+        r = s.get(href, timeout=8)
+        m = re.search(r'<title>([^<]+)</title>', r.text)
+        if m:
+            ym = YEAR_IN_TITLE_TAG_RX.search(m.group(1))
+            if ym:
+                return ym.group(1)
+        m2 = re.search(r'property="og:title"\s+content="[^"]*\((\d{4})\)', r.text)
+        if m2:
+            return m2.group(1)
+    except Exception:
+        pass
+    return ""
 
 
 def login(s: requests.Session) -> bool:
@@ -75,11 +112,12 @@ def login(s: requests.Session) -> bool:
 
 
 # ── PARSE ONE LETTER PAGE ─────────────────────────────────────
-def parse_letter_page(html: str, seen_ids: set, letter: str, log_detail: dict) -> list[dict]:
+def parse_letter_page(s: requests.Session, html: str, seen_ids: set, letter: str, log_detail: dict) -> list[dict]:
     """
     log_detail acumuleaza detalii pentru scraper_log.txt:
       - filtered_tv: titluri respinse ca seriale TV
       - filtered_dup: titluri respinse ca duplicate (release_id sau titlu+an deja vazut)
+      - year_resolved: cazuri unde anul a fost obtinut prin fetch suplimentar
     """
     soup = BeautifulSoup(html, "html.parser")
     movies = []
@@ -106,15 +144,38 @@ def parse_letter_page(html: str, seen_ids: set, letter: str, log_detail: dict) -
             log_detail["filtered_tv"].append(f"{title} ({year})" if year else title)
             continue
 
-        norm = re.sub(r'[^a-z0-9]', '', title.lower()) + '|' + year
-        if norm in seen_ids:
-            log_detail["filtered_dup"].append(f"{title} ({year}) [letter={letter}]")
-            continue
+        norm = re.sub(r'[^a-z0-9]', '', title.lower())
+        key = norm + '|' + year
+
+        if key in seen_ids:
+            # Coliziune. Daca anul lipsea, incearca sa-l obtii de pe pagina
+            # individuala a filmului — ar putea fi doua filme distincte cu
+            # titlu identic (ex. remake), pe care listarea nu le distinge.
+            if not year:
+                fetched_year = fetch_year_from_page(s, href)
+                if fetched_year:
+                    key2 = norm + '|' + fetched_year
+                    if key2 not in seen_ids:
+                        year = fetched_year
+                        key = key2
+                        log_detail.setdefault("year_resolved", []).append(
+                            f"{title} → an confirmat {fetched_year} [letter={letter}]")
+                    else:
+                        log_detail["filtered_dup"].append(
+                            f"{title} [letter={letter}] (an confirmat {fetched_year}, ediție deja existentă)")
+                        continue
+                else:
+                    log_detail["filtered_dup"].append(
+                        f"{title} [letter={letter}] (an indisponibil nici pe pagina proprie, tratat ca duplicat)")
+                    continue
+            else:
+                log_detail["filtered_dup"].append(f"{title} ({year}) [letter={letter}]")
+                continue
 
         img = a.find("img")
         poster = (img.get("src") or img.get("data-src") or "") if img else ""
         seen_ids.add(release_id)
-        seen_ids.add(norm)
+        seen_ids.add(key)
         movies.append({
             "title":           title,
             "year":            year,
@@ -146,7 +207,7 @@ def get_owned_collection(s: requests.Session) -> tuple[list[dict], dict]:
                 log(f"  {letter}: HTTP {resp.status_code}, skip")
                 log_detail["per_letter"][letter] = f"HTTP {resp.status_code}"
                 continue
-            batch = parse_letter_page(resp.text, seen_ids, letter, log_detail)
+            batch = parse_letter_page(s, resp.text, seen_ids, letter, log_detail)
             log_detail["per_letter"][letter] = len(batch)
             if batch:
                 log(f"  {letter}: +{len(batch)} filme")
@@ -241,6 +302,11 @@ def main():
     if log_detail["filtered_tv"]:
         log(f"\n   Filtrate ca seriale TV ({len(log_detail['filtered_tv'])}):")
         for t in log_detail["filtered_tv"]:
+            log(f"     - {t}")
+
+    if log_detail.get("year_resolved"):
+        log(f"\n   An rezolvat prin fetch suplimentar ({len(log_detail['year_resolved'])}):")
+        for t in log_detail["year_resolved"]:
             log(f"     - {t}")
 
     if log_detail["filtered_dup"]:
