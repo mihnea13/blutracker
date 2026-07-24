@@ -1,0 +1,174 @@
+═══ BluTracker Scraper Run — 2026-07-24T14:35:35.399388Z ═══
+
+1. Login...
+  ✓ Login reusit
+
+2. Colectie (litera cu litera)...
+  A: +13 filme
+  B: +9 filme
+  C: +9 filme
+  D: +5 filme
+  E: +1 filme
+  F: +2 filme
+  G: +5 filme
+  H: +6 filme
+  I: +6 filme
+  K: +2 filme
+  L: +6 filme
+  M: +9 filme
+  N: +3 filme
+  O: +4 filme
+  P: +3 filme
+  R: +3 filme
+  S: +18 filme
+  T: +7 filme
+  U: +1 filme
+  W: +6 filme
+  Y: +1 filme
+  Z: +1 filme
+
+   Total filme retinute: 120
+   Total link-uri /Titlu/ID/ vazute in HTML: 244
+
+   Filtrate ca duplicate (4):
+     - Alien³ () [letter=A]
+     - Alien³ () [letter=A]
+     - Graveyard of Honor () [letter=G]
+     - Graveyard of Honor () [letter=G]
+
+3. Watch dates + comments...
+
+  Fetch watch dates pentru 120 filme...
+    20/120 procesate (9 cu date)...
+    40/120 procesate (19 cu date)...
+    60/120 procesate (27 cu date)...
+    80/120 procesate (32 cu date)...
+    100/120 procesate (41 cu date)...
+    120/120 procesate (52 cu date)...
+  Done: 52/120 filme cu watch dates
+
+✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
+  120 filme  |  52 cu watch dates  |  2 cu features tags
+  Durata rulare: 68.5s
+
+── LISTA COMPLETA FILME (120) ──
+  A Clockwork Orange  id=18400 [watched: 2026-02-08]
+  A Most Violent Year  id=330845
+  Alien  id=19887
+  Alien: Covenant  id=577989
+  Alien: Resurrection  id=19890
+  Alien: Romulus  id=1680691
+  Aliens  id=19888
+  American Boy: A Profile of Steven Prince  id=1258916
+  American Gangster  id=18714 [watched: 2026-04-18]
+  American History X  id=19474 [watched: 2025-03-02]
+  Anatomy of a Murder  id=64298
+  Angel Heart  id=20410 [watched: 2025-08-31]
+  Apocalypse Now  id=21871 [watched: 2026-06-01]
+  Argo  id=128491
+  Babylon  id=1223550 [watched: 2025-06-15]
+  Ben-Hur  id=18643 [watched: 2025-08-23]
+  Black Mass  id=347430
+  Black Swan  id=25691 [watched: 2025-10-12]
+  Blade Runner  id=18435
+  Che: Part One  id=20406
+  Che: Part Two  id=318911
+  Chinatown  id=20192 [watched: 2026-04-17]
+  Cinema Paradiso  id=25740 [watched: 2025-05-23]
+  Code Geass: Lelouch of the Rebellion  id=139239
+  Cold Light of Day  id=330598 [watched: 2025-07-07]
+  Dark City  id=18690 [watched: 2025-09-16]
+  Dogville  id=97945 [watched: 2026-02-01]
+  Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb  id=22260
+  End of Watch  id=128498
+  Frost/Nixon  id=19689
+  Gattaca  id=18059 [watched: 2025-04-05]
+  Get Carter  id=161633
+  Gran Torino  id=19813
+  Graveyard of Honor  id=484146 [watched: 2025-05-26]
+  Henry: Portrait of a Serial Killer  id=20179
+  Hiroshima  id=1284362
+  House of the Dragon  id=1218290
+  Human Planet  id=29387
+  Interstellar  id=206156 [watched: 2025-08-17]
+  Investigation of a Citizen Above Suspicion  id=164810
+  It's Not Just You, Murray!  id=1258914
+  It: Chapter Two  id=795499 [watched: 2025-03-08]
+  Italianamerican  id=1233084
+  King of New York  id=18431 [watched: 2026-06-24]
+  La La Land  id=458490 [watched: 2025-03-09]
+  Lady Vengeance  id=29002
+  Lawrence of Arabia  id=18109
+  Light Sleeper  id=333407 [watched: 2026-03-01]
+  Lost  id=19752
+  Mad Max  id=21989
+  Mad Max 2: The Road Warrior  id=18304
+  Mad Max Beyond Thunderdome  id=107716
+  Mad Max: Fury Road  id=234155
+  Making  id=2094466
+  Mean Streets  id=27157
+  Memento  id=18043 [watched: 2025-11-02]
+  Memories of Murder  id=28415
+  Network  id=23828 [watched: 2026-02-15]
+  Night Moves  id=196574
+  Nosferatu  id=1632869
+  O Lucky Malcolm!  id=1444224
+  Oldboy  id=18412 [watched: 2025-07-30]
+  Once Upon a Time in Hollywood  id=811512 [watched: 2025-04-07]
+  Pale Rider  id=18751 [watched: 2025-07-29]
+  Planet Earth  id=18275
+  Prometheus  id=63701
+  Requiem for a Dream  id=18234 [watched: 2025-04-21]
+  RocknRolla  id=19391 [watched: 2026-04-26]
+  Rosemary's Baby  id=97935
+  Saint Maud  id=1199856
+  Sanjuro  id=20832
+  Satantango  id=359002
+  Session 9  id=112424 [watched: 2025-12-09]
+  Seven Samurai  id=24392 [watched: 2025-06-27]
+  Sicario  id=411321
+  Sinners  id=1897027
+  Solaris  id=28143 [watched: 2025-03-30]
+  Stalker  id=96682 [watched: 2026-03-20]
+  Stanley Kubrick: A Life in Pictures  id=235556
+  Stray Dog  id=146823
+  Sweeney Todd: The Demon Barber of Fleet Street  id=18862 [watched: 2025-09-17]
+  Sympathy for Mr. Vengeance  id=29043 [watched: 2025-06-25]
+  Taxi Driver  id=18973 [watched: 2025-09-21]
+  Tenebrae  id=28132 [watched: 2026-07-01]
+  The Babadook  id=327369 [watched: 2025-10-28]
+  The Batman  id=786253 [watched: 2025-03-18]
+  The Big Shave  id=1258915
+  The Bridge on the River Kwai  id=17942
+  The Coffee Table  id=1801182
+  The Conversation  id=31742 [watched: 2025-10-03]
+  The Deer Hunter  id=22860
+  The Departed  id=18247 [watched: 2025-09-28]
+  The Fighter  id=27804 [watched: 2026-01-17]
+  The Girl with the Dragon Tattoo  id=59480 [watched: 2026-02-01]
+  The Hateful Eight  id=355379 [watched: 2026-07-18]
+  The Hidden Fortress  id=146811
+  The Imitation Game  id=328915
+  The Killing of a Sacred Deer  id=727487 [watched: 2025-07-25]
+  The Long Goodbye  id=137492
+  The Outlaw Josey Wales  id=27638
+  The Pianist  id=28471
+  The Sacred Spirit  id=1566660 [watched: 2025-05-19]
+  The Sacrifice  id=33044
+  The Shining  id=18398 [watched: 2025-06-28]
+  The Social Network  id=23439
+  The Stylist  id=1418767 [watched: 2026-01-12]
+  The Thing  id=18935 [watched: 2025-05-30,2025-07-28]
+  The Wages of Fear  id=27314
+  The Wicker Man  id=36202
+  The Wolf of Wall Street  id=147117 [watched: 2026-01-25]
+  The Working Class Goes to Heaven  id=257291
+  Throne of Blood  id=98711
+  To Live and Die in L.A.  id=19841
+  Touch of Evil  id=36357 [watched: 2025-10-04]
+  Training Day  id=18014 [watched: 2025-11-01]
+  Unforgiven  id=18018
+  What's a Nice Girl Like You Doing in a Place Like This?  id=1258913
+  Whiplash  id=326080 [watched: 2025-07-07]
+  Yojimbo  id=20831
+  Zodiac  id=18349 [watched: 2026-07-04]
