@@ -1,4 +1,4 @@
-═══ BluTracker Scraper Run — 2026-07-24T15:30:48.904031Z ═══
+═══ BluTracker Scraper Run — 2026-07-27T09:40:06.625461Z ═══
 
 1. Login...
   ✓ Login reusit
@@ -57,7 +57,7 @@
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
   117 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 55.3s
+  Durata rulare: 60.1s
 
 ── LISTA COMPLETA FILME (117) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
