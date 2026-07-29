@@ -1,5 +1,5 @@
-// BluTracker v2.3
-const BT_VERSION = '2.3';
+// BluTracker v2.4
+const BT_VERSION = '2.4';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -1154,7 +1154,9 @@ function saveGithubToken() {
 }
 
 async function syncFromFile() {
-  const btn=$('#btn-sync'); btn.textContent='⏳'; btn.disabled=true;
+  const btn = $('#btn-sync'); // poate lipsi (buton mutat in drawer) - folosim optional chaining
+  if (btn) { btn.textContent='⏳'; btn.disabled=true; }
+  showToast('Se sincronizează…');
   try {
     const [colResp,seedResp]=await Promise.all([
       fetch('./data/collection.json?t='+Date.now()),
@@ -1162,10 +1164,11 @@ async function syncFromFile() {
     ]);
     const colData=await colResp.json(), seedData=await seedResp.json();
     if (colData.movies?.length) {
-      const {added,updated,addedTitles,movies}=await dbSync(colData,seedData,S.movies);
+      const {added,updated,ambiguous,addedTitles,movies}=await dbSync(colData,seedData,S.movies);
       S.movies=movies;
       (addedTitles||[]).forEach(title => logAction('📦', title, 'Adăugat în colecție (sync blu-ray.com)', null));
-      showToast(`Sync OK — ${added} noi, ${updated} actualizate ✓`,'success');
+      const ambText = ambiguous ? `, ${ambiguous} ambigue (vezi Debug Sync)` : '';
+      showToast(`Sync OK — ${added} noi, ${updated} actualizate${ambText} ✓`,'success');
     } else {
       const {added,addedTitles,movies}=await dbSeedOnly(seedData,S.movies);
       S.movies=movies;
@@ -1174,14 +1177,15 @@ async function syncFromFile() {
     }
     render();
     prefetchTmdb();
-  } catch(e){showToast('Sync eșuat: '+e.message,'error');}
-  finally { btn.textContent='⟳'; btn.disabled=false; }
+  } catch(e){ console.error('syncFromFile error:', e); showToast('Sync eșuat: '+e.message,'error'); }
+  finally { if (btn) { btn.textContent='⟳'; btn.disabled=false; } }
 }
 
 async function triggerAndSync() {
   const token = localStorage.getItem('bt_github_token');
   if (!token) { openSetGithubToken(); return; }
-  const btn=$('#btn-sync'); btn.textContent='⏳'; btn.disabled=true;
+  const btn = $('#btn-sync'); // poate lipsi (buton mutat in drawer)
+  if (btn) { btn.textContent='⏳'; btn.disabled=true; }
   try {
     const r = await fetch(
       'https://api.github.com/repos/' + GITHUB_REPO + '/actions/workflows/sync.yml/dispatches',
@@ -1191,16 +1195,16 @@ async function triggerAndSync() {
                   'Content-Type':'application/json' },
         body: JSON.stringify({ref:'main'}) }
     );
-    if (r.status === 401) { localStorage.removeItem('bt_github_token'); showToast('Token invalid','error'); btn.textContent='⟳'; btn.disabled=false; return; }
-    if (r.status !== 204) { showToast('Eroare GitHub: ' + r.status,'error'); btn.textContent='⟳'; btn.disabled=false; return; }
+    if (r.status === 401) { localStorage.removeItem('bt_github_token'); showToast('Token invalid','error'); if(btn){btn.textContent='⟳';btn.disabled=false;} return; }
+    if (r.status !== 204) { showToast('Eroare GitHub: ' + r.status,'error'); if(btn){btn.textContent='⟳';btn.disabled=false;} return; }
     showToast('Scraper pornit! Sync automat în 3 minute 🚀','success');
     let secs = 180;
     const iv = setInterval(() => {
       secs--;
-      btn.textContent = Math.floor(secs/60) + ':' + String(secs%60).padStart(2,'0');
-      if (secs <= 0) { clearInterval(iv); syncFromFile().finally(()=>{btn.textContent='⟳';btn.disabled=false;}); }
+      if (btn) btn.textContent = Math.floor(secs/60) + ':' + String(secs%60).padStart(2,'0');
+      if (secs <= 0) { clearInterval(iv); syncFromFile().finally(()=>{ if(btn){btn.textContent='⟳';btn.disabled=false;} }); }
     }, 1000);
-  } catch(e) { showToast('Eroare: '+e.message,'error'); btn.textContent='⟳'; btn.disabled=false; }
+  } catch(e) { showToast('Eroare: '+e.message,'error'); if(btn){btn.textContent='⟳';btn.disabled=false;} }
 }
 
 function doSync() { openSyncMenu(); }
