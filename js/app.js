@@ -1,5 +1,5 @@
-// BluTracker v2.1
-const BT_VERSION = '2.1';
+// BluTracker v2.2
+const BT_VERSION = '2.2';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -959,64 +959,81 @@ async function generateSyncDebugReport() {
   ]);
   const excludedIds = new Set(exDoc.exists ? (exDoc.data().ids||[]) : []);
   const firestoreMovies = S.movies;
+  const fsEntries = Object.entries(firestoreMovies);
 
   const byBlurayId = {};
   const byTitleYear = {};
-  Object.entries(firestoreMovies).forEach(([docId,m]) => {
+  fsEntries.forEach(([docId,m]) => {
     if (m.blurayComId) byBlurayId[m.blurayComId] = docId;
     const key = normTitleDebug(m.title)+'|'+(m.year||'');
     if (!(key in byTitleYear)) byTitleYear[key] = docId;
   });
 
   const lines = [];
-  lines.push('═══ BLUTRACKER — DEBUG SYNC REPORT ═══');
+  lines.push('═══ BLUTRACKER — DEBUG SYNC REPORT (v2) ═══');
   lines.push(new Date().toISOString());
   lines.push('');
-  lines.push('collection.json (de pe blu-ray.com, ultimul scrape): '+(colData.movies?.length||0)+' filme');
-  lines.push('Firestore (ce vede aplicatia ACUM): '+Object.keys(firestoreMovies).length+' filme');
-  lines.push('Lista de excluse (sterse manual candva): '+excludedIds.size+' id-uri');
+  lines.push('collection.json: '+(colData.movies?.length||0)+' filme');
+  lines.push('Firestore: '+fsEntries.length+' filme');
+  lines.push('Excluse: '+excludedIds.size);
   lines.push('');
 
-  let matched=0, wouldAdd=0, blocked=0;
-  const blockedList=[], wouldAddList=[], seenIdsInJson=new Set();
+  let matched=0, wouldAdd=0;
+  const blockedList=[], wouldAddDetailed=[], seenIdsInJson=new Set();
 
   (colData.movies||[]).forEach(m => {
     seenIdsInJson.add(m.blurayComId);
 
     if (excludedIds.has(m.blurayComId)) {
-      blocked++;
-      blockedList.push(m.title+' (id='+m.blurayComId+', an='+(m.year||'?')+')');
+      blockedList.push({title:m.title, id:m.blurayComId});
       return;
     }
     if (byBlurayId[m.blurayComId]) { matched++; return; }
 
-    const key = normTitleDebug(m.title)+'|'+(m.year||'');
+    const norm = normTitleDebug(m.title);
+    const key = norm+'|'+(m.year||'');
     if (key in byTitleYear) { matched++; return; }
 
+    // Nu s-a gasit match exact — cauta orice potrivire APROXIMATIVA (ignorand anul)
+    // ca sa vedem EXACT de ce difera (an diferit? blurayComId lipsa? titlu usor diferit?)
+    const near = fsEntries.filter(([id,fm]) => normTitleDebug(fm.title) === norm);
+
     wouldAdd++;
-    wouldAddList.push(m.title+' (id='+m.blurayComId+', an='+(m.year||'?')+')');
+    wouldAddDetailed.push({
+      title: m.title, id: m.blurayComId, year: m.year||'', normKey: key,
+      near: near.map(([id,fm]) => ({
+        docId: id, title: fm.title, year: fm.year||'(lipsă)',
+        blurayComId: fm.blurayComId||'(lipsă)'
+      }))
+    });
   });
 
-  lines.push('── REZULTAT PE URMATOAREA SINCRONIZARE ──');
-  lines.push('Deja exista (matched): '+matched);
-  lines.push('S-ar ADAUGA ca noi: '+wouldAdd);
-  if (wouldAddList.length) {
-    lines.push('  Lista celor ce s-ar adauga:');
-    wouldAddList.forEach(t=>lines.push('    - '+t));
-  }
-  lines.push('BLOCATE de exclusion list (NU se vor adauga niciodata pana nu le scoti manual): '+blocked);
-  if (blockedList.length) {
-    lines.push('  Lista celor blocate:');
-    blockedList.forEach(t=>lines.push('    - '+t));
-  }
+  lines.push('── REZULTAT ──');
+  lines.push('Matched: '+matched);
+  lines.push('Ar fi adăugate ca noi: '+wouldAdd);
+  lines.push('Blocate (exclusion list): '+blockedList.length);
   lines.push('');
 
-  // Orfani: filme in Firestore care au blurayComId dar acesta nu mai apare deloc in collection.json
-  const orphans = Object.entries(firestoreMovies).filter(([id,m]) => m.blurayComId && !seenIdsInJson.has(m.blurayComId));
-  lines.push('Filme in Firestore cu blurayComId care NU mai apare in scrape-ul curent: '+orphans.length);
+  lines.push('── DETALIU PENTRU FIECARE "AR FI ADĂUGAT CA NOU" ──');
+  wouldAddDetailed.forEach(w => {
+    lines.push('');
+    lines.push('▶ "'+w.title+'"  id='+w.id+'  an='+(w.year||'lipsă')+'  cheie_căutată="'+w.normKey+'"');
+    if (w.near.length) {
+      w.near.forEach(n => {
+        lines.push('    ~ GĂSIT în Firestore cu titlu identic normalizat: docId='+n.docId+
+                    '  titlu="'+n.title+'"  an='+n.year+'  blurayComId='+n.blurayComId);
+      });
+    } else {
+      lines.push('    (Niciun titlu asemănător în Firestore — chiar pare film nou)');
+    }
+  });
+
+  lines.push('');
+  const orphans = fsEntries.filter(([id,m]) => m.blurayComId && !seenIdsInJson.has(m.blurayComId));
+  lines.push('Filme în Firestore cu blurayComId absent din scrape-ul curent: '+orphans.length);
   orphans.forEach(([id,m])=>lines.push('    - '+m.title+' (id='+m.blurayComId+')'));
 
-  return lines.join('\n');
+  return { report: lines.join('\n'), blockedList };
 }
 
 // Copie locala a normTitle (identica cu cea din db.js) — evita dependenta incrucisata
@@ -1028,13 +1045,31 @@ function normTitleDebug(t) {
 async function openSyncDebugModal() {
   showToast('Se generează raportul…');
   try {
-    const report = await generateSyncDebugReport();
+    const { report, blockedList } = await generateSyncDebugReport();
     S._lastDebugReport = report;
+
+    const blockedHTML = blockedList.length
+      ? blockedList.map(b =>
+          '<div class="debug-blocked-row"><span>'+esc(b.title)+'</span>'+
+          '<button class="btn btn--ghost btn--sm" onclick="unexcludeAndRefreshDebug(\''+b.id+'\')">↩ Deblochează</button></div>'
+        ).join('')
+      : '<p style="font-size:13px;color:var(--text-2)">Nimic blocat momentan.</p>';
+
     openModal('🔍 Debug Sync',
-      '<textarea readonly class="debug-textarea" onclick="this.select()">'+esc(report)+'</textarea>'+
-      '<p style="font-size:11px;color:var(--text-2);margin-top:8px">Tap pe text → selectează tot → copiază → trimite-mi raportul.</p>',
+      '<p class="debug-section-label">FILME BLOCATE (excluse manual):</p>'+
+      blockedHTML+
+      '<p class="debug-section-label" style="margin-top:16px">RAPORT COMPLET (copiază pentru debug):</p>'+
+      '<textarea readonly class="debug-textarea" onclick="this.select()">'+esc(report)+'</textarea>',
       '<button class="btn btn--ghost" onclick="downloadSyncDebugReport()">⬇ Descarcă .txt</button>'+
       '<button class="btn btn--accent" onclick="closeModal()">Închide</button>');
+  } catch(e) { showToast('Eroare: '+e.message,'error'); }
+}
+
+async function unexcludeAndRefreshDebug(blurayComId) {
+  try {
+    await dbUnexclude(blurayComId);
+    showToast('Deblocat ✓ — dă Sync ca să reapară.', 'success');
+    openSyncDebugModal();
   } catch(e) { showToast('Eroare: '+e.message,'error'); }
 }
 
