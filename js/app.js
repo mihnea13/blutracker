@@ -1,5 +1,5 @@
-// BluTracker v2.2
-const BT_VERSION = '2.2';
+// BluTracker v2.3
+const BT_VERSION = '2.3';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -962,15 +962,31 @@ async function generateSyncDebugReport() {
   const fsEntries = Object.entries(firestoreMovies);
 
   const byBlurayId = {};
-  const byTitleYear = {};
+  const titleGroups = {};
   fsEntries.forEach(([docId,m]) => {
     if (m.blurayComId) byBlurayId[m.blurayComId] = docId;
-    const key = normTitleDebug(m.title)+'|'+(m.year||'');
-    if (!(key in byTitleYear)) byTitleYear[key] = docId;
+    const norm = normTitleDebug(m.title);
+    if (!titleGroups[norm]) titleGroups[norm] = [];
+    titleGroups[norm].push({docId, year:m.year||'', blurayComId:m.blurayComId||'', title:m.title});
   });
 
+  // Logica IDENTICA cu dbSync (db.js) — raportul trebuie sa prezica exact ce face sync-ul real
+  function findMatch(title, year) {
+    const norm = normTitleDebug(title);
+    const group = titleGroups[norm] || [];
+    if (!group.length) return { docId:null, reason:'niciun candidat — film nou' };
+    if (year) {
+      const exact = group.find(g=>g.year===year);
+      if (exact) return { docId:exact.docId, reason:'an exact potrivit ('+year+')' };
+      if (group.length===1 && !group[0].year) return { docId:group[0].docId, reason:'candidat unic, an Firestore necunoscut' };
+      return { docId:null, reason:'an specificat ('+year+') dar nu se potriveste cu niciun candidat — probabil editie diferita' };
+    }
+    if (group.length===1) return { docId:group[0].docId, reason:'candidat unic, an necunoscut pe ambele parti' };
+    return { docId:null, reason:'AMBIGUU — '+group.length+' candidati cu acelasi titlu, fara an sa disambigheze' };
+  }
+
   const lines = [];
-  lines.push('═══ BLUTRACKER — DEBUG SYNC REPORT (v2) ═══');
+  lines.push('═══ BLUTRACKER — DEBUG SYNC REPORT (v3) ═══');
   lines.push(new Date().toISOString());
   lines.push('');
   lines.push('collection.json: '+(colData.movies?.length||0)+' filme');
@@ -978,62 +994,70 @@ async function generateSyncDebugReport() {
   lines.push('Excluse: '+excludedIds.size);
   lines.push('');
 
-  let matched=0, wouldAdd=0;
-  const blockedList=[], wouldAddDetailed=[], seenIdsInJson=new Set();
+  // Grupuri de titluri duplicate in Firestore — risc de coliziune viitoare
+  const dupGroups = Object.entries(titleGroups).filter(([k,g])=>g.length>1);
+  lines.push('── TITLURI DUPLICATE ÎN FIRESTORE ──');
+  lines.push('Grupuri cu 2+ documente identice ca titlu: '+dupGroups.length);
+  dupGroups.forEach(([norm,g]) => {
+    lines.push('  "'+g[0].title+'" — '+g.length+' documente:');
+    g.forEach(x=>lines.push('    docId='+x.docId+'  an='+(x.year||'lipsă')+'  blurayComId='+(x.blurayComId||'lipsă')));
+  });
+  lines.push('');
+
+  const missingId = fsEntries.filter(([id,m])=>!m.blurayComId);
+  lines.push('Filme în Firestore FĂRĂ blurayComId (din seed, nesincronizate încă cu blu-ray.com): '+missingId.length);
+  lines.push('');
+
+  let added=0, updated=0, blocked=0, ambiguous=0;
+  const addedList=[], blockedList=[], ambiguousList=[], seenIdsInJson=new Set();
 
   (colData.movies||[]).forEach(m => {
     seenIdsInJson.add(m.blurayComId);
-
     if (excludedIds.has(m.blurayComId)) {
-      blockedList.push({title:m.title, id:m.blurayComId});
+      blocked++; blockedList.push({title:m.title, id:m.blurayComId});
       return;
     }
-    if (byBlurayId[m.blurayComId]) { matched++; return; }
+    if (byBlurayId[m.blurayComId]) { updated++; return; }
 
-    const norm = normTitleDebug(m.title);
-    const key = norm+'|'+(m.year||'');
-    if (key in byTitleYear) { matched++; return; }
-
-    // Nu s-a gasit match exact — cauta orice potrivire APROXIMATIVA (ignorand anul)
-    // ca sa vedem EXACT de ce difera (an diferit? blurayComId lipsa? titlu usor diferit?)
-    const near = fsEntries.filter(([id,fm]) => normTitleDebug(fm.title) === norm);
-
-    wouldAdd++;
-    wouldAddDetailed.push({
-      title: m.title, id: m.blurayComId, year: m.year||'', normKey: key,
-      near: near.map(([id,fm]) => ({
-        docId: id, title: fm.title, year: fm.year||'(lipsă)',
-        blurayComId: fm.blurayComId||'(lipsă)'
-      }))
-    });
-  });
-
-  lines.push('── REZULTAT ──');
-  lines.push('Matched: '+matched);
-  lines.push('Ar fi adăugate ca noi: '+wouldAdd);
-  lines.push('Blocate (exclusion list): '+blockedList.length);
-  lines.push('');
-
-  lines.push('── DETALIU PENTRU FIECARE "AR FI ADĂUGAT CA NOU" ──');
-  wouldAddDetailed.forEach(w => {
-    lines.push('');
-    lines.push('▶ "'+w.title+'"  id='+w.id+'  an='+(w.year||'lipsă')+'  cheie_căutată="'+w.normKey+'"');
-    if (w.near.length) {
-      w.near.forEach(n => {
-        lines.push('    ~ GĂSIT în Firestore cu titlu identic normalizat: docId='+n.docId+
-                    '  titlu="'+n.title+'"  an='+n.year+'  blurayComId='+n.blurayComId);
-      });
-    } else {
-      lines.push('    (Niciun titlu asemănător în Firestore — chiar pare film nou)');
+    const {docId, reason} = findMatch(m.title, m.year);
+    if (docId) { updated++; return; }
+    if (reason.startsWith('AMBIGUU')) {
+      ambiguous++;
+      ambiguousList.push(m.title+' (id='+m.blurayComId+', an='+(m.year||'lipsă')+') — '+reason);
+      return;
     }
+    added++;
+    addedList.push(m.title+' (id='+m.blurayComId+', an='+(m.year||'lipsă')+') — '+reason);
   });
 
+  lines.push('── SIMULARE SYNC (ce s-ar întâmpla la Sync acum) ──');
+  lines.push('Actualizate (matched): '+updated);
+  lines.push('Adăugate ca noi: '+added);
+  lines.push('Blocate (exclusion list): '+blocked);
+  lines.push('Ambigue (SKIP automat, necesită clarificare manuală): '+ambiguous);
   lines.push('');
-  const orphans = fsEntries.filter(([id,m]) => m.blurayComId && !seenIdsInJson.has(m.blurayComId));
-  lines.push('Filme în Firestore cu blurayComId absent din scrape-ul curent: '+orphans.length);
-  orphans.forEach(([id,m])=>lines.push('    - '+m.title+' (id='+m.blurayComId+')'));
 
-  return { report: lines.join('\n'), blockedList };
+  if (addedList.length) {
+    lines.push('── FILME CE S-AR ADĂUGA CA NOI ('+addedList.length+') ──');
+    addedList.forEach(t=>lines.push('  + '+t));
+    lines.push('');
+  }
+  if (ambiguousList.length) {
+    lines.push('── FILME AMBIGUE — necesită clarificare manuală ('+ambiguousList.length+') ──');
+    ambiguousList.forEach(t=>lines.push('  ? '+t));
+    lines.push('');
+  }
+  if (blockedList.length) {
+    lines.push('── FILME BLOCATE (exclusion list) ('+blockedList.length+') ──');
+    blockedList.forEach(b=>lines.push('  ✗ '+b.title+' (id='+b.id+')'));
+    lines.push('');
+  }
+
+  const orphans = fsEntries.filter(([id,m]) => m.blurayComId && !seenIdsInJson.has(m.blurayComId));
+  lines.push('Filme în Firestore cu blurayComId absent din scrape-ul curent (posibil șters de pe blu-ray.com): '+orphans.length);
+  orphans.forEach(([id,m])=>lines.push('  - '+m.title+' (id='+m.blurayComId+')'));
+
+  return { report: lines.join('\n'), blockedList, ambiguousList };
 }
 
 // Copie locala a normTitle (identica cu cea din db.js) — evita dependenta incrucisata

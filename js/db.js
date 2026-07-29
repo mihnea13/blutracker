@@ -146,33 +146,62 @@ async function dbSync(collectionData, seedData, existingMovies) {
   } catch(e) {}
 
   // Lookup PRIMAR: blurayComId (sigur, unic)
-  // Lookup FALLBACK: titlu+an normalizat (evita coliziunea intre filme cu titlu identic
-  // dar an diferit, ex. "Graveyard of Honor" 1975 vs 2002 — fiecare isi pastreaza cheia proprie)
-  const byBlurayId = {}, byTitleYear = {};
+  // Lookup FALLBACK: grupare pe titlu normalizat (FARA an in cheie) — anul din
+  // Firestore vine adesea de la imbogatirea automata cu TMDB (an real, ex 1979),
+  // in timp ce scraper-ul aproape mereu are anul gol pe pagina de listare.
+  // Compararea stricta "titlu+an" esua sistematic pentru orice film deja imbogatit.
+  const byBlurayId = {};
+  const titleGroups = {};
   Object.entries(existingMovies).forEach(([docId, m]) => {
     if (m.blurayComId) byBlurayId[m.blurayComId] = docId;
-    const key = normTitle(m.title) + '|' + (m.year || '');
-    if (!(key in byTitleYear)) byTitleYear[key] = docId; // primul castiga, nu se suprascrie
+    const norm = normTitle(m.title);
+    if (!titleGroups[norm]) titleGroups[norm] = [];
+    titleGroups[norm].push({ docId, year: m.year || '' });
   });
 
-  // Seed lookup
+  /**
+   * - Un singur candidat cu acel titlu -> match direct, indiferent daca anii difera.
+   * - Mai multi candidati (ex: Graveyard of Honor 1975+2002) -> anul disambigueaza;
+   *   daca nu se potriveste niciunul, film nou (editie diferita).
+   * - Mai multi candidati, an necunoscut pe ambele parti -> ambiguu, null (nu ghicim).
+   */
+  function findExistingMatch(title, year) {
+    const norm = normTitle(title);
+    const group = titleGroups[norm];
+    if (!group || !group.length) return null;
+    if (year) {
+      const exact = group.find(g => g.year === year);
+      if (exact) return exact.docId;
+      if (group.length === 1 && !group[0].year) return group[0].docId;
+      return null;
+    }
+    if (group.length === 1) return group[0].docId;
+    return null;
+  }
+
   const seedMap = {};
   (seedData || []).forEach(s => { seedMap[normTitle(s.title)] = s; });
 
   const result = { ...existingMovies };
-  let added = 0, updated = 0, skipped = 0;
+  let added = 0, updated = 0, skipped = 0, ambiguous = 0;
   const addedTitles = [];
 
   for (const movie of (collectionData.movies || [])) {
     if (movie.blurayComId && excludedIds.has(movie.blurayComId)) { skipped++; continue; }
 
     const norm = normTitle(movie.title);
-    const titleYearKey = norm + '|' + (movie.year || '');
-    const existingId = byBlurayId[movie.blurayComId] || byTitleYear[titleYearKey];
+    const existingId = byBlurayId[movie.blurayComId] || findExistingMatch(movie.title, movie.year);
     const seed = seedMap[norm];
 
+    const group = titleGroups[norm];
+    if (!existingId && group && group.length > 1) {
+      // Ambiguu: mai multi candidati cu acelasi titlu, nu am putut disambigua sigur.
+      // Sarim peste (nu cream duplicat gresit) in loc sa ghicim.
+      ambiguous++;
+      continue;
+    }
+
     if (!existingId) {
-      // Film nou
       const ref = moviesRef.doc();
       const doc = buildNewMovie(movie, seed);
       batch.set(ref, doc);
@@ -180,8 +209,6 @@ async function dbSync(collectionData, seedData, existingMovies) {
       added++;
       addedTitles.push(movie.title);
     } else {
-      // Film existent — actualizare minimala, INCLUSIV blurayComId
-      // (esential: fara asta, matching-ul viitor tot pica pe titlu, fragil)
       const ref = moviesRef.doc(existingId);
       const ex = existingMovies[existingId];
       const upd = {
@@ -189,8 +216,8 @@ async function dbSync(collectionData, seedData, existingMovies) {
         lastSynced: ts(),
         blurayComId: movie.blurayComId || ex.blurayComId || '',
         ...(movie.posterUrl ? { posterUrl: movie.posterUrl } : {}),
+        ...(movie.year && !ex.year ? { year: movie.year } : {}),
       };
-      // Aplica seed commentary daca nu exista inca
       if (seed && (!ex.commentaryTracks || !ex.commentaryTracks.length)) {
         upd.commentaryTracks = seed.commentaryTracks.map(t => ({
           watched: t.watched, watchDate: null,
@@ -206,7 +233,7 @@ async function dbSync(collectionData, seedData, existingMovies) {
   }
 
   if (ops > 0) await flushBatch();
-  return { added, updated, skipped, addedTitles, movies: result };
+  return { added, updated, skipped, ambiguous, addedTitles, movies: result };
 }
 
 /**
