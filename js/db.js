@@ -96,8 +96,12 @@ async function dbToggleGenericFeatures(id) {
   const ref = _db.collection('movies').doc(id);
   const data = (await ref.get()).data();
   const next = !data.genericFeaturesWatched;
-  await ref.update({ genericFeaturesWatched: next });
-  return { ...data, genericFeaturesWatched: next };
+  const upd = {
+    genericFeaturesWatched: next,
+    genericFeaturesWatchDate: next ? new Date().toISOString().split('T')[0] : null,
+  };
+  await ref.update(upd);
+  return { ...data, ...upd };
 }
 
 // ── SPECIAL (NAMED) FEATURES ─────────────────────────────────

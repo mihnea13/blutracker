@@ -1,5 +1,5 @@
-// BluTracker v2.4
-const BT_VERSION = '2.4';
+// BluTracker v2.5
+const BT_VERSION = '2.5';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -57,6 +57,8 @@ const SORT_OPTIONS = {
     { value:'year-asc',     label:'An: vechi → nou' },
     { value:'runtime-desc', label:'Durată: lung → scurt' },
     { value:'runtime-asc',  label:'Durată: scurt → lung' },
+    { value:'added-desc',   label:'Adăugat în colecție: recent → vechi' },
+    { value:'added-asc',    label:'Adăugat în colecție: vechi → recent' },
   ],
   watched: [
     { value:'az',                label:'A → Z' },
@@ -69,6 +71,8 @@ const SORT_OPTIONS = {
     { value:'watch-count-asc',   label:'Nr. vizionări ↑' },
     { value:'last-watch-desc',   label:'Ultima vizionare ↓' },
     { value:'first-watch-asc',   label:'Prima vizionare ↑' },
+    { value:'added-desc',        label:'Adăugat în colecție: recent → vechi' },
+    { value:'added-asc',         label:'Adăugat în colecție: vechi → recent' },
   ],
 };
 const lastDate  = m => [...(m.watchHistory||[])].sort((a,b)=>b.date>a.date?1:-1)[0]?.date||'';
@@ -144,6 +148,8 @@ function filterSort(arr) {
     case 'first-watch-asc':  return out.sort((a,b)=>firstDate(a).localeCompare(firstDate(b)));
     case 'watch-count-desc': return out.sort((a,b)=>(b.watchHistory?.length||0)-(a.watchHistory?.length||0));
     case 'watch-count-asc':  return out.sort((a,b)=>(a.watchHistory?.length||0)-(b.watchHistory?.length||0));
+    case 'added-desc':       return out.sort((a,b)=>(b.addedAt||'').localeCompare(a.addedAt||''));
+    case 'added-asc':        return out.sort((a,b)=>(a.addedAt||'').localeCompare(b.addedAt||''));
     default:             return out.sort((a,b)=>sortTitle(a.title).localeCompare(sortTitle(b.title)));
   }
 }
@@ -1259,6 +1265,9 @@ function computeStats() {
   const w = watched();
   const allTracks = all.flatMap(m => m.commentaryTracks||[]);
   const watchedTracks = allTracks.filter(t => t.watched);
+
+  // watchEvents — folosit pentru grafice bazate STRICT pe data (lunar, prima/ultima vizionare)
+  // include doar intrarile cu data valida (nu poti pune pe un grafic temporal un eveniment fara data)
   const watchEvents = [];
   w.forEach(m => (m.watchHistory||[]).forEach(wh => {
     if (wh.date && wh.date.length >= 10) watchEvents.push({date:wh.date, title:m.title, runtime:m.runtime||0});
@@ -1275,7 +1284,7 @@ function computeStats() {
     if (m.watchHistory?.length) decadeMap[key].watched++;
   });
 
-  // Monthly (last 18 months)
+  // Monthly (last 12 months)
   const monthMap = {};
   const now = new Date();
   for (let i=11;i>=0;i--) {
@@ -1313,10 +1322,35 @@ function computeStats() {
     return m.watchHistory?.length && t.length>=4 && t.every(x=>x.watched);
   }).length;
 
-  // Heatmap (last 365 days)
+  // Feature status per film (analog cu commStatus, pt donut consistent)
+  const featStatusOf = m => {
+    const spec = m.specialFeatures||[];
+    if (!m.hasGenericFeatures && !spec.length) return null; // fara features deloc
+    const genOK = !m.hasGenericFeatures || m.genericFeaturesWatched;
+    const specDone = spec.filter(f=>f.watched).length;
+    if (genOK && specDone===spec.length) return 'done';
+    if ((m.hasGenericFeatures&&m.genericFeaturesWatched) || specDone>0) return 'partial';
+    return 'pending';
+  };
+  const fByStatus = {pending:0,partial:0,done:0};
+  all.forEach(m => { const s=featStatusOf(m); if(s) fByStatus[s]++; });
+
+  // ── HEATMAP: TOATE activitatile (vizionari + comentarii bifate + features bifate) ──
+  // nu doar vizionari de film — orice interactiune de tracking conteaza ca "activitate"
   const heatmap = {};
   const yr = new Date(); yr.setFullYear(yr.getFullYear()-1);
-  watchEvents.forEach(e => { if(new Date(e.date+'T12:00:00')>=yr) heatmap[e.date]=(heatmap[e.date]||0)+1; });
+  const addHeat = dateStr => {
+    if (!dateStr || dateStr.length < 10) return;
+    const d = new Date(dateStr+'T12:00:00');
+    if (isNaN(d.getTime()) || d < yr) return;
+    heatmap[dateStr] = (heatmap[dateStr]||0)+1;
+  };
+  watchEvents.forEach(e => addHeat(e.date));
+  all.forEach(m => {
+    (m.commentaryTracks||[]).forEach(t => { if (t.watched) addHeat(t.watchDate); });
+    (m.specialFeatures||[]).forEach(f => { if (f.watched) addHeat(f.watchDate); });
+    if (m.hasGenericFeatures && m.genericFeaturesWatched) addHeat(m.genericFeaturesWatchDate);
+  });
 
   // Longest films
   const longestWatched = [...w].filter(m=>m.runtime).sort((a,b)=>b.runtime-a.runtime).slice(0,3);
@@ -1333,13 +1367,19 @@ function computeStats() {
   const cByStatus = {pending:0,partial:0,done:0,none:0};
   all.forEach(m => { const s=commStatus(m); if(s) cByStatus[s]++; else cByStatus.none++; });
 
-  const totalMin = w.reduce((s,m)=>s+(m.runtime||0),0);
+  // ── TIMP TOTAL DE VIZIONARE ──────────────────────────────────
+  // BUG anterior: se calcula runtime O SINGURA DATA per film unic, ignorand rewatch-urile
+  // si excluzand orice vizionare fara data explicita din watchHistory.
+  // Fix: se calculeaza direct din tab-ul Vazute — runtime * nr.de vizionari (watchHistory.length),
+  // indiferent daca acele vizionari au sau nu data (o vizionare conteaza chiar si fara data salvata).
+  const totalMin = w.reduce((s,m) => s + (m.runtime||0) * (m.watchHistory?.length||0), 0);
+
   return {
     total:all.length, watched:w.length, unwatched:unwatched().length,
     watchedPct: all.length?Math.round(w.length/all.length*100):0,
     totalMin, totalHours:Math.floor(totalMin/60), totalDays:Math.floor(totalMin/60/24),
     commTotal:allTracks.length, commWatched:watchedTracks.length,
-    watchEvents, cByStatus, decadeMap, monthMap, rb, directors,
+    watchEvents, cByStatus, fByStatus, decadeMap, monthMap, rb, directors,
     withGenFeat:withGenFeat.length, genFeatWatched:withGenFeat.filter(m=>m.genericFeaturesWatched).length,
     allSpecial:allSpecial.length, specialWatched:allSpecial.filter(f=>f.watched).length,
     fullDisc, heatmap, longestWatched, longestUnwatched, favDecade, maxMonth,
@@ -1479,6 +1519,7 @@ function makeDonutsRow(s) {
 
   // Donut 1: watched vs unwatched
   const d1 = mk('div','donut-item');
+  d1.appendChild(mk('div','donut-title','Colecție'));
   d1.appendChild(makeSVGDonut(
     [{pct:p,color:'var(--green)'},{pct:100-p,color:'var(--surface-2)'}],
     p+'%','văzut'
@@ -1491,17 +1532,18 @@ function makeDonutsRow(s) {
   });
   d1.appendChild(l1); row.appendChild(d1);
 
-  // Donut 2: commentary status
+  // Donut 2: commentary status (per film)
   if (s.commTotal > 0) {
     const cPct = Math.round(s.commWatched/s.commTotal*100);
     const pendN = s.cByStatus.pending, partN = s.cByStatus.partial, doneN = s.cByStatus.done;
     const tot2 = pendN+partN+doneN||1;
     const d2 = mk('div','donut-item');
+    d2.appendChild(mk('div','donut-title','🎙 Commentary tracks'));
     d2.appendChild(makeSVGDonut([
       {pct:Math.round(doneN/tot2*100),color:'var(--green)'},
       {pct:Math.round(partN/tot2*100),color:'var(--amber)'},
       {pct:Math.round(pendN/tot2*100),color:'var(--red)'},
-    ], cPct+'%','tracks'));
+    ], cPct+'%','tracks văzute'));
     const l2 = mk('div','donut-legend');
     [{c:'var(--green)',t:'Complete'},{c:'var(--amber)',t:'Parțial'},{c:'var(--red)',t:'Niciun track'}].forEach(({c,t})=>{
       const li=mk('div','legend-item');
@@ -1510,6 +1552,27 @@ function makeDonutsRow(s) {
     });
     d2.appendChild(l2); row.appendChild(d2);
   }
+
+  // Donut 3: features status per film — acelasi stil ca Comentarii (consistenta UI)
+  const fTot = s.fByStatus.pending + s.fByStatus.partial + s.fByStatus.done;
+  if (fTot > 0) {
+    const fPctDone = Math.round(s.fByStatus.done/fTot*100);
+    const d3 = mk('div','donut-item');
+    d3.appendChild(mk('div','donut-title','🎞 Extras & Features'));
+    d3.appendChild(makeSVGDonut([
+      {pct:Math.round(s.fByStatus.done/fTot*100),color:'var(--green)'},
+      {pct:Math.round(s.fByStatus.partial/fTot*100),color:'var(--amber)'},
+      {pct:Math.round(s.fByStatus.pending/fTot*100),color:'var(--red)'},
+    ], fPctDone+'%','filme complete'));
+    const l3 = mk('div','donut-legend');
+    [{c:'var(--green)',t:'Complete'},{c:'var(--amber)',t:'Parțial'},{c:'var(--red)',t:'Niciun feature'}].forEach(({c,t})=>{
+      const li=mk('div','legend-item');
+      const dot=mk('span','legend-dot'); dot.style.background=c;
+      li.append(dot,document.createTextNode(t)); l3.appendChild(li);
+    });
+    d3.appendChild(l3); row.appendChild(d3);
+  }
+
   return row;
 }
 
@@ -1596,6 +1659,20 @@ function makeHeatmap(heatmapData) {
 
   const COLORS=['var(--surface-2)','#1c3a2e','#2d6b47','var(--green)'];
   const MO=['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Praguri DINAMICE — se adapteaza la distributia reala de activitate.
+  // Cu activitati combinate (vizionari+comentarii+features), praguri fixe
+  // faceau ca aproape tot sa cada in ultima categorie (doar verde/gol).
+  const counts = Object.values(heatmapData).filter(c=>c>0);
+  const maxCount = Math.max(...counts, 1);
+  function levelFor(cnt) {
+    if (cnt<=0) return 0;
+    const ratio = cnt/maxCount;
+    if (ratio <= 0.25) return 1;
+    if (ratio <= 0.6)  return 2;
+    return 3;
+  }
+
   let cur=new Date(start), col=0, row=0, lastM=-1;
 
   while(cur<=today) {
@@ -1609,11 +1686,12 @@ function makeHeatmap(heatmapData) {
     }
     const ds=cur.toISOString().substring(0,10);
     const cnt=heatmapData[ds]||0;
-    const lvl=cnt===0?0:cnt===1?1:cnt<=3?2:3;
+    const lvl=levelFor(cnt);
     const rect=document.createElementNS(ns,'rect');
     rect.setAttribute('x',col*(CELL+GAP)); rect.setAttribute('y',row*(CELL+GAP)+18);
     rect.setAttribute('width',CELL); rect.setAttribute('height',CELL);
     rect.setAttribute('rx',4); rect.setAttribute('fill',COLORS[lvl]);
+    if (cnt>0) { const titleEl=document.createElementNS(ns,'title'); titleEl.textContent=ds+': '+cnt+' activitati'; rect.appendChild(titleEl); }
     svg.appendChild(rect);
     cur.setDate(cur.getDate()+1); row++;
     if(row===7){row=0;col++;}
@@ -1676,7 +1754,7 @@ function makeDirectorsChart(s) {
 // ── Features stats ────────────────────────────────────
 function makeFeaturesStats(s) {
   const sec = mk('div','stats-section');
-  sec.appendChild(mk('div','stats-section-title','Extras & Features'));
+  sec.appendChild(mk('div','stats-section-title','Extras & Features — detaliu pe itemi'));
   const wrap = mk('div','chart-wrap');
 
   const items = [
@@ -1872,8 +1950,6 @@ const MILESTONES_TRACKING_ENABLED = true;
 
 function getAchievementDefs(stats) {
   const monthsProductiv = Object.values(stats.monthMap||{}).filter(v=>v>=5).length;
-  const decadesExplored = Object.entries(stats.decadeMap||{})
-    .filter(([k,v])=>k!=='?'&&v.watched>0).length;
 
   const defs = [
     { id:'watched', icon:'🎬', name:'Cineast în formare', desc:'Filme văzute',
@@ -1891,24 +1967,32 @@ function getAchievementDefs(stats) {
     { id:'comm_serious', icon:'🎓', name:'Commentary serios', desc:'Filme cu 4+ tracks toate bifate',
       val:stats.fullDisc,
       levels:[{t:'🥉',n:1},{t:'🥈',n:3},{t:'🥇',n:5},{t:'💎',n:10}] },
-    { id:'decades_exp', icon:'🗓', name:'Explorator de epoci', desc:'Decade diferite explorate',
-      val:decadesExplored,
-      levels:[{t:'🥉',n:2},{t:'🥈',n:4},{t:'🥇',n:6},{t:'💎',n:8}] },
     { id:'features', icon:'🌟', name:'Features hunter', desc:'Features speciale văzute',
       val:stats.specialWatched,
       levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:25}] },
+    { id:'features_generic', icon:'🎞', name:'Extras complet', desc:'Filme cu extras generice bifate',
+      val:stats.genFeatWatched,
+      levels:[{t:'🥉',n:5},{t:'🥈',n:20},{t:'🥇',n:50},{t:'💎',n:100}] },
     { id:'collection', icon:'📦', name:'Colecționar', desc:'Titluri în colecție',
       val:stats.total,
       levels:[{t:'🥉',n:50},{t:'🥈',n:150},{t:'🥇',n:300},{t:'💎',n:500},{t:'⭐',n:1000}] },
   ];
 
-  // Per-decade achievements (dynamic)
+  // Per-decade achievements (dinamice — future-proof: apar automat pentru orice
+  // decada noua din colectie, ex. daca adaugi un film din anii '30).
+  // Praguri scalate pe era: decade vechi (pre-1970) au tipic mult mai putine
+  // filme disponibile intr-o colectie fizica, deci praguri mai mici; 1970+
+  // foloseste pragurile standard.
+  function decadeLevels(decadeNum) {
+    if (decadeNum < 1970) return [{t:'🥉',n:2},{t:'🥈',n:5},{t:'🥇',n:10}];
+    return [{t:'🥉',n:5},{t:'🥈',n:15},{t:'🥇',n:30}];
+  }
   Object.entries(stats.decadeMap||{}).filter(([k])=>k!=='?').sort().forEach(([decade,data])=>{
     defs.push({
       id:'dec_'+decade, icon:'📽', name:'Ani '+decade+'s',
       desc:'Văzute din '+decade+'s: '+data.watched+'/'+data.total,
       val:data.watched, small:true,
-      levels:[{t:'🥉',n:5},{t:'🥈',n:10},{t:'🥇',n:25}],
+      levels: decadeLevels(parseInt(decade)),
     });
   });
 
@@ -1937,9 +2021,11 @@ function makeAchCard(a) {
   track.appendChild(fill);
   const lbl = mk('div','ach-progress-label');
   const sx = a.suffix||'';
+  // Clarificat: nivelul curent (tier badge sus) e mereu explicit, iar bara
+  // arata explicit progresul SPRE nivelul urmator, nu spre nivelul final.
   lbl.textContent = a.nextLvl
-    ? a.val+sx+' / '+a.nextLvl.n+sx+' → '+a.nextLvl.t
-    : a.val+sx+' — MAX '+a.curTier;
+    ? 'Nivel curent: '+(a.curTier||'🔒 blocat')+'  ·  '+a.val+sx+'/'+a.nextLvl.n+sx+' spre '+a.nextLvl.t
+    : 'Nivel curent: '+a.curTier+' (MAX) — '+a.val+sx;
   body.append(hdr, track, lbl);
   card.append(icon, body);
   setTimeout(()=>{ fill.style.width=a.pct+'%'; }, 150);
@@ -1990,6 +2076,9 @@ const MILESTONES = [
   {id:'pm_first',icon:'📅', title:'Luna productivă 📅', desc:'5+ filme vizionate într-o singură lună.', check:s=>Object.values(s.monthMap).some(v=>v>=5)},
   {id:'f_first', icon:'★',  title:'Dincolo de film ★', desc:'Primul feature special terminat.', check:s=>s.specialWatched>=1},
   {id:'f_10',    icon:'🌟', title:'Features completionist 🌟', desc:'10 features speciale văzute.', check:s=>s.specialWatched>=10},
+  {id:'fg_first',icon:'🎞', title:'Primul extras generic bifat 🎞', desc:'Ai bifat primul extras generic.', check:s=>s.genFeatWatched>=1},
+  {id:'fg_20',   icon:'🎞', title:'Extras cu regularitate 🎞', desc:'20 filme cu extras generice bifate.', check:s=>s.genFeatWatched>=20},
+  {id:'fg_50',   icon:'🎞', title:'Nimic nu-ți scapă 🎞', desc:'50 filme cu extras generice bifate.', check:s=>s.genFeatWatched>=50},
   {id:'disc_100',icon:'💿', title:'Zero neexplorat 💿', desc:'Disc 100% complet (watched + 4+ commentary).', check:s=>s.fullDisc>=1},
   {id:'col_50',  icon:'📦', title:'Cincizeci 📦', desc:'50 de titluri în colecție.', check:s=>s.total>=50},
   {id:'col_150', icon:'📦', title:'O sută cincizeci 📦', desc:'150 de titluri în colecție.', check:s=>s.total>=150},
@@ -2251,27 +2340,44 @@ function syncFilterBadge() {
 // DIARY VIEW
 // ════════════════════════════════════════════════════
 function renderDiary(main, movies) {
-  // Separa watchHistory entries: cu data valida vs fara data
+  // Colecteaza TOATE tipurile de activitate cu data: vizionari + commentary bifate + features bifate
   const entries = [];
   const noDateFilms = [];
+
   movies.forEach(m => {
     const wh = m.watchHistory || [];
     let hasValidDate = false;
     wh.forEach(w => {
-      if (w.date && w.date > '') { entries.push({...m, watchDate: w.date}); hasValidDate = true; }
+      if (w.date && w.date > '') {
+        entries.push({...m, evDate:w.date, evType:'watch', evLabel:'✓ Văzut'});
+        hasValidDate = true;
+      }
     });
-    // Film e in "fara data" doar daca NICIUNA din vizionarile lui n-are data valida
     if (wh.length && !hasValidDate) noDateFilms.push(m);
+
+    (m.commentaryTracks||[]).forEach((t,i) => {
+      if (t.watched && t.watchDate) {
+        entries.push({...m, evDate:t.watchDate, evType:'commentary', evLabel:'🎙 Commentary '+(i+1)+' ascultat'});
+      }
+    });
+    (m.specialFeatures||[]).forEach(f => {
+      if (f.watched && f.watchDate) {
+        entries.push({...m, evDate:f.watchDate, evType:'feature', evLabel:'★ '+f.name});
+      }
+    });
+    if (m.hasGenericFeatures && m.genericFeaturesWatched && m.genericFeaturesWatchDate) {
+      entries.push({...m, evDate:m.genericFeaturesWatchDate, evType:'feature', evLabel:'🎞 Extras generice'});
+    }
   });
-  entries.sort((a,b) => b.watchDate.localeCompare(a.watchDate));
+  entries.sort((a,b) => b.evDate.localeCompare(a.evDate));
 
   if (!entries.length && !noDateFilms.length) {
-    main.appendChild(emptyState('📅','Nicio dată de vizionare înregistrată.')); return;
+    main.appendChild(emptyState('📅','Nicio activitate cu dată înregistrată.')); return;
   }
 
   // Sectiune "Fara data" - mereu prima, editabila direct
   if (noDateFilms.length) {
-    const hdr = mk('div','diary-month-header','⚠ Fără dată înregistrată ('+noDateFilms.length+')');
+    const hdr = mk('div','diary-month-header','⚠ Vizionări fără dată ('+noDateFilms.length+')');
     hdr.style.color = 'var(--amber)';
     main.appendChild(hdr);
     noDateFilms.sort((a,b)=>sortTitle(a.title).localeCompare(sortTitle(b.title))).forEach(m => {
@@ -2295,7 +2401,7 @@ function renderDiary(main, movies) {
 
   let lastMonth = '';
   entries.forEach(e => {
-    const month = e.watchDate.substring(0,7);
+    const month = e.evDate.substring(0,7);
     if (month !== lastMonth) {
       const d = new Date(month+'-15T12:00:00');
       const hdr = mk('div','diary-month-header',
@@ -2304,7 +2410,7 @@ function renderDiary(main, movies) {
       main.appendChild(hdr);
       lastMonth = month;
     }
-    const day = parseInt(e.watchDate.substring(8,10));
+    const day = parseInt(e.evDate.substring(8,10));
     const row = mk('div','diary-row');
     row.onclick = () => openFilmDetail(e.id);
 
@@ -2317,7 +2423,7 @@ function renderDiary(main, movies) {
 
     const info = mk('div','diary-info');
     info.appendChild(mk('div','diary-title',e.title));
-    const metaParts = [e.year, e.runtime?e.runtime+'m':'', e.voteAverage?'★ '+e.voteAverage:''].filter(Boolean);
+    const metaParts = [e.evLabel, e.year].filter(Boolean);
     info.appendChild(mk('div','diary-meta',metaParts.join(' · ')));
     row.append(dayEl,poster,info);
     main.appendChild(row);
@@ -2511,11 +2617,6 @@ function doPickRandomGeneric() {
 function openDrawer() {
   document.body.classList.add('drawer-open');
   syncViewButtons();
-  // Update sort label
-  const allOpts = [...SORT_OPTIONS.all, ...SORT_OPTIONS.watched];
-  const found = allOpts.find(o => o.value === S.sort);
-  const lbl = $('#drawer-sort-label');
-  if (lbl && found) lbl.textContent = found.label;
 }
 
 function closeDrawer() {
@@ -2553,6 +2654,7 @@ async function initApp() {
   $('#btn-menu').addEventListener('click', openDrawer);
   $('#btn-stats')?.addEventListener('click', openStats);
   $('#btn-filter')?.addEventListener('click', openFiltersModal);
+  $('#btn-sort-header')?.addEventListener('click', () => openSortSheet(S.tab));
   $('#btn-search').addEventListener('click', () => {
     if (document.body.classList.contains('search-open')) closeSearch();
     else openSearch();
