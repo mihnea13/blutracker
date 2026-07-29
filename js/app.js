@@ -1,5 +1,5 @@
-// BluTracker v2.0
-const BT_VERSION = '2.0';
+// BluTracker v2.1
+const BT_VERSION = '2.1';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -22,6 +22,8 @@ const S = {
   randomN: 1,
   randomMaxRuntime: 999,
   randomDecades: new Set(),
+  randomCommStatus: null,
+  randomFeatStatus: null,
   achievedMilestones: null,
   activityLog: [],
   lastUndo: null,
@@ -210,7 +212,7 @@ function renderUnwatched(main) {
   const all = unwatched(); const movies = filterSort(all);
   const rndPickBtn = mk('button','toolbar__icon-btn');
   rndPickBtn.title='Ce văd în seara asta?'; rndPickBtn.innerHTML='🎲';
-  rndPickBtn.onclick = openRandomPicker;
+  rndPickBtn.onclick = () => openRandomPicker('unwatched');
   main.appendChild(makeToolbar(all.length, 'unwatched', [rndPickBtn]));
   if (!movies.length) { main.appendChild(emptyState('🎉', S.search?'Niciun rezultat.':'Toate filmele au fost vizionate!')); return; }
   const grid = mk('div', S.view==='grid'?'grid':'grid list');
@@ -230,7 +232,10 @@ function renderUnwatched(main) {
 function renderWatched(main) {
   main.innerHTML = '';
   const all = watched(); const movies = filterSort(all);
-  main.appendChild(makeToolbar(all.length, 'watched'));
+  const rndBtn = mk('button','toolbar__icon-btn');
+  rndBtn.title='Rewatch surpriză'; rndBtn.innerHTML='🎲';
+  rndBtn.onclick = () => openRandomPicker('watched');
+  main.appendChild(makeToolbar(all.length, 'watched', [rndBtn]));
   if (!movies.length) { main.appendChild(emptyState('📼', S.search?'Niciun rezultat.':'Niciun film văzut.')); return; }
   if (S.diaryMode) { renderDiary(main, movies); return; }
   const grid = mk('div', S.view==='grid'?'grid':'grid list');
@@ -252,8 +257,8 @@ function renderWatched(main) {
 function renderCommentaries(main) {
   main.innerHTML = '';
   const rndBtn = mk('button','toolbar__icon-btn');
-  rndBtn.title = 'Film random'; rndBtn.innerHTML = '🎲';
-  rndBtn.onclick = pickRandom;
+  rndBtn.title = 'Ce commentary ascult?'; rndBtn.innerHTML = '🎲';
+  rndBtn.onclick = () => openRandomPicker('commentaries');
   main.appendChild(makeToolbar(withComm().length, 'commentaries', [rndBtn]));
 
   const all = filterSort(withComm());
@@ -354,9 +359,21 @@ function commCard(m) {
 // ════════════════════════════════════════════════════
 const allFeatDone = m => (!m.hasGenericFeatures||m.genericFeaturesWatched) && (m.specialFeatures||[]).every(f=>f.watched);
 
+// Returneaza {done, total} pentru toate features-urile unui film (generice + speciale)
+function featCounts(m) {
+  const spec = m.specialFeatures||[];
+  const specDone = spec.filter(f=>f.watched).length;
+  const total = (m.hasGenericFeatures?1:0) + spec.length;
+  const done  = (m.hasGenericFeatures && m.genericFeaturesWatched ? 1:0) + specDone;
+  return { done, total };
+}
+
 function renderFeatures(main) {
   main.innerHTML = '';
-  main.appendChild(makeToolbar(withFeat().length, 'features'));
+  const rndBtn = mk('button','toolbar__icon-btn');
+  rndBtn.title='Ce features explorez?'; rndBtn.innerHTML='🎲';
+  rndBtn.onclick = () => openRandomPicker('features');
+  main.appendChild(makeToolbar(withFeat().length, 'features', [rndBtn]));
   const all = filterSort(withFeat());
   if (!all.length) { main.appendChild(emptyState('🎞', S.search?'Niciun rezultat.':'Niciun film cu features.\nDin tab-ul Văzute → ⚙ Disc pe fiecare film.')); return; }
 
@@ -932,6 +949,104 @@ async function doToggleSpecialFeature(id,featId) {
 // SYNC
 // ════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════
+// SYNC DEBUG — raport tintit, nu ghicit
+// ════════════════════════════════════════════════════
+async function generateSyncDebugReport() {
+  const [colData, exDoc] = await Promise.all([
+    fetch('./data/collection.json?t='+Date.now()).then(r=>r.json()),
+    firebase.firestore().collection('config').doc('excludedIds').get(),
+  ]);
+  const excludedIds = new Set(exDoc.exists ? (exDoc.data().ids||[]) : []);
+  const firestoreMovies = S.movies;
+
+  const byBlurayId = {};
+  const byTitleYear = {};
+  Object.entries(firestoreMovies).forEach(([docId,m]) => {
+    if (m.blurayComId) byBlurayId[m.blurayComId] = docId;
+    const key = normTitleDebug(m.title)+'|'+(m.year||'');
+    if (!(key in byTitleYear)) byTitleYear[key] = docId;
+  });
+
+  const lines = [];
+  lines.push('═══ BLUTRACKER — DEBUG SYNC REPORT ═══');
+  lines.push(new Date().toISOString());
+  lines.push('');
+  lines.push('collection.json (de pe blu-ray.com, ultimul scrape): '+(colData.movies?.length||0)+' filme');
+  lines.push('Firestore (ce vede aplicatia ACUM): '+Object.keys(firestoreMovies).length+' filme');
+  lines.push('Lista de excluse (sterse manual candva): '+excludedIds.size+' id-uri');
+  lines.push('');
+
+  let matched=0, wouldAdd=0, blocked=0;
+  const blockedList=[], wouldAddList=[], seenIdsInJson=new Set();
+
+  (colData.movies||[]).forEach(m => {
+    seenIdsInJson.add(m.blurayComId);
+
+    if (excludedIds.has(m.blurayComId)) {
+      blocked++;
+      blockedList.push(m.title+' (id='+m.blurayComId+', an='+(m.year||'?')+')');
+      return;
+    }
+    if (byBlurayId[m.blurayComId]) { matched++; return; }
+
+    const key = normTitleDebug(m.title)+'|'+(m.year||'');
+    if (key in byTitleYear) { matched++; return; }
+
+    wouldAdd++;
+    wouldAddList.push(m.title+' (id='+m.blurayComId+', an='+(m.year||'?')+')');
+  });
+
+  lines.push('── REZULTAT PE URMATOAREA SINCRONIZARE ──');
+  lines.push('Deja exista (matched): '+matched);
+  lines.push('S-ar ADAUGA ca noi: '+wouldAdd);
+  if (wouldAddList.length) {
+    lines.push('  Lista celor ce s-ar adauga:');
+    wouldAddList.forEach(t=>lines.push('    - '+t));
+  }
+  lines.push('BLOCATE de exclusion list (NU se vor adauga niciodata pana nu le scoti manual): '+blocked);
+  if (blockedList.length) {
+    lines.push('  Lista celor blocate:');
+    blockedList.forEach(t=>lines.push('    - '+t));
+  }
+  lines.push('');
+
+  // Orfani: filme in Firestore care au blurayComId dar acesta nu mai apare deloc in collection.json
+  const orphans = Object.entries(firestoreMovies).filter(([id,m]) => m.blurayComId && !seenIdsInJson.has(m.blurayComId));
+  lines.push('Filme in Firestore cu blurayComId care NU mai apare in scrape-ul curent: '+orphans.length);
+  orphans.forEach(([id,m])=>lines.push('    - '+m.title+' (id='+m.blurayComId+')'));
+
+  return lines.join('\n');
+}
+
+// Copie locala a normTitle (identica cu cea din db.js) — evita dependenta incrucisata
+function normTitleDebug(t) {
+  return (t||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+    .replace(/[^a-z0-9]/g,'').replace(/^the/,'');
+}
+
+async function openSyncDebugModal() {
+  showToast('Se generează raportul…');
+  try {
+    const report = await generateSyncDebugReport();
+    S._lastDebugReport = report;
+    openModal('🔍 Debug Sync',
+      '<textarea readonly class="debug-textarea" onclick="this.select()">'+esc(report)+'</textarea>'+
+      '<p style="font-size:11px;color:var(--text-2);margin-top:8px">Tap pe text → selectează tot → copiază → trimite-mi raportul.</p>',
+      '<button class="btn btn--ghost" onclick="downloadSyncDebugReport()">⬇ Descarcă .txt</button>'+
+      '<button class="btn btn--accent" onclick="closeModal()">Închide</button>');
+  } catch(e) { showToast('Eroare: '+e.message,'error'); }
+}
+
+function downloadSyncDebugReport() {
+  if (!S._lastDebugReport) return;
+  const blob = new Blob([S._lastDebugReport], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'blutracker-debug-'+Date.now()+'.txt';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
 function openSyncMenu() {
   const storedToken = localStorage.getItem('bt_github_token');
   const hasToken = storedToken && storedToken.startsWith('ghp_');
@@ -1034,18 +1149,7 @@ function doSync() { openSyncMenu(); }
 // ════════════════════════════════════════════════════
 // RANDOM COMMENTARY
 // ════════════════════════════════════════════════════
-function pickRandom() {
-  const pending=pendingComm();
-  if (!pending.length){showToast('Toate commentary-urile văzute! 🎉');return;}
-  const pick=pending[Math.floor(Math.random()*pending.length)];
-  const key=`comm-${pick.id}`;
-  S.tab='commentaries'; S.expanded.add(key); render();
-  requestAnimationFrame(()=>{
-    const el=document.getElementById(key);
-    if(el){el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),1200);}
-  });
-  showToast(`🎲 ${pick.title}`,'success');
-}
+// pickRandom() (scroll-to-film) inlocuit de openRandomPicker('commentaries') — sistem unificat
 
 // ════════════════════════════════════════════════════
 // UI UTILS
@@ -2158,54 +2262,118 @@ function renderDiary(main, movies) {
 }
 
 // ════════════════════════════════════════════════════
-// RANDOM PICKER
+// RANDOM PICKER — unificat pentru toate cele 4 tab-uri
 // ════════════════════════════════════════════════════
-function openRandomPicker() {
-  const decades = [...new Set(
-    list().filter(m=>m.year&&!m.watchHistory?.length)
-          .map(m=>Math.floor(parseInt(m.year)/10)*10)
-          .filter(d=>!isNaN(d))
-  )].sort();
+const RANDOM_PICKER_CONFIG = {
+  unwatched: {
+    label: 'Ce văd în seara asta?',
+    getPool: () => unwatched(),
+    filters: ['decade','runtime'],
+  },
+  watched: {
+    label: 'Rewatch surpriză',
+    getPool: () => watched(),
+    filters: ['decade','runtime'],
+  },
+  commentaries: {
+    label: 'Ce commentary ascult?',
+    // exclude mereu filmele cu toate track-urile deja bifate — nimic de ales acolo
+    getPool: () => withComm().filter(m => commStatus(m) !== 'done'),
+    filters: ['commStatus'],
+  },
+  features: {
+    label: 'Ce features explorez?',
+    // exclude mereu filmele complet bifate
+    getPool: () => withFeat().filter(m => !allFeatDone(m)),
+    filters: ['featStatus'],
+  },
+};
 
-  renderRandomPickerModal(decades, []);
+function openRandomPicker(tab) {
+  S._randomTab = tab || S.tab;
+  renderRandomPickerModal([]);
 }
 
-function renderRandomPickerModal(decades, results) {
-  const maxR = S.randomMaxRuntime;
-  const labelR = maxR >= 999 ? 'Orice durată' : maxR + ' min';
-  const decadeChips = decades.map(d => {
-    const active = S.randomDecades.has(d);
-    return '<button class="decade-chip'+(active?' decade-chip--active':'')+
-           '" onclick="setRandomDecade('+d+','+JSON.stringify(decades)+')">'+(d>0?d+'s':'?')+'</button>';
-  }).join('');
+function renderRandomPickerModal(results) {
+  const tab = S._randomTab;
+  const cfg = RANDOM_PICKER_CONFIG[tab];
+  if (!cfg) return;
+  const pool = cfg.getPool();
+
+  let filterHTML = '';
+
+  if (cfg.filters.includes('decade')) {
+    const decades = [...new Set(pool.filter(m=>m.year).map(m=>Math.floor(parseInt(m.year)/10)*10).filter(d=>!isNaN(d)))].sort();
+    if (decades.length) {
+      const chips = decades.map(d => {
+        const active = S.randomDecades.has(d);
+        return '<button class="decade-chip'+(active?' decade-chip--active':'')+'" onclick="setRandomDecade('+d+')">'+d+'s</button>';
+      }).join('');
+      filterHTML += '<div class="field"><label>Decadă (opțional, selecție multiplă)</label><div class="decade-chips">'+chips+'</div></div>';
+    }
+  }
+
+  if (cfg.filters.includes('runtime')) {
+    const maxR = S.randomMaxRuntime;
+    const labelR = maxR>=999 ? 'Orice durată' : maxR+' min';
+    filterHTML += '<div class="field"><label>Durată maximă</label>'+
+      '<div class="range-wrap"><div class="range-label"><span>60 min</span><span class="range-val" id="rnd-r-lbl">'+labelR+'</span><span>4h+</span></div>'+
+      '<input type="range" id="rnd-runtime" min="60" max="300" step="30" value="'+(maxR>=999?300:maxR)+'" oninput="updateRuntimeLabel(this)"></div></div>';
+  }
+
+  if (cfg.filters.includes('commStatus')) {
+    const opts = [['all','Toate'],['zero','Zero văzute'],['some','Parțial văzute']];
+    const chips = opts.map(([v,label]) => {
+      const active = (S.randomCommStatus||'all') === v;
+      return '<button class="decade-chip'+(active?' decade-chip--active':'')+'" onclick="setRandomStatusFilter(\'comm\',\''+v+'\')">'+label+'</button>';
+    }).join('');
+    filterHTML += '<div class="field"><label>Status commentary</label><div class="decade-chips">'+chips+'</div></div>';
+  }
+
+  if (cfg.filters.includes('featStatus')) {
+    const opts = [['all','Toate'],['zero','Zero bifate'],['some','Parțial bifate']];
+    const chips = opts.map(([v,label]) => {
+      const active = (S.randomFeatStatus||'all') === v;
+      return '<button class="decade-chip'+(active?' decade-chip--active':'')+'" onclick="setRandomStatusFilter(\'feat\',\''+v+'\')">'+label+'</button>';
+    }).join('');
+    filterHTML += '<div class="field"><label>Status features</label><div class="decade-chips">'+chips+'</div></div>';
+  }
 
   const resultHTML = results.length ? results.map(m => {
     const poster = m.tmdbPosterUrl||m.posterUrl||'';
+    let extraLine = '';
+    if (tab==='commentaries') {
+      const t = m.commentaryTracks||[]; const w = t.filter(x=>x.watched).length;
+      extraLine = '🎙 '+w+'/'+t.length+' tracks';
+    } else if (tab==='features') {
+      const {done,total} = featCounts(m);
+      extraLine = '🎞 '+done+'/'+total+' bifate';
+    } else if (tab==='watched') {
+      extraLine = '✓ '+(m.watchHistory?.length||0)+'×';
+    }
+    const actionBtn = tab==='unwatched'
+      ? '<button class="btn btn--primary btn--sm" style="margin-top:8px" onclick="closeModal();openMarkWatchedModal(\''+m.id+'\')">▶ Marchează văzut</button>'
+      : '<button class="btn btn--ghost btn--sm" style="margin-top:8px" onclick="closeModal();openFilmDetail(\''+m.id+'\')">Deschide film</button>';
     return '<div class="random-film-card">' +
       '<div class="random-film-card__poster"><img src="'+esc(poster)+'" alt="'+esc(m.title)+'"></div>' +
       '<div class="random-film-card__info">' +
         '<div class="random-film-card__title">'+esc(m.title)+'</div>' +
-        '<div class="random-film-card__meta">'+ [m.year, m.runtime?m.runtime+'m':'', m.voteAverage?'★ '+m.voteAverage:''].filter(Boolean).join(' · ') +'</div>' +
-        '<button class="btn btn--primary btn--sm" style="margin-top:8px" onclick=\"closeModal();openMarkWatchedModal(\"+m.id+\")">▶ Marchează văzut</button>' +
+        '<div class="random-film-card__meta">'+[m.year, m.runtime?m.runtime+'m':'', extraLine].filter(Boolean).join(' · ')+'</div>' +
+        actionBtn +
       '</div></div>';
   }).join('') : '';
 
-  openModal('🎲 Ce văd în seara asta?',
+  openModal('🎲 '+cfg.label,
     '<div class="field"><label>Câte filme</label>' +
       '<div class="random-n-row">' +
         '<button class="random-n-btn" onclick="adjRandomN(-1)">−</button>' +
         '<span class="random-n-val" id="rnd-n">'+S.randomN+'</span>' +
         '<button class="random-n-btn" onclick="adjRandomN(1)">+</button>' +
       '</div></div>' +
-    '<div class="field"><label>Durată maximă</label>' +
-      '<div class="range-wrap">' +
-        '<div class="range-label"><span>60 min</span><span class="range-val" id="rnd-r-lbl">'+labelR+'</span><span>4h+</span></div>' +
-        '<input type="range" id="rnd-runtime" min="60" max="300" step="30" value="'+(maxR>=999?300:maxR)+'" oninput="updateRuntimeLabel(this)">' +
-      '</div></div>' +
-    (decades.length ? '<div class="field"><label>Decadă (opțional)</label><div class="decade-chips">'+decadeChips+'</div></div>' : '') +
+    filterHTML +
     (resultHTML ? '<div class="random-results">'+resultHTML+'</div>' : ''),
     '<button class="btn btn--ghost" onclick="closeModal()">Închide</button>' +
-    '<button class="btn btn--accent" onclick="doPickRandom()">🎲 Alege!</button>'
+    '<button class="btn btn--accent" onclick="doPickRandomGeneric()">🎲 Alege!</button>'
   );
 }
 
@@ -2221,35 +2389,57 @@ function updateRuntimeLabel(el) {
   if (lbl) lbl.textContent = v >= 300 ? 'Orice durată' : v + ' min';
 }
 
-function setRandomDecade(d, decades) {
+function setRandomDecade(d) {
   if (S.randomDecades.has(d)) S.randomDecades.delete(d);
   else S.randomDecades.add(d);
   const maxR = parseInt($('#rnd-runtime')?.value||300);
-  S.randomMaxRuntime = maxR >= 300 ? 999 : maxR;
-  renderRandomPickerModal(decades, []);
+  if ($('#rnd-runtime')) S.randomMaxRuntime = maxR>=300?999:maxR;
+  renderRandomPickerModal([]);
 }
 
-function doPickRandom() {
-  const maxR = parseInt($('#rnd-runtime')?.value||300);
-  S.randomMaxRuntime = maxR >= 300 ? 999 : maxR;
-  const decades = [...new Set(
-    list().filter(m=>m.year&&!m.watchHistory?.length)
-          .map(m=>Math.floor(parseInt(m.year)/10)*10).filter(d=>!isNaN(d))
-  )].sort();
+function setRandomStatusFilter(kind, val) {
+  const key = kind==='comm' ? 'randomCommStatus' : 'randomFeatStatus';
+  S[key] = (val==='all') ? null : val;
+  renderRandomPickerModal([]);
+}
 
-  let pool = unwatched();
-  if (S.randomMaxRuntime < 999) pool = pool.filter(m=>!m.runtime||m.runtime<=S.randomMaxRuntime);
-  if (S.randomDecades.size > 0) pool = pool.filter(m=>m.year&&S.randomDecades.has(Math.floor(parseInt(m.year)/10)*10));
+function doPickRandomGeneric() {
+  const tab = S._randomTab;
+  const cfg = RANDOM_PICKER_CONFIG[tab];
+  if (!cfg) return;
+
+  const maxR = parseInt($('#rnd-runtime')?.value||300);
+  if ($('#rnd-runtime')) S.randomMaxRuntime = maxR>=300?999:maxR;
+
+  let pool = cfg.getPool();
+
+  if (cfg.filters.includes('decade') && S.randomDecades.size>0) {
+    pool = pool.filter(m=>m.year && S.randomDecades.has(Math.floor(parseInt(m.year)/10)*10));
+  }
+  if (cfg.filters.includes('runtime') && S.randomMaxRuntime<999) {
+    pool = pool.filter(m=>!m.runtime||m.runtime<=S.randomMaxRuntime);
+  }
+  if (cfg.filters.includes('commStatus') && S.randomCommStatus) {
+    pool = pool.filter(m=>{
+      const t=m.commentaryTracks||[]; const w=t.filter(x=>x.watched).length;
+      return S.randomCommStatus==='zero' ? w===0 : (w>0 && w<t.length);
+    });
+  }
+  if (cfg.filters.includes('featStatus') && S.randomFeatStatus) {
+    pool = pool.filter(m=>{
+      const {done,total} = featCounts(m);
+      return S.randomFeatStatus==='zero' ? done===0 : (done>0 && done<total);
+    });
+  }
 
   if (!pool.length) { showToast('Niciun film cu aceste criterii 😕','error'); return; }
 
-  const picks = [];
-  const copy = [...pool];
-  for (let i=0; i<S.randomN && copy.length; i++) {
+  const picks=[]; const copy=[...pool];
+  for (let i=0;i<S.randomN && copy.length;i++) {
     const idx = Math.floor(Math.random()*copy.length);
     picks.push(copy.splice(idx,1)[0]);
   }
-  renderRandomPickerModal(decades, picks);
+  renderRandomPickerModal(picks);
 }
 
 // ════════════════════════════════════════════════════
