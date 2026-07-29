@@ -1,5 +1,5 @@
-// BluTracker v2.5
-const BT_VERSION = '2.5';
+// BluTracker v2.6
+const BT_VERSION = '2.6';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -1260,6 +1260,50 @@ function closeStats() {
 }
 
 // ── Data aggregation ─────────────────────────────────
+// ════════════════════════════════════════════════════
+// STREAK HELPERS (saptamanal + lunar productiv)
+// ════════════════════════════════════════════════════
+function weekIndexOf(dateStr) {
+  const d = new Date(dateStr+'T12:00:00');
+  const day = (d.getDay()+6)%7; // Luni=0 .. Duminica=6
+  const monday = new Date(d); monday.setDate(d.getDate()-day);
+  const epoch = new Date(2020,0,6); // Luni de referinta arbitrar, doar pt index monoton
+  return Math.floor((monday - epoch) / (7*24*3600000));
+}
+function monthIndexOf(ym) {
+  const [y,m] = ym.split('-').map(Number);
+  return y*12+(m-1);
+}
+function findLongestRun(sortedIndices) {
+  if (!sortedIndices.length) return {len:0,start:null,end:null};
+  let bestLen=1, bestStart=sortedIndices[0], curLen=1, curStart=sortedIndices[0];
+  for (let i=1;i<sortedIndices.length;i++){
+    if (sortedIndices[i]===sortedIndices[i-1]+1) { curLen++; }
+    else { curLen=1; curStart=sortedIndices[i]; }
+    if (curLen>bestLen) { bestLen=curLen; bestStart=curStart; }
+  }
+  return {len:bestLen, start:bestStart, end:bestStart+bestLen-1};
+}
+function computeStreakInfo(activeIndices, currentIndex, lastYearCutoffIndex) {
+  const sorted = [...new Set(activeIndices)].sort((a,b)=>a-b);
+  if (!sorted.length) return {longestEver:0,longestLastYear:0,current:0,sameStreak:true};
+
+  const overall = findLongestRun(sorted);
+  const withinYear = sorted.filter(i=>i>=lastYearCutoffIndex);
+  const yearRun = findLongestRun(withinYear);
+
+  const lastActive = sorted[sorted.length-1];
+  let current = 0;
+  if (currentIndex - lastActive <= 1) {
+    current = 1; let idx = lastActive;
+    for (let i=sorted.length-2;i>=0;i--){
+      if (sorted[i]===idx-1) { current++; idx--; } else break;
+    }
+  }
+  const sameStreak = overall.end === yearRun.end && overall.len === yearRun.len;
+  return { longestEver: overall.len, longestLastYear: yearRun.len, current, sameStreak };
+}
+
 function computeStats() {
   const all = list();
   const w = watched();
@@ -1374,6 +1418,47 @@ function computeStats() {
   // indiferent daca acele vizionari au sau nu data (o vizionare conteaza chiar si fara data salvata).
   const totalMin = w.reduce((s,m) => s + (m.runtime||0) * (m.watchHistory?.length||0), 0);
 
+  // ── LUNI PRODUCTIVE (definitie noua) + STREAK-URI SAPTAMANALE/LUNARE ──
+  // Luna productiva = 4+ vizionari/revizionari SAU 8+ activitati combinate
+  // (vizionari + comentarii bifate + features bifate) in acea luna calendaristica.
+  // Agregare ALL-TIME (nu doar ultimele 12 luni, spre deosebire de monthMap
+  // folosit la graficul afisat) — necesar pentru achievement-uri si streak-uri istorice.
+  const allTimeMonths = {};
+  function bumpMonth(dateStr, isWatch) {
+    if (!dateStr || dateStr.length<10) return;
+    const k = dateStr.substring(0,7);
+    if (!allTimeMonths[k]) allTimeMonths[k] = {watches:0, combined:0};
+    allTimeMonths[k].combined++;
+    if (isWatch) allTimeMonths[k].watches++;
+  }
+  watchEvents.forEach(e => bumpMonth(e.date, true));
+  all.forEach(m => {
+    (m.commentaryTracks||[]).forEach(t => { if(t.watched) bumpMonth(t.watchDate, false); });
+    (m.specialFeatures||[]).forEach(f => { if(f.watched) bumpMonth(f.watchDate, false); });
+    if (m.hasGenericFeatures && m.genericFeaturesWatched) bumpMonth(m.genericFeaturesWatchDate, false);
+  });
+  const productiveMonthKeys = Object.entries(allTimeMonths)
+    .filter(([k,v]) => v.watches>=4 || v.combined>=8)
+    .map(([k])=>k);
+  const monthsProductiv = productiveMonthKeys.length;
+
+  // Streak saptamanal (orice tip de activitate cu data)
+  const activityDates = new Set();
+  watchEvents.forEach(e=>activityDates.add(e.date));
+  all.forEach(m => {
+    (m.commentaryTracks||[]).forEach(t=>{ if(t.watched&&t.watchDate) activityDates.add(t.watchDate); });
+    (m.specialFeatures||[]).forEach(f=>{ if(f.watched&&f.watchDate) activityDates.add(f.watchDate); });
+    if (m.hasGenericFeatures && m.genericFeaturesWatched && m.genericFeaturesWatchDate) activityDates.add(m.genericFeaturesWatchDate);
+  });
+  const weekIndices = [...activityDates].map(weekIndexOf);
+  const todayWeekIdx = weekIndexOf(new Date().toISOString().split('T')[0]);
+  const weeklyStreaks = computeStreakInfo(weekIndices, todayWeekIdx, todayWeekIdx-52);
+
+  // Streak pe luni productive
+  const monthIndices = productiveMonthKeys.map(monthIndexOf);
+  const todayMonthIdx = monthIndexOf(new Date().toISOString().substring(0,7));
+  const monthlyStreaks = computeStreakInfo(monthIndices, todayMonthIdx, todayMonthIdx-12);
+
   return {
     total:all.length, watched:w.length, unwatched:unwatched().length,
     watchedPct: all.length?Math.round(w.length/all.length*100):0,
@@ -1384,6 +1469,7 @@ function computeStats() {
     allSpecial:allSpecial.length, specialWatched:allSpecial.filter(f=>f.watched).length,
     fullDisc, heatmap, longestWatched, longestUnwatched, favDecade, maxMonth,
     firstWatch:watchEvents[0]?.date, lastWatch:watchEvents[watchEvents.length-1]?.date,
+    monthsProductiv, weeklyStreaks, monthlyStreaks,
   };
 }
 
@@ -1414,6 +1500,8 @@ function renderStats() {
     sec.appendChild(mk('div','stats-section-title','Progres colecție'));
     const w=mk('div','chart-wrap'); w.appendChild(makeDonutsRow(s)); sec.appendChild(w); return sec;
   }, 'donuts');
+
+  addSection(makeStreaksSection, 'streaks');
 
   addSection(s => {
     const sec=mk('div','stats-section');
@@ -1511,6 +1599,32 @@ function makeSVGDonut(segments, label, sublabel) {
   t2.textContent = sublabel;
   svg.append(t1,t2);
   return svg;
+}
+
+function makeStreaksSection(s) {
+  const sec = mk('div','stats-section');
+  sec.appendChild(mk('div','stats-section-title','🔥 Streak-uri'));
+  const wrap = mk('div','chart-wrap');
+
+  function streakBlock(icon, label, info, unit) {
+    const div = mk('div','streak-block');
+    const top = mk('div','streak-top');
+    top.innerHTML = '<span class="streak-icon">'+icon+'</span>'+
+      '<span class="streak-label">'+label+'</span>'+
+      '<span class="streak-current">'+info.current+' '+unit+' curent'+(info.current>0?' 🔥':'')+'</span>';
+    const sub = mk('div','streak-sub');
+    sub.textContent = info.sameStreak
+      ? 'Record: '+info.longestEver+' '+unit+' (același interval e și în ultimul an)'
+      : 'Record all-time: '+info.longestEver+' '+unit+'  ·  record ultimul an: '+info.longestLastYear+' '+unit;
+    div.append(top, sub);
+    return div;
+  }
+
+  wrap.appendChild(streakBlock('📅','Săptămâni cu activitate', s.weeklyStreaks, 'săpt.'));
+  wrap.appendChild(streakBlock('🎯','Luni productive la rând', s.monthlyStreaks, 'luni'));
+
+  sec.appendChild(wrap);
+  return sec;
 }
 
 function makeDonutsRow(s) {
@@ -1949,33 +2063,36 @@ function makeActivityLogSection() {
 const MILESTONES_TRACKING_ENABLED = true;
 
 function getAchievementDefs(stats) {
-  const monthsProductiv = Object.values(stats.monthMap||{}).filter(v=>v>=5).length;
+  // Rewatch-uri STRICTE: vizionari suplimentare peste prima vizionare a fiecarui film,
+  // nu toate vizionarile (asta era bug-ul anterior — "Vazut si iar vazut" masura
+  // aproape acelasi lucru ca "Cineast in formare", inclusiv prima vizionare).
+  const strictRewatches = Math.max(0, stats.watchEvents.length - stats.watched);
 
   const defs = [
     { id:'watched', icon:'🎬', name:'Cineast în formare', desc:'Filme văzute',
       val:stats.watched,
-      levels:[{t:'🥉',n:50},{t:'🥈',n:150},{t:'🥇',n:400},{t:'💎',n:1000}] },
-    { id:'rewatches', icon:'🔄', name:'Văzut și iar văzut', desc:'Vizionări totale cu rewatches',
-      val:stats.watchEvents.length,
-      levels:[{t:'🥉',n:1},{t:'🥈',n:10},{t:'🥇',n:30},{t:'💎',n:75},{t:'⭐',n:150},{t:'♾️',n:300}] },
-    { id:'productive', icon:'📅', name:'Luna productivă', desc:'Luni cu 5+ filme văzute',
-      val:monthsProductiv,
-      levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:20}] },
+      levels:[{t:'🥉',n:25},{t:'🥈',n:75},{t:'🥇',n:150},{t:'💎',n:350},{t:'⭐',n:700},{t:'♾️',n:1500}] },
+    { id:'rewatches', icon:'🔄', name:'Văzut și iar văzut', desc:'Re-vizionări (peste prima vizionare a fiecărui film)',
+      val:strictRewatches,
+      levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:15},{t:'💎',n:30},{t:'⭐',n:60},{t:'♾️',n:100}] },
+    { id:'productive', icon:'📅', name:'Luna productivă', desc:'Luni cu 4+ vizionări sau 8+ activități combinate',
+      val:stats.monthsProductiv,
+      levels:[{t:'🥉',n:1},{t:'🥈',n:3},{t:'🥇',n:6},{t:'💎',n:12},{t:'⭐',n:24},{t:'♾️',n:40}] },
     { id:'comm_pct', icon:'🎙', name:'Audiofil', desc:'Commentary tracks văzute (număr)',
       val:stats.commWatched,
-      levels:[{t:'🥉',n:10},{t:'🥈',n:50},{t:'🥇',n:150},{t:'💎',n:300},{t:'⭐',n:500}] },
+      levels:[{t:'🥉',n:10},{t:'🥈',n:30},{t:'🥇',n:75},{t:'💎',n:150},{t:'⭐',n:300},{t:'♾️',n:600}] },
     { id:'comm_serious', icon:'🎓', name:'Commentary serios', desc:'Filme cu 4+ tracks toate bifate',
       val:stats.fullDisc,
-      levels:[{t:'🥉',n:1},{t:'🥈',n:3},{t:'🥇',n:5},{t:'💎',n:10}] },
+      levels:[{t:'🥉',n:1},{t:'🥈',n:2},{t:'🥇',n:4},{t:'💎',n:7},{t:'⭐',n:12},{t:'♾️',n:20}] },
     { id:'features', icon:'🌟', name:'Features hunter', desc:'Features speciale văzute',
       val:stats.specialWatched,
-      levels:[{t:'🥉',n:1},{t:'🥈',n:5},{t:'🥇',n:10},{t:'💎',n:25}] },
+      levels:[{t:'🥉',n:1},{t:'🥈',n:3},{t:'🥇',n:7},{t:'💎',n:15},{t:'⭐',n:30},{t:'♾️',n:60}] },
     { id:'features_generic', icon:'🎞', name:'Extras complet', desc:'Filme cu extras generice bifate',
       val:stats.genFeatWatched,
-      levels:[{t:'🥉',n:5},{t:'🥈',n:20},{t:'🥇',n:50},{t:'💎',n:100}] },
+      levels:[{t:'🥉',n:5},{t:'🥈',n:15},{t:'🥇',n:35},{t:'💎',n:70},{t:'⭐',n:120},{t:'♾️',n:200}] },
     { id:'collection', icon:'📦', name:'Colecționar', desc:'Titluri în colecție',
       val:stats.total,
-      levels:[{t:'🥉',n:50},{t:'🥈',n:150},{t:'🥇',n:300},{t:'💎',n:500},{t:'⭐',n:1000}] },
+      levels:[{t:'🥉',n:50},{t:'🥈',n:125},{t:'🥇',n:250},{t:'💎',n:450},{t:'⭐',n:700},{t:'♾️',n:1000}] },
   ];
 
   // Per-decade achievements (dinamice — future-proof: apar automat pentru orice
@@ -1984,8 +2101,8 @@ function getAchievementDefs(stats) {
   // filme disponibile intr-o colectie fizica, deci praguri mai mici; 1970+
   // foloseste pragurile standard.
   function decadeLevels(decadeNum) {
-    if (decadeNum < 1970) return [{t:'🥉',n:2},{t:'🥈',n:5},{t:'🥇',n:10}];
-    return [{t:'🥉',n:5},{t:'🥈',n:15},{t:'🥇',n:30}];
+    if (decadeNum < 1970) return [{t:'🥉',n:2},{t:'🥈',n:4},{t:'🥇',n:7},{t:'💎',n:12},{t:'⭐',n:20},{t:'♾️',n:35}];
+    return [{t:'🥉',n:5},{t:'🥈',n:12},{t:'🥇',n:25},{t:'💎',n:45},{t:'⭐',n:75},{t:'♾️',n:120}];
   }
   Object.entries(stats.decadeMap||{}).filter(([k])=>k!=='?').sort().forEach(([decade,data])=>{
     defs.push({
@@ -2073,7 +2190,10 @@ const MILESTONES = [
   {id:'c_150',   icon:'🎙', title:'Audiofil convins 🎙', desc:'150 commentary tracks văzute.', check:s=>s.commWatched>=150},
   {id:'c_4plus', icon:'🎓', title:'Cinefil serios 🎓', desc:'Ai terminat toate tracks la un film cu minim 4 commentaries.', check:s=>s.fullDisc>=1},
   {id:'c_5film', icon:'🎓', title:'Commentary dedicat 🎓', desc:'5 filme cu toate comentariile văzute.', check:s=>s.fullDisc>=5},
-  {id:'pm_first',icon:'📅', title:'Luna productivă 📅', desc:'5+ filme vizionate într-o singură lună.', check:s=>Object.values(s.monthMap).some(v=>v>=5)},
+  {id:'pm_first',icon:'📅', title:'Luna productivă 📅', desc:'Prima lună cu 4+ vizionări sau 8+ activități.', check:s=>s.monthsProductiv>=1},
+  {id:'pm_6',    icon:'📅', title:'Constanță 📅', desc:'6 luni productive.', check:s=>s.monthsProductiv>=6},
+  {id:'streak_w4',icon:'🔥', title:'Săptămâni la rând 🔥', desc:'4 săptămâni consecutive cu activitate.', check:s=>s.weeklyStreaks.current>=4||s.weeklyStreaks.longestEver>=4},
+  {id:'streak_m3',icon:'🔥', title:'Serie lunară 🔥', desc:'3 luni productive consecutive.', check:s=>s.monthlyStreaks.current>=3||s.monthlyStreaks.longestEver>=3},
   {id:'f_first', icon:'★',  title:'Dincolo de film ★', desc:'Primul feature special terminat.', check:s=>s.specialWatched>=1},
   {id:'f_10',    icon:'🌟', title:'Features completionist 🌟', desc:'10 features speciale văzute.', check:s=>s.specialWatched>=10},
   {id:'fg_first',icon:'🎞', title:'Primul extras generic bifat 🎞', desc:'Ai bifat primul extras generic.', check:s=>s.genFeatWatched>=1},

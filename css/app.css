@@ -1142,3 +1142,18 @@ body.stats-open #stats-panel {
   border-radius: 8px; margin-bottom: 6px;
   font-size: 14px;
 }
+
+/* ── STREAK BLOCKS ───────────────────────────────────────────── */
+.streak-block {
+  background: var(--surface-2); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 10px;
+}
+.streak-block:last-child { margin-bottom: 0; }
+.streak-top {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.streak-icon { font-size: 20px; }
+.streak-label { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
+.streak-current { font-size: 14px; font-weight: 800; color: var(--accent); }
+.streak-sub { font-size: 12px; color: var(--text-2); line-height: 1.4; }
