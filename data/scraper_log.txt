@@ -1,4 +1,4 @@
-═══ BluTracker Scraper Run — 2026-08-03T09:33:21.902502Z ═══
+═══ BluTracker Scraper Run — 2026-08-08T17:35:42.451952Z ═══
 
 1. Login...
   ✓ Login reusit
@@ -12,7 +12,8 @@
   F: +2 filme
   G: +6 filme
   H: +4 filme
-  I: +6 filme
+  I: +7 filme
+  J: +1 filme
   K: +2 filme
   L: +5 filme
   M: +9 filme
@@ -21,14 +22,14 @@
   P: +2 filme
   R: +3 filme
   S: +18 filme
-  T: +7 filme
+  T: +9 filme
   U: +1 filme
   W: +6 filme
   Y: +1 filme
   Z: +1 filme
 
-   Total filme retinute: 117
-   Total link-uri /Titlu/ID/ vazute in HTML: 244
+   Total filme retinute: 121
+   Total link-uri /Titlu/ID/ vazute in HTML: 252
 
    Filtrate ca seriale TV (10):
      - Code Geass: Lelouch of the Rebellion
@@ -47,19 +48,20 @@
 
 3. Watch dates + comments...
 
-  Fetch watch dates pentru 117 filme...
-    20/117 procesate (8 cu date)...
-    40/117 procesate (19 cu date)...
-    60/117 procesate (27 cu date)...
-    80/117 procesate (33 cu date)...
-    100/117 procesate (43 cu date)...
-  Done: 52/117 filme cu watch dates
+  Fetch watch dates pentru 121 filme...
+    20/121 procesate (8 cu date)...
+    40/121 procesate (19 cu date)...
+    60/121 procesate (27 cu date)...
+    80/121 procesate (32 cu date)...
+    100/121 procesate (41 cu date)...
+    120/121 procesate (51 cu date)...
+  Done: 52/121 filme cu watch dates
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
-  117 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 54.7s
+  121 filme  |  52 cu watch dates  |  2 cu features tags
+  Durata rulare: 68.0s
 
-── LISTA COMPLETA FILME (117) ──
+── LISTA COMPLETA FILME (121) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
   A Most Violent Year  id=330845
   Alien  id=19887
@@ -97,11 +99,13 @@
   Graveyard of Honor (2002)  id=297326
   Henry: Portrait of a Serial Killer  id=20179
   Hiroshima  id=1284362
+  In My Skin  id=299517
   Interstellar  id=206156 [watched: 2025-08-17]
   Investigation of a Citizen Above Suspicion  id=164810
   It's Not Just You, Murray!  id=1258914
   It: Chapter Two  id=795499 [watched: 2025-03-08]
   Italianamerican  id=1233084
+  Jacob's Ladder  id=21725
   King of New York  id=18431 [watched: 2026-06-24]
   La La Land  id=458490 [watched: 2025-03-09]
   Lady Vengeance  id=29002
@@ -164,10 +168,12 @@
   The Social Network  id=23439
   The Stylist  id=1418767 [watched: 2026-01-12]
   The Thing  id=18935 [watched: 2025-05-30,2025-07-28]
+  The Third Man  id=19053
   The Wages of Fear  id=27314
   The Wicker Man  id=36202
   The Wolf of Wall Street  id=147117 [watched: 2026-01-25]
   The Working Class Goes to Heaven  id=257291
+  Thief  id=58796
   Throne of Blood  id=98711
   To Live and Die in L.A.  id=19841
   Touch of Evil  id=36357 [watched: 2025-10-04]

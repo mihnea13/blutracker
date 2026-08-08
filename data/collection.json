@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-03T09:34:16.562341Z",
+  "lastUpdated": "2026-08-08T17:36:50.428260Z",
   "movies": [
     {
       "title": "Alien",
@@ -596,6 +596,17 @@
       "userComment": ""
     },
     {
+      "title": "In My Skin",
+      "year": "",
+      "blurayComId": "299517",
+      "posterUrl": "https://images.static-bluray.com/products/20/26787_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "Interstellar",
       "year": "",
       "blurayComId": "206156",
@@ -648,6 +659,17 @@
       "year": "",
       "blurayComId": "1233084",
       "posterUrl": "https://images.static-bluray.com/products/20/94100_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Jacob's Ladder",
+      "year": "",
+      "blurayComId": "21725",
+      "posterUrl": "https://images.static-bluray.com/products/20/3790_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -1227,6 +1249,17 @@
       "userComment": "#features_toWatch #commentary_toWatch"
     },
     {
+      "title": "Thief",
+      "year": "",
+      "blurayComId": "58796",
+      "posterUrl": "https://images.static-bluray.com/products/20/7307_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Thing",
       "year": "",
       "blurayComId": "18935",
@@ -1236,6 +1269,17 @@
         "2025-07-28"
       ],
       "watchedCount": 1,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "The Third Man",
+      "year": "",
+      "blurayComId": "19053",
+      "posterUrl": "https://images.static-bluray.com/products/20/1118_10_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
