@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-08T17:36:50.428260Z",
+  "lastUpdated": "2026-08-10T07:21:45.893300Z",
   "movies": [
     {
       "title": "Alien",
@@ -567,6 +567,17 @@
       "year": "",
       "blurayComId": "146811",
       "posterUrl": "https://images.static-bluray.com/products/20/14416_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "High and Low",
+      "year": "",
+      "blurayComId": "31394",
+      "posterUrl": "https://images.static-bluray.com/products/20/5457_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,

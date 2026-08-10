@@ -1,4 +1,4 @@
-═══ BluTracker Scraper Run — 2026-08-08T17:35:42.451952Z ═══
+═══ BluTracker Scraper Run — 2026-08-10T07:20:35.129337Z ═══
 
 1. Login...
   ✓ Login reusit
@@ -11,7 +11,7 @@
   E: +1 filme
   F: +2 filme
   G: +6 filme
-  H: +4 filme
+  H: +5 filme
   I: +7 filme
   J: +1 filme
   K: +2 filme
@@ -28,8 +28,8 @@
   Y: +1 filme
   Z: +1 filme
 
-   Total filme retinute: 121
-   Total link-uri /Titlu/ID/ vazute in HTML: 252
+   Total filme retinute: 122
+   Total link-uri /Titlu/ID/ vazute in HTML: 254
 
    Filtrate ca seriale TV (10):
      - Code Geass: Lelouch of the Rebellion
@@ -48,20 +48,20 @@
 
 3. Watch dates + comments...
 
-  Fetch watch dates pentru 121 filme...
-    20/121 procesate (8 cu date)...
-    40/121 procesate (19 cu date)...
-    60/121 procesate (27 cu date)...
-    80/121 procesate (32 cu date)...
-    100/121 procesate (41 cu date)...
-    120/121 procesate (51 cu date)...
-  Done: 52/121 filme cu watch dates
+  Fetch watch dates pentru 122 filme...
+    20/122 procesate (8 cu date)...
+    40/122 procesate (19 cu date)...
+    60/122 procesate (26 cu date)...
+    80/122 procesate (32 cu date)...
+    100/122 procesate (41 cu date)...
+    120/122 procesate (51 cu date)...
+  Done: 52/122 filme cu watch dates
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
-  121 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 68.0s
+  122 filme  |  52 cu watch dates  |  2 cu features tags
+  Durata rulare: 70.8s
 
-── LISTA COMPLETA FILME (121) ──
+── LISTA COMPLETA FILME (122) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
   A Most Violent Year  id=330845
   Alien  id=19887
@@ -98,6 +98,7 @@
   Graveyard of Honor  id=484146 [watched: 2025-05-26]
   Graveyard of Honor (2002)  id=297326
   Henry: Portrait of a Serial Killer  id=20179
+  High and Low  id=31394
   Hiroshima  id=1284362
   In My Skin  id=299517
   Interstellar  id=206156 [watched: 2025-08-17]
