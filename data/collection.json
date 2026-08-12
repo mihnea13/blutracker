@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-07-27T09:41:06.674243Z",
+  "lastUpdated": "2026-08-12T15:54:21.934937Z",
   "movies": [
     {
       "title": "Alien",
@@ -421,6 +421,17 @@
       "userComment": ""
     },
     {
+      "title": "Don't Torture a Duckling",
+      "year": "",
+      "blurayComId": "95022",
+      "posterUrl": "https://images.static-bluray.com/products/20/8666_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb",
       "year": "",
       "blurayComId": "22260",
@@ -436,6 +447,17 @@
       "year": "",
       "blurayComId": "128498",
       "posterUrl": "https://images.static-bluray.com/products/20/12177_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Enter the Void",
+      "year": "",
+      "blurayComId": "27509",
+      "posterUrl": "https://images.static-bluray.com/products/20/4761_1_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -539,6 +561,17 @@
       "userComment": ""
     },
     {
+      "title": "Hagazussa: A Heathen's Curse",
+      "year": "",
+      "blurayComId": "924953",
+      "posterUrl": "https://images.static-bluray.com/products/20/73339_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Hateful Eight",
       "year": "",
       "blurayComId": "355379",
@@ -547,6 +580,50 @@
         "2026-07-18"
       ],
       "watchedCount": 1,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Hellbound: Hellraiser II",
+      "year": "",
+      "blurayComId": "34447",
+      "posterUrl": "https://images.static-bluray.com/products/20/6193_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Hellraiser",
+      "year": "",
+      "blurayComId": "19491",
+      "posterUrl": "https://images.static-bluray.com/products/20/1556_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Hellraiser III: Hell on Earth",
+      "year": "",
+      "blurayComId": "61222",
+      "posterUrl": "https://images.static-bluray.com/products/20/7498_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Hellraiser IV: Bloodline",
+      "year": "",
+      "blurayComId": "32467",
+      "posterUrl": "https://images.static-bluray.com/products/20/5648_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -574,6 +651,17 @@
       "userComment": ""
     },
     {
+      "title": "High and Low",
+      "year": "",
+      "blurayComId": "31394",
+      "posterUrl": "https://images.static-bluray.com/products/20/5457_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "Hiroshima",
       "year": "",
       "blurayComId": "1284362",
@@ -585,10 +673,32 @@
       "userComment": ""
     },
     {
+      "title": "The Holy Mountain",
+      "year": "",
+      "blurayComId": "27749",
+      "posterUrl": "https://images.static-bluray.com/products/20/4802_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Imitation Game",
       "year": "",
       "blurayComId": "328915",
       "posterUrl": "https://images.static-bluray.com/products/20/29952_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "In My Skin",
+      "year": "",
+      "blurayComId": "299517",
+      "posterUrl": "https://images.static-bluray.com/products/20/26787_1_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -648,6 +758,17 @@
       "year": "",
       "blurayComId": "1233084",
       "posterUrl": "https://images.static-bluray.com/products/20/94100_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Jacob's Ladder",
+      "year": "",
+      "blurayComId": "21725",
+      "posterUrl": "https://images.static-bluray.com/products/20/3790_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -1227,6 +1348,17 @@
       "userComment": "#features_toWatch #commentary_toWatch"
     },
     {
+      "title": "Thief",
+      "year": "",
+      "blurayComId": "58796",
+      "posterUrl": "https://images.static-bluray.com/products/20/7307_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Thing",
       "year": "",
       "blurayComId": "18935",
@@ -1236,6 +1368,17 @@
         "2025-07-28"
       ],
       "watchedCount": 1,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "The Third Man",
+      "year": "",
+      "blurayComId": "19053",
+      "posterUrl": "https://images.static-bluray.com/products/20/1118_10_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
