@@ -1,5 +1,5 @@
-// BluTracker v2.6
-const BT_VERSION = '2.6';
+// BluTracker v2.6.1
+const BT_VERSION = '2.6.1';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -27,7 +27,7 @@ const S = {
   achievedMilestones: null,
   activityLog: [],
   lastUndo: null,
-  sort:    'az',   // az | za | year-desc | year-asc | runtime-desc | runtime-asc
+  sort:    localStorage.getItem('bt_sort') || 'az',
   loading: true,
 };
 
@@ -199,7 +199,7 @@ function openSortSheet(tab) {
   openModal('Sortare', '<div class="sort-options">' + rows + '</div>', '');
   setTimeout(() => {
     document.querySelectorAll('input[name="sort-pick"]').forEach(inp => {
-      inp.addEventListener('change', () => { S.sort = inp.value; closeModal(); render(); });
+      inp.addEventListener('change', () => { S.sort = inp.value; localStorage.setItem('bt_sort', S.sort); closeModal(); render(); });
     });
   }, 50);
 }
@@ -807,7 +807,12 @@ async function confirmMarkWatched(id) {
     let data = await dbAddWatch(id, date);
     if (commN>0||hasFeat) data = await dbSetExtras(id, commN, hasFeat);
     if (hasFeat && specialName) data = await dbAddSpecialFeature(id, specialName);
-    S.movies[id]=data; render(); showToast(`${S.movies[id].title} — văzut 🎬`,'success');
+    S.movies[id]=data;
+    const mv = S.movies[id];
+    logAction('✓', mv.title, 'Marcat văzut — ' + fmtDate(date), null);
+    render();
+    showToast(`${mv.title} — văzut 🎬`,'success');
+    setTimeout(checkAndFireMilestones, 400);
   } catch(e) { showToast('Eroare: '+e.message,'error'); }
 }
 
@@ -925,6 +930,7 @@ async function doToggleCommentary(id,idx) {
     logAction('🎙', title, 'Commentary '+(idx+1)+' '+(t.watched?'bifat ✓':'debifat'),
       async () => { S.movies[id]=await dbToggleCommentary(id,idx); render(); });
     render();
+    setTimeout(checkAndFireMilestones, 400);
   } catch(e){showToast('Eroare: '+e.message,'error');}
 }
 async function doAddCommentaryTrack(id) {
@@ -938,6 +944,7 @@ async function doToggleGenericFeatures(id) {
     logAction('🎞', title, 'Extras generice '+(done?'bifate ✓':'debifate'),
       async () => { S.movies[id]=await dbToggleGenericFeatures(id); render(); });
     render();
+    setTimeout(checkAndFireMilestones, 400);
   } catch(e){showToast('Eroare: '+e.message,'error');}
 }
 async function doToggleSpecialFeature(id,featId) {
@@ -948,6 +955,7 @@ async function doToggleSpecialFeature(id,featId) {
     if (feat) logAction('★', title, '"'+feat.name+'" '+(feat.watched?'bifat ✓':'debifat'),
       async () => { S.movies[id]=await dbToggleSpecialFeature(id,featId); render(); });
     render();
+    setTimeout(checkAndFireMilestones, 400);
   } catch(e){showToast('Eroare: '+e.message,'error');}
 }
 
@@ -1159,6 +1167,27 @@ function saveGithubToken() {
   showToast('Token salvat ✓', 'success');
 }
 
+/**
+ * Verifica la pornire daca collection.json s-a schimbat de la ultimul sync
+ * (ex: scraper-ul a rulat pe GitHub Actions intre timp) si sincronizeaza automat.
+ * Elimina nevoia de a apasa manual Sync dupa fiecare rulare de scraper.
+ */
+async function autoSyncIfChanged() {
+  try {
+    const resp = await fetch('./data/collection.json?t='+Date.now());
+    const colData = await resp.json();
+    const remoteStamp = colData.lastUpdated || '';
+    if (!remoteStamp) return;
+
+    const lastSynced = localStorage.getItem('bt_last_collection_stamp') || '';
+    if (remoteStamp === lastSynced) return; // nimic nou
+
+    showToast('Colecție actualizată detectată — se sincronizează…');
+    await syncFromFile();
+    localStorage.setItem('bt_last_collection_stamp', remoteStamp);
+  } catch(e) { console.warn('autoSyncIfChanged:', e); }
+}
+
 async function syncFromFile() {
   const btn = $('#btn-sync'); // poate lipsi (buton mutat in drawer) - folosim optional chaining
   if (btn) { btn.textContent='⏳'; btn.disabled=true; }
@@ -1181,8 +1210,14 @@ async function syncFromFile() {
       (addedTitles||[]).forEach(title => logAction('📦', title, 'Adăugat din seed', null));
       showToast(`Seed importat — ${added} filme ✓`,'success');
     }
+    // Marcheaza stamp-ul ca sincronizat, ca auto-sync sa nu repete inutil
+    try {
+      const cd = await (await fetch('./data/collection.json?t='+Date.now())).json();
+      if (cd.lastUpdated) localStorage.setItem('bt_last_collection_stamp', cd.lastUpdated);
+    } catch(e) {}
     render();
     prefetchTmdb();
+    setTimeout(checkAndFireMilestones, 600);
   } catch(e){ console.error('syncFromFile error:', e); showToast('Sync eșuat: '+e.message,'error'); }
   finally { if (btn) { btn.textContent='⟳'; btn.disabled=false; } }
 }
@@ -2244,6 +2279,7 @@ async function ensureMilestoneBaseline() {
     S.achievedMilestones = achieved;
 
     // Baseline achievement history (nivele deja atinse, data necunoscuta -> null)
+    S._baselineJustApplied = true; // suprima celebrarile retroactive in timpul baseline-ului
     const achs = getAchievementDefs(stats);
     const hist = {};
     achs.forEach(a => {
@@ -2255,7 +2291,8 @@ async function ensureMilestoneBaseline() {
     await firebase.firestore().collection('config').doc('achievementHistory').set({ history: hist });
 
     console.log('Milestone baseline aplicat:', achieved.size, 'praguri deja marcate silentios.');
-  } catch(e) { console.warn('Eroare baseline milestones:', e); }
+    S._baselineJustApplied = false;
+  } catch(e) { console.warn('Eroare baseline milestones:', e); S._baselineJustApplied = false; }
 }
 
 // Coada de milestone-uri de afisat — daca se declanseaza mai multe simultan,
@@ -2271,7 +2308,7 @@ function checkAndFireMilestones() {
   MILESTONES.forEach(m => {
     if (!S.achievedMilestones.has(m.id) && m.check(stats)) {
       S.achievedMilestones.add(m.id);
-      _milestoneQueue.push(m);
+      _milestoneQueue.push({icon:m.icon, title:m.title, desc:m.desc, kind:'milestone'});
       logAction('🏆', m.title, m.desc, null);
       changed = true;
     }
@@ -2281,7 +2318,8 @@ function checkAndFireMilestones() {
       .set({achieved:[...S.achievedMilestones], ts:new Date().toISOString()}, {merge:true}).catch(()=>{});
   }
 
-  // Verifica si nivele noi de achievement (tiered), inregistreaza data atingerii
+  // Nivele noi de achievement (tiered) — declanseaza si ele celebrare, nu doar
+  // inregistrare de data (bug anterior: urcai un nivel si nu primeai nimic vizual)
   checkAchievementLevelUps(stats);
 
   if (_milestoneQueue.length && !document.body.classList.contains('milestone-visible')) {
@@ -2298,9 +2336,25 @@ function checkAchievementLevelUps(stats) {
   achs.forEach(a => {
     if (a.curLvl < 0) return;
     const hist = S.achievementHistory[a.id] || {};
+    const isFirstTimeSeen = Object.keys(hist).length === 0 && !S._baselineJustApplied;
     for (let i=0; i<=a.curLvl; i++) {
       const k = String(i);
-      if (!(k in hist)) { hist[k] = today; changed = true; }
+      if (!(k in hist)) {
+        hist[k] = today;
+        changed = true;
+        // Celebrare pentru nivelul nou atins (doar daca tracking-ul e activ
+        // si nu suntem in timpul aplicarii baseline-ului initial)
+        if (MILESTONES_TRACKING_ENABLED && !S._baselineJustApplied) {
+          const lvl = a.levels[i];
+          _milestoneQueue.push({
+            icon: a.icon,
+            title: a.name + ' — ' + lvl.t,
+            desc: 'Ai atins pragul de ' + lvl.n + (a.suffix||'') + '. ' + a.desc,
+            kind: 'achievement'
+          });
+          logAction(lvl.t, a.name, 'Nivel nou atins: ' + lvl.t + ' (' + lvl.n + (a.suffix||'') + ')', null);
+        }
+      }
     }
     S.achievementHistory[a.id] = hist;
   });
@@ -2348,13 +2402,30 @@ function showNextMilestone() {
     document.body.appendChild(overlay);
   }
   const remaining = _milestoneQueue.length;
-  overlay.innerHTML =
+  const banner = m.kind === 'achievement' ? 'NIVEL NOU DEBLOCAT' : 'PRAG ATINS';
+
+  // Confetti simplu, generat programatic (fara librarii)
+  let confetti = '<div class="ms-confetti">';
+  for (let i=0;i<14;i++) {
+    const left = Math.round(Math.random()*100);
+    const delay = (Math.random()*0.8).toFixed(2);
+    const dur = (1.6+Math.random()*1.2).toFixed(2);
+    const colors = ['var(--accent)','var(--green)','#e8c030','#7c6fcd','#e05555'];
+    const c = colors[i % colors.length];
+    confetti += '<span style="left:'+left+'%;background:'+c+';animation-delay:'+delay+'s;animation-duration:'+dur+'s"></span>';
+  }
+  confetti += '</div>';
+
+  overlay.innerHTML = confetti +
     '<div class="milestone-card">' +
+      '<div class="milestone-banner">'+banner+'</div>' +
       '<div class="milestone-icon-big">'+m.icon+'</div>' +
       '<div class="milestone-title-big">'+esc(m.title)+'</div>' +
       '<div class="milestone-desc-big">'+esc(m.desc)+'</div>' +
-      (remaining>0 ? '<div class="milestone-queue-note">+'+remaining+' alte praguri atinse</div>' : '') +
-      '<button class="btn btn--accent btn--full" onclick="closeMilestoneOverlay()">✓ Super!</button>' +
+      (remaining>0 ? '<div class="milestone-queue-note">+'+remaining+' alte praguri atinse — apasă pentru următorul</div>' : '') +
+      '<button class="btn btn--accent btn--full milestone-close-btn" onclick="closeMilestoneOverlay()">' +
+        (remaining>0 ? 'Următorul →' : '✓ Super!') +
+      '</button>' +
     '</div>';
   document.body.classList.add('milestone-visible');
   requestAnimationFrame(()=> overlay.classList.add('visible'));
@@ -2796,6 +2867,7 @@ async function initApp() {
     await loadAchievedMilestones();
     await loadAchievementHistory();
     await ensureMilestoneBaseline();
+    autoSyncIfChanged(); // in fundal, fara sa blocheze pornirea
   } catch(e) { showToast('Firebase error: '+e.message,'error'); console.error(e); }
 
   S.loading=false;

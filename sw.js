@@ -1,5 +1,5 @@
 // BluTracker Service Worker
-const CACHE = 'blutracker-v28';
+const CACHE = 'blutracker-v29';
 const SHELL = [
   './',
   './index.html',

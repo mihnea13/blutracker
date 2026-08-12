@@ -1157,3 +1157,29 @@ body.stats-open #stats-panel {
 .streak-label { font-size: 14px; font-weight: 700; color: var(--text); flex: 1; }
 .streak-current { font-size: 14px; font-weight: 800; color: var(--accent); }
 .streak-sub { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+
+/* ── MILESTONE CELEBRATION — enhanced ─────────────────────── */
+.milestone-banner {
+  font-size: 11px; font-weight: 900; letter-spacing: 1.5px;
+  color: var(--accent); margin-bottom: 14px;
+  padding: 4px 12px; border: 1.5px solid var(--accent);
+  border-radius: 20px; display: inline-block;
+}
+.milestone-close-btn { margin-top: 18px; padding: 14px !important; font-size: 16px !important; }
+.milestone-card { position: relative; z-index: 2; }
+
+/* Confetti */
+.ms-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+.ms-confetti span {
+  position: absolute; top: -20px;
+  width: 9px; height: 14px; border-radius: 2px;
+  animation-name: confettiFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  opacity: .85;
+}
+@keyframes confettiFall {
+  0%   { transform: translateY(-20px) rotate(0deg);   opacity: 0; }
+  10%  { opacity: .9; }
+  100% { transform: translateY(105vh) rotate(720deg); opacity: .2; }
+}
