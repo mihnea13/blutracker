@@ -1,4 +1,4 @@
-═══ BluTracker Scraper Run — 2026-08-10T07:20:35.129337Z ═══
+═══ BluTracker Scraper Run — 2026-08-12T15:53:19.607850Z ═══
 
 1. Login...
   ✓ Login reusit
@@ -7,11 +7,11 @@
   A: +14 filme
   B: +9 filme
   C: +8 filme
-  D: +5 filme
-  E: +1 filme
+  D: +6 filme
+  E: +2 filme
   F: +2 filme
   G: +6 filme
-  H: +5 filme
+  H: +11 filme
   I: +7 filme
   J: +1 filme
   K: +2 filme
@@ -28,8 +28,8 @@
   Y: +1 filme
   Z: +1 filme
 
-   Total filme retinute: 122
-   Total link-uri /Titlu/ID/ vazute in HTML: 254
+   Total filme retinute: 130
+   Total link-uri /Titlu/ID/ vazute in HTML: 270
 
    Filtrate ca seriale TV (10):
      - Code Geass: Lelouch of the Rebellion
@@ -48,20 +48,20 @@
 
 3. Watch dates + comments...
 
-  Fetch watch dates pentru 122 filme...
-    20/122 procesate (8 cu date)...
-    40/122 procesate (19 cu date)...
-    60/122 procesate (26 cu date)...
-    80/122 procesate (32 cu date)...
-    100/122 procesate (41 cu date)...
-    120/122 procesate (51 cu date)...
-  Done: 52/122 filme cu watch dates
+  Fetch watch dates pentru 130 filme...
+    20/130 procesate (8 cu date)...
+    40/130 procesate (18 cu date)...
+    60/130 procesate (22 cu date)...
+    80/130 procesate (29 cu date)...
+    100/130 procesate (37 cu date)...
+    120/130 procesate (48 cu date)...
+  Done: 52/130 filme cu watch dates
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
-  122 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 70.8s
+  130 filme  |  52 cu watch dates  |  2 cu features tags
+  Durata rulare: 62.3s
 
-── LISTA COMPLETA FILME (122) ──
+── LISTA COMPLETA FILME (130) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
   A Most Violent Year  id=330845
   Alien  id=19887
@@ -89,14 +89,21 @@
   Cold Light of Day  id=330598 [watched: 2025-07-07]
   Dark City  id=18690 [watched: 2025-09-16]
   Dogville  id=97945 [watched: 2026-02-01]
+  Don't Torture a Duckling  id=95022
   Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb  id=22260
   End of Watch  id=128498
+  Enter the Void  id=27509
   Frost/Nixon  id=19689
   Gattaca  id=18059 [watched: 2025-04-05]
   Get Carter  id=161633
   Gran Torino  id=19813
   Graveyard of Honor  id=484146 [watched: 2025-05-26]
   Graveyard of Honor (2002)  id=297326
+  Hagazussa: A Heathen's Curse  id=924953
+  Hellbound: Hellraiser II  id=34447
+  Hellraiser  id=19491
+  Hellraiser III: Hell on Earth  id=61222
+  Hellraiser IV: Bloodline  id=32467
   Henry: Portrait of a Serial Killer  id=20179
   High and Low  id=31394
   Hiroshima  id=1284362
@@ -158,6 +165,7 @@
   The Girl with the Dragon Tattoo  id=59480 [watched: 2026-02-01]
   The Hateful Eight  id=355379 [watched: 2026-07-18]
   The Hidden Fortress  id=146811
+  The Holy Mountain  id=27749
   The Imitation Game  id=328915
   The Killing of a Sacred Deer  id=727487 [watched: 2025-07-25]
   The Long Goodbye  id=137492
