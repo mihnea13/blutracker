@@ -377,13 +377,16 @@ async function dbSaveTmdb(id, tmdb) {
  * Daca filmul are blurayComId, il adauga la lista de excluse,
  * ca sa nu fie re-adaugat automat la urmatorul sync cu blu-ray.com.
  */
-async function dbDeleteMovie(id) {
+async function dbDeleteMovie(id, excludeFromSync = true) {
   const ref = _db.collection('movies').doc(id);
   const doc = await ref.get();
   const data = doc.data();
   await ref.delete();
 
-  if (data?.blurayComId) {
+  // excludeFromSync=false se foloseste cand stergi o COPIE DUPLICATA — filmul
+  // legitim trebuie sa ramana sincronizabil. Daca s-ar adauga pe lista de excluse,
+  // ar fi blocat permanent la toate sincronizarile viitoare.
+  if (excludeFromSync && data?.blurayComId) {
     try {
       await _db.collection('config').doc('excludedIds').set({
         ids: firebase.firestore.FieldValue.arrayUnion(data.blurayComId)

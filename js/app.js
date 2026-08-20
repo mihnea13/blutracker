@@ -1,5 +1,5 @@
-// BluTracker v2.6.2
-const BT_VERSION = '2.6.2';
+// BluTracker v2.6.3
+const BT_VERSION = '2.6.3';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -630,22 +630,31 @@ async function doDeleteWatchEntry(id, idx) {
 function confirmDeleteModal(id) {
   const m = S.movies[id];
   $('#modal .modal__body').innerHTML = `
-    <p>Ștergi definitiv <strong>${esc(m.title)}</strong>?</p>
-    <p style="font-size:13px;color:var(--text-2);margin-top:8px">Se șterg și toate datele de tracking.</p>`;
+    <p style="margin-bottom:14px">Ștergi <strong>${esc(m.title)}</strong>?</p>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px">Se șterg toate datele de tracking (vizionări, commentary, features).</p>
+    <button class="btn btn--danger btn--full" style="margin-bottom:10px" onclick="doDelete('${id}', true)">
+      🚫 Șterge și nu-l mai importa
+      <span style="display:block;font-size:11px;font-weight:400;opacity:.75;margin-top:3px">Nu va reapărea la sincronizări viitoare</span>
+    </button>
+    <button class="btn btn--ghost btn--full" onclick="doDelete('${id}', false)">
+      🗑 Șterge doar din tracker
+      <span style="display:block;font-size:11px;font-weight:400;opacity:.75;margin-top:3px">Poate reapărea la următorul sync (pentru duplicate)</span>
+    </button>`;
   $('#modal .modal__footer').innerHTML = `
-    <button class="btn btn--ghost" onclick="renderDetailModal('${id}')">Anulează</button>
-    <button class="btn btn--danger" onclick="doDelete('${id}')">🗑 Șterge</button>`;
+    <button class="btn btn--ghost" onclick="renderDetailModal('${id}')">Anulează</button>`;
 }
 
-async function doDelete(id) {
+async function doDelete(id, excludeFromSync = true) {
   closeModal();
   try {
     const title = S.movies[id].title;
-    await dbDeleteMovie(id);
+    await dbDeleteMovie(id, excludeFromSync);
     delete S.movies[id];
-    logAction('🗑', title, 'Șters din colecție', null); // no undo for delete
+    logAction('🗑', title, excludeFromSync
+      ? 'Șters + exclus de la sincronizări'
+      : 'Șters din tracker (poate reveni la sync)', null);
     render();
-    showToast('Film șters ✓');
+    showToast(excludeFromSync ? 'Film șters și exclus ✓' : 'Film șters ✓');
   } catch(e) { showToast('Eroare: '+e.message,'error'); }
 }
 
@@ -1080,6 +1089,106 @@ function normTitleDebug(t) {
     .replace(/[^a-z0-9]/g,'').replace(/^the/,'');
 }
 
+// ════════════════════════════════════════════════════
+// CURATARE DUPLICATE
+// ════════════════════════════════════════════════════
+/**
+ * Scor de "bogatie" a unui document — folosit pentru a decide care copie
+ * se pastreaza dintr-un grup de duplicate (cea cu cele mai multe date reale).
+ */
+function movieDataScore(m) {
+  let s = 0;
+  s += (m.watchHistory||[]).length * 100;
+  s += (m.commentaryTracks||[]).filter(t=>t.watched).length * 40;
+  s += (m.commentaryTracks||[]).length * 10;
+  s += (m.specialFeatures||[]).filter(f=>f.watched).length * 30;
+  s += (m.specialFeatures||[]).length * 8;
+  if (m.genericFeaturesWatched) s += 25;
+  if (m.hasGenericFeatures) s += 5;
+  if (m.tmdbId) s += 15;
+  if (m.blurayComId) s += 12;
+  if (m.year) s += 3;
+  return s;
+}
+
+function findDuplicateGroups() {
+  const groups = {};
+  Object.entries(S.movies).forEach(([id,m]) => {
+    // Cheie: blurayComId daca exista (cel mai sigur), altfel titlu normalizat + an
+    const key = m.blurayComId
+      ? 'id:'+m.blurayComId
+      : 'ty:'+normTitleDebug(m.title)+'|'+(m.year||'');
+    if (!groups[key]) groups[key] = [];
+    groups[key].push({id, ...m});
+  });
+  return Object.entries(groups)
+    .filter(([k,g]) => g.length > 1)
+    .map(([k,g]) => ({
+      key: k,
+      items: g.sort((a,b)=>movieDataScore(b)-movieDataScore(a)) // cel mai bogat primul
+    }));
+}
+
+async function openDedupeModal() {
+  const dups = findDuplicateGroups();
+  if (!dups.length) {
+    openModal('🧹 Curățare duplicate',
+      '<p style="font-size:15px;color:var(--text-2)">Nu s-au găsit duplicate. Colecția e curată. ✓</p>',
+      '<button class="btn btn--accent" onclick="closeModal()">Închide</button>');
+    return;
+  }
+
+  const rows = dups.map((g,gi) => {
+    const keep = g.items[0];
+    const remove = g.items.slice(1);
+    const detail = it => {
+      const wh = (it.watchHistory||[]).length;
+      const ct = (it.commentaryTracks||[]).length;
+      const cw = (it.commentaryTracks||[]).filter(t=>t.watched).length;
+      const sf = (it.specialFeatures||[]).length;
+      return [wh?wh+' vizionări':'', ct?cw+'/'+ct+' comm':'', sf?sf+' features':'', it.year||'']
+        .filter(Boolean).join(' · ') || 'fără date';
+    };
+    return '<div class="dedup-group">'+
+      '<div class="dedup-title">'+esc(keep.title)+'</div>'+
+      '<div class="dedup-keep">✓ PĂSTREZ: '+esc(detail(keep))+'</div>'+
+      remove.map(r=>'<div class="dedup-remove">✗ ȘTERG: '+esc(detail(r))+'</div>').join('')+
+    '</div>';
+  }).join('');
+
+  const totalToRemove = dups.reduce((s,g)=>s+g.items.length-1,0);
+
+  openModal('🧹 Curățare duplicate',
+    '<p style="font-size:14px;color:var(--text-2);margin-bottom:14px">'+
+      'Găsite <strong>'+dups.length+'</strong> grupuri cu duplicate — se vor șterge <strong>'+totalToRemove+'</strong> intrări. '+
+      'Se păstrează automat copia cu cele mai multe date (vizionări, commentary, features).</p>'+
+    rows,
+    '<button class="btn btn--ghost" onclick="closeModal()">Anulează</button>'+
+    '<button class="btn btn--danger" onclick="doDedupe()">🧹 Curăță ('+totalToRemove+')</button>');
+}
+
+async function doDedupe() {
+  closeModal();
+  showToast('Se curăță duplicatele…');
+  const dups = findDuplicateGroups();
+  let removed = 0;
+  try {
+    for (const g of dups) {
+      // items[0] = cel mai bogat, se pastreaza; restul se sterg
+      for (const it of g.items.slice(1)) {
+        // Stergere DIRECTA, fara a adauga pe exclusion list — altfel filmul
+        // legitim (copia pastrata) ar fi blocat la sincronizarile viitoare.
+        await firebase.firestore().collection('movies').doc(it.id).delete();
+        delete S.movies[it.id];
+        removed++;
+      }
+    }
+    logAction('🧹', 'Curățare duplicate', removed+' intrări duplicate șterse', null);
+    render();
+    showToast(removed+' duplicate șterse ✓','success');
+  } catch(e) { showToast('Eroare: '+e.message,'error'); }
+}
+
 async function openSyncDebugModal() {
   showToast('Se generează raportul…');
   try {
@@ -1188,7 +1297,24 @@ async function autoSyncIfChanged() {
   } catch(e) { console.warn('autoSyncIfChanged:', e); }
 }
 
+// Lock global — impiedica doua sincronizari concurente (auto-sync la pornire +
+// apasare manuala pe Sync) sa citeasca aceeasi stare veche si sa creeze duplicate.
+let _syncInProgress = false;
+
 async function syncFromFile() {
+  if (_syncInProgress) {
+    showToast('O sincronizare e deja în curs…');
+    return;
+  }
+  _syncInProgress = true;
+  try {
+    return await _syncFromFileInner();
+  } finally {
+    _syncInProgress = false;
+  }
+}
+
+async function _syncFromFileInner() {
   const btn = $('#btn-sync'); // poate lipsi (buton mutat in drawer) - folosim optional chaining
   if (btn) { btn.textContent='⏳'; btn.disabled=true; }
   showToast('Se sincronizează…');
@@ -1198,6 +1324,10 @@ async function syncFromFile() {
       fetch('./data/seed.json?t='+Date.now()),
     ]);
     const colData=await colResp.json(), seedData=await seedResp.json();
+    // Reincarca starea curenta din Firestore INAINTE de merge — daca alt device
+    // sau alt tab a sincronizat intre timp, evitam sa lucram pe un snapshot vechi
+    // (cauza duplicatelor: doua sync-uri concurente vad ambele "film nou").
+    try { S.movies = await dbLoadMovies(); } catch(e) { console.warn('refresh state:', e); }
     if (colData.movies?.length) {
       const {added,updated,ambiguous,addedTitles,movies}=await dbSync(colData,seedData,S.movies);
       S.movies=movies;

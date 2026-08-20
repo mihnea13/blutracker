@@ -1183,3 +1183,12 @@ body.stats-open #stats-panel {
   10%  { opacity: .9; }
   100% { transform: translateY(105vh) rotate(720deg); opacity: .2; }
 }
+
+/* ── DEDUPE MODAL ────────────────────────────────────────────── */
+.dedup-group {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+}
+.dedup-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.dedup-keep   { font-size: 12px; color: var(--green); margin-bottom: 3px; }
+.dedup-remove { font-size: 12px; color: var(--red); }
