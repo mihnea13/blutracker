@@ -1,35 +1,35 @@
-═══ BluTracker Scraper Run — 2026-08-17T06:41:49.364327Z ═══
+═══ BluTracker Scraper Run — 2026-08-20T15:55:11.577817Z ═══
 
 1. Login...
   ✓ Login reusit
 
 2. Colectie (litera cu litera)...
-  A: +14 filme
+  A: +15 filme
   B: +9 filme
   C: +8 filme
   D: +6 filme
   E: +2 filme
-  F: +2 filme
-  G: +6 filme
-  H: +11 filme
-  I: +7 filme
+  F: +3 filme
+  G: +8 filme
+  H: +12 filme
+  I: +8 filme
   J: +1 filme
   K: +2 filme
   L: +5 filme
   M: +9 filme
   N: +3 filme
-  O: +4 filme
-  P: +2 filme
+  O: +5 filme
+  P: +3 filme
   R: +3 filme
   S: +18 filme
-  T: +9 filme
+  T: +10 filme
   U: +1 filme
   W: +6 filme
   Y: +1 filme
   Z: +1 filme
 
-   Total filme retinute: 130
-   Total link-uri /Titlu/ID/ vazute in HTML: 270
+   Total filme retinute: 139
+   Total link-uri /Titlu/ID/ vazute in HTML: 288
 
    Filtrate ca seriale TV (10):
      - Code Geass: Lelouch of the Rebellion
@@ -48,20 +48,20 @@
 
 3. Watch dates + comments...
 
-  Fetch watch dates pentru 130 filme...
-    20/130 procesate (8 cu date)...
-    40/130 procesate (18 cu date)...
-    60/130 procesate (22 cu date)...
-    80/130 procesate (29 cu date)...
-    100/130 procesate (37 cu date)...
-    120/130 procesate (48 cu date)...
-  Done: 52/130 filme cu watch dates
+  Fetch watch dates pentru 139 filme...
+    20/139 procesate (8 cu date)...
+    40/139 procesate (17 cu date)...
+    60/139 procesate (22 cu date)...
+    80/139 procesate (28 cu date)...
+    100/139 procesate (34 cu date)...
+    120/139 procesate (44 cu date)...
+  Done: 52/139 filme cu watch dates
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
-  130 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 59.9s
+  139 filme  |  52 cu watch dates  |  2 cu features tags
+  Durata rulare: 86.7s
 
-── LISTA COMPLETA FILME (130) ──
+── LISTA COMPLETA FILME (139) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
   A Most Violent Year  id=330845
   Alien  id=19887
@@ -74,6 +74,7 @@
   American Gangster  id=18714 [watched: 2026-04-18]
   American History X  id=19474 [watched: 2025-03-02]
   Anatomy of a Murder  id=64298
+  Andrei Rublev  id=28022
   Angel Heart  id=20410 [watched: 2025-08-31]
   Apocalypse Now  id=21871 [watched: 2026-06-01]
   Argo  id=128491
@@ -94,12 +95,15 @@
   End of Watch  id=128498
   Enter the Void  id=27509
   Frost/Nixon  id=19689
+  Furiosa: A Mad Max Saga  id=1431191
   Gattaca  id=18059 [watched: 2025-04-05]
   Get Carter  id=161633
+  GoodFellas  id=17959
   Gran Torino  id=19813
   Graveyard of Honor  id=484146 [watched: 2025-05-26]
   Graveyard of Honor (2002)  id=297326
   Hagazussa: A Heathen's Curse  id=924953
+  Heat  id=18640
   Hellbound: Hellraiser II  id=34447
   Hellraiser  id=19491
   Hellraiser III: Hell on Earth  id=61222
@@ -107,6 +111,7 @@
   Henry: Portrait of a Serial Killer  id=20179
   High and Low  id=31394
   Hiroshima  id=1284362
+  Ikiru  id=146820
   In My Skin  id=299517
   Interstellar  id=206156 [watched: 2025-08-17]
   Investigation of a Citizen Above Suspicion  id=164810
@@ -133,8 +138,10 @@
   O Lucky Malcolm!  id=1444224
   Oldboy  id=18412 [watched: 2025-07-30]
   Once Upon a Time in Hollywood  id=811512 [watched: 2025-04-07]
+  Out of the Blue  id=307557
   Pale Rider  id=18751 [watched: 2025-07-29]
   Prometheus  id=63701
+  Psycho  id=20563
   Requiem for a Dream  id=18234 [watched: 2025-04-21]
   RocknRolla  id=19391 [watched: 2026-04-26]
   Rosemary's Baby  id=97935
@@ -162,6 +169,7 @@
   The Deer Hunter  id=22860
   The Departed  id=18247 [watched: 2025-09-28]
   The Fighter  id=27804 [watched: 2026-01-17]
+  The Game  id=22224
   The Girl with the Dragon Tattoo  id=59480 [watched: 2026-02-01]
   The Hateful Eight  id=355379 [watched: 2026-07-18]
   The Hidden Fortress  id=146811
@@ -185,6 +193,7 @@
   Thief  id=58796
   Throne of Blood  id=98711
   To Live and Die in L.A.  id=19841
+  Tokyo Story  id=33951
   Touch of Evil  id=36357 [watched: 2025-10-04]
   Training Day  id=18014 [watched: 2025-11-01]
   Unforgiven  id=18018

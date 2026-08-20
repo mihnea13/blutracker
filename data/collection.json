@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-17T06:42:49.271878Z",
+  "lastUpdated": "2026-08-20T15:56:38.305003Z",
   "movies": [
     {
       "title": "Alien",
@@ -109,6 +109,17 @@
       "year": "",
       "blurayComId": "64298",
       "posterUrl": "https://images.static-bluray.com/products/20/7741_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Andrei Rublev",
+      "year": "",
+      "blurayComId": "28022",
+      "posterUrl": "https://images.static-bluray.com/products/20/4853_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -489,6 +500,28 @@
       "userComment": ""
     },
     {
+      "title": "Furiosa: A Mad Max Saga",
+      "year": "",
+      "blurayComId": "1431191",
+      "posterUrl": "https://images.static-bluray.com/products/20/114199_7_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "The Game",
+      "year": "",
+      "blurayComId": "22224",
+      "posterUrl": "https://images.static-bluray.com/products/20/4247_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "Gattaca",
       "year": "",
       "blurayComId": "18059",
@@ -521,6 +554,17 @@
         "2026-02-01"
       ],
       "watchedCount": 1,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "GoodFellas",
+      "year": "",
+      "blurayComId": "17959",
+      "posterUrl": "https://images.static-bluray.com/products/20/24_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -580,6 +624,17 @@
         "2026-07-18"
       ],
       "watchedCount": 1,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Heat",
+      "year": "",
+      "blurayComId": "18640",
+      "posterUrl": "https://images.static-bluray.com/products/20/705_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
       "hasFeatures": false,
       "featuresWatched": false,
       "userComment": ""
@@ -677,6 +732,17 @@
       "year": "",
       "blurayComId": "27749",
       "posterUrl": "https://images.static-bluray.com/products/20/4802_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Ikiru",
+      "year": "",
+      "blurayComId": "146820",
+      "posterUrl": "https://images.static-bluray.com/products/20/14423_1_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -1034,6 +1100,17 @@
       "userComment": ""
     },
     {
+      "title": "Out of the Blue",
+      "year": "",
+      "blurayComId": "307557",
+      "posterUrl": "https://images.static-bluray.com/products/20/27500_3_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Outlaw Josey Wales",
       "year": "",
       "blurayComId": "27638",
@@ -1062,6 +1139,17 @@
       "year": "",
       "blurayComId": "28471",
       "posterUrl": "https://images.static-bluray.com/products/20/4988_3_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Psycho",
+      "year": "",
+      "blurayComId": "20563",
+      "posterUrl": "https://images.static-bluray.com/products/20/2628_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -1399,6 +1487,17 @@
       "year": "",
       "blurayComId": "19841",
       "posterUrl": "https://images.static-bluray.com/products/20/1906_3_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "Tokyo Story",
+      "year": "",
+      "blurayComId": "33951",
+      "posterUrl": "https://images.static-bluray.com/products/20/5963_2_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
