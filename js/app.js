@@ -1,5 +1,5 @@
-// BluTracker v2.6.1
-const BT_VERSION = '2.6.1';
+// BluTracker v2.6.2
+const BT_VERSION = '2.6.2';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -1552,7 +1552,7 @@ function renderStats() {
 
   addSection(s => {
     const sec=mk('div','stats-section');
-    sec.appendChild(mk('div','stats-section-title','Calendar activitate (3 luni)'));
+    sec.appendChild(mk('div','stats-section-title','Calendar activitate — pe săptămâni (4 luni)'));
     const w=mk('div','heatmap-wrap'); w.appendChild(makeHeatmap(s.heatmap)); sec.appendChild(w); return sec;
   }, 'heatmap');
 
@@ -1796,54 +1796,103 @@ function openMonthFilmsModal(monthKey, watchEvents) {
 
 // ── Heatmap ───────────────────────────────────────────
 function makeHeatmap(heatmapData) {
-  const CELL=24, GAP=4, ROWS=7, ns='http://www.w3.org/2000/svg';
-  const today=new Date();
-  const start=new Date(today); start.setMonth(start.getMonth()-3);
-  start.setDate(start.getDate()-start.getDay());
-  const cols=Math.ceil((today-start)/(7*24*3600000))+1;
-  const W=cols*(CELL+GAP)+1, H=ROWS*(CELL+GAP)+26;
-  const svg=document.createElementNS(ns,'svg');
-  svg.setAttribute('viewBox','0 0 '+W+' '+H);
-  svg.style.cssText='width:'+W+'px;min-width:'+W+'px;display:block;';
-
-  const COLORS=['var(--surface-2)','#1c3a2e','#2d6b47','var(--green)'];
+  // Agregare SAPTAMANALA pe ultimele 4 luni:
+  //   1 patratel = 1 saptamana calendaristica din luna (S1=zilele 1-7, S2=8-14, etc.)
+  //   1 coloana  = 1 luna
+  //   randuri    = saptamana din luna (S1..S5)
+  // Granularitatea zilnica era prea rara (majoritatea zilelor 0 sau 1 activitate).
+  const ns='http://www.w3.org/2000/svg';
+  const CELL_W=58, CELL_H=40, GAP=6, LEFT=32, TOP=24, ROWS=5, MONTHS=4;
   const MO=['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Nov','Dec'];
 
-  // Praguri DINAMICE — se adapteaza la distributia reala de activitate.
-  // Cu activitati combinate (vizionari+comentarii+features), praguri fixe
-  // faceau ca aproape tot sa cada in ultima categorie (doar verde/gol).
-  const counts = Object.values(heatmapData).filter(c=>c>0);
+  const today = new Date();
+  // Ultimele 4 luni, cea curenta ultima (dreapta)
+  const monthKeys = [];
+  for (let i=MONTHS-1;i>=0;i--) {
+    const d = new Date(today.getFullYear(), today.getMonth()-i, 1);
+    monthKeys.push({ key:d.toISOString().substring(0,7), label:MO[d.getMonth()], year:d.getFullYear(), month:d.getMonth() });
+  }
+
+  // Suma activitatilor pe (luna, saptamana-din-luna)
+  const buckets = {}; // "YYYY-MM|weekIdx" -> count
+  Object.entries(heatmapData).forEach(([ds,cnt]) => {
+    const mk_ = ds.substring(0,7);
+    const day = parseInt(ds.substring(8,10));
+    const wk = Math.min(ROWS, Math.ceil(day/7)); // 1..5
+    const k = mk_+'|'+wk;
+    buckets[k] = (buckets[k]||0) + cnt;
+  });
+
+  const counts = Object.values(buckets).filter(c=>c>0);
   const maxCount = Math.max(...counts, 1);
+  const COLORS=['var(--surface-2)','#1c3a2e','#2d6b47','var(--green)'];
   function levelFor(cnt) {
     if (cnt<=0) return 0;
-    const ratio = cnt/maxCount;
-    if (ratio <= 0.25) return 1;
-    if (ratio <= 0.6)  return 2;
+    const r = cnt/maxCount;
+    if (r <= 0.34) return 1;
+    if (r <= 0.67) return 2;
     return 3;
   }
 
-  let cur=new Date(start), col=0, row=0, lastM=-1;
+  const W = LEFT + MONTHS*(CELL_W+GAP);
+  const H = TOP  + ROWS*(CELL_H+GAP);
+  const svg = document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.style.cssText='width:100%;max-width:'+W+'px;display:block;';
 
-  while(cur<=today) {
-    if(row===0 && cur.getMonth()!==lastM) {
-      const t=document.createElementNS(ns,'text');
-      t.setAttribute('x',col*(CELL+GAP)); t.setAttribute('y',12);
-      t.setAttribute('font-size','11'); t.setAttribute('fill','var(--text-2)');
-      t.setAttribute('font-weight','600');
-      t.textContent=MO[cur.getMonth()]; svg.appendChild(t);
-      lastM=cur.getMonth();
-    }
-    const ds=cur.toISOString().substring(0,10);
-    const cnt=heatmapData[ds]||0;
-    const lvl=levelFor(cnt);
-    const rect=document.createElementNS(ns,'rect');
-    rect.setAttribute('x',col*(CELL+GAP)); rect.setAttribute('y',row*(CELL+GAP)+18);
-    rect.setAttribute('width',CELL); rect.setAttribute('height',CELL);
-    rect.setAttribute('rx',4); rect.setAttribute('fill',COLORS[lvl]);
-    if (cnt>0) { const titleEl=document.createElementNS(ns,'title'); titleEl.textContent=ds+': '+cnt+' activitati'; rect.appendChild(titleEl); }
-    svg.appendChild(rect);
-    cur.setDate(cur.getDate()+1); row++;
-    if(row===7){row=0;col++;}
+  // Etichete luni (sus)
+  monthKeys.forEach((m,ci) => {
+    const t=document.createElementNS(ns,'text');
+    t.setAttribute('x', LEFT + ci*(CELL_W+GAP) + CELL_W/2);
+    t.setAttribute('y', 15);
+    t.setAttribute('text-anchor','middle');
+    t.setAttribute('font-size','13'); t.setAttribute('font-weight','700');
+    t.setAttribute('fill','var(--text-2)');
+    t.textContent = m.label;
+    svg.appendChild(t);
+  });
+
+  // Etichete saptamani (stanga) + celule
+  for (let r=0;r<ROWS;r++) {
+    const lbl=document.createElementNS(ns,'text');
+    lbl.setAttribute('x', LEFT-10);
+    lbl.setAttribute('y', TOP + r*(CELL_H+GAP) + CELL_H/2 + 4);
+    lbl.setAttribute('text-anchor','end');
+    lbl.setAttribute('font-size','12'); lbl.setAttribute('font-weight','600');
+    lbl.setAttribute('fill','var(--text-3)');
+    lbl.textContent = 'S'+(r+1);
+    svg.appendChild(lbl);
+
+    monthKeys.forEach((m,ci) => {
+      const cnt = buckets[m.key+'|'+(r+1)] || 0;
+      // Sari peste S5 daca luna nu are zile in acea saptamana (luni cu 28 zile)
+      const daysInMonth = new Date(m.year, m.month+1, 0).getDate();
+      if ((r+1)*7 - 6 > daysInMonth) return;
+
+      const rect=document.createElementNS(ns,'rect');
+      rect.setAttribute('x', LEFT + ci*(CELL_W+GAP));
+      rect.setAttribute('y', TOP + r*(CELL_H+GAP));
+      rect.setAttribute('width', CELL_W); rect.setAttribute('height', CELL_H);
+      rect.setAttribute('rx',6);
+      rect.setAttribute('fill', COLORS[levelFor(cnt)]);
+      svg.appendChild(rect);
+
+      if (cnt>0) {
+        const num=document.createElementNS(ns,'text');
+        num.setAttribute('x', LEFT + ci*(CELL_W+GAP) + CELL_W/2);
+        num.setAttribute('y', TOP + r*(CELL_H+GAP) + CELL_H/2 + 5);
+        num.setAttribute('text-anchor','middle');
+        num.setAttribute('font-size','14'); num.setAttribute('font-weight','800');
+        num.setAttribute('fill', levelFor(cnt)>=3 ? '#0d0d1a' : 'var(--text)');
+        num.textContent = cnt;
+        svg.appendChild(num);
+
+        const ttl=document.createElementNS(ns,'title');
+        const d1 = (r*7)+1, d2 = Math.min((r+1)*7, daysInMonth);
+        ttl.textContent = m.label+' '+d1+'-'+d2+': '+cnt+' activități';
+        rect.appendChild(ttl);
+      }
+    });
   }
   return svg;
 }
