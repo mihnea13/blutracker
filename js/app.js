@@ -1,5 +1,5 @@
-// BluTracker v2.6.3
-const BT_VERSION = '2.6.3';
+// BluTracker v2.6.4
+const BT_VERSION = '2.6.4';
 
 // ─── app.js — BluTracker PWA ─────────────────────────────────
 'use strict';
@@ -661,39 +661,92 @@ async function doDelete(id, excludeFromSync = true) {
 // ════════════════════════════════════════════════════
 // TMDB
 // ════════════════════════════════════════════════════
+/**
+ * Normalizare pentru comparatie de titluri TMDB (nu identica cu normTitle din db.js —
+ * aici NU eliminam "the", pentru ca "The Game" vs "The Imitation Game" trebuie
+ * sa ramana clar distincte).
+ */
+function normForCompare(t) {
+  return (t||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().replace(/[^a-z0-9]/g,'');
+}
+
+/**
+ * Alege cel mai bun rezultat TMDB pe baza de scor, NU primul din lista.
+ * TMDB sorteaza dupa popularitate, deci o cautare pentru "The Game" poate
+ * returna "The Imitation Game" (mult mai popular) pe prima pozitie.
+ */
+function pickBestTmdbMatch(results, wantedTitle, wantedYear) {
+  if (!results || !results.length) return null;
+  const wt = normForCompare(wantedTitle);
+  const wy = parseInt(wantedYear) || null;
+
+  const scored = results.map(r => {
+    const rt = normForCompare(r.title);
+    const rot = normForCompare(r.original_title);
+    let score = 0;
+
+    // Potrivire de titlu — factorul decisiv
+    if (rt === wt || rot === wt) score += 1000;              // exact
+    else if (rt.startsWith(wt) || wt.startsWith(rt)) score += 300; // prefix
+    else if (rt.includes(wt) || wt.includes(rt)) score += 100;     // continut
+    else score -= 500; // titlu clar diferit — penalizare mare
+
+    // Penalizare pentru lungime foarte diferita (ex. "game" in "imitationgame")
+    const lenDiff = Math.abs(rt.length - wt.length);
+    score -= lenDiff * 8;
+
+    // Anul, cand il stim
+    if (wy) {
+      const ry = parseInt((r.release_date||'').substring(0,4)) || 0;
+      if (ry === wy) score += 400;
+      else if (ry) score -= Math.min(300, Math.abs(ry-wy) * 25);
+    }
+
+    // Popularitatea conteaza doar ca tiebreaker fin
+    score += Math.min(20, (r.popularity||0) / 10);
+    return { r, score, rt };
+  }).sort((a,b)=>b.score-a.score);
+
+  const best = scored[0];
+  // Prag minim — mai bine niciun rezultat decat unul gresit
+  if (best.score < 0) {
+    console.warn('TMDB: niciun rezultat suficient de bun pentru "'+wantedTitle+'"',
+                 scored.slice(0,3).map(s=>s.r.title+' ('+s.score+')'));
+    return null;
+  }
+  return best.r;
+}
+
 async function enrichWithTmdb(id) {
   if (!TMDB_API_KEY) return;
   const m = S.movies[id];
   if (m.tmdbId) return;
   try {
     const q  = encodeURIComponent(m.title);
-    const yr = m.year || '';  // year saved from blu-ray.com or manually entered
-    let hit = null;
+    const yr = m.year || '';
+    let results = [];
 
-    // Search with year for accurate matching (avoids wrong decade remakes)
+    // Cautare cu an (mai precisa) daca il avem
     if (yr) {
       const r = await fetch(TMDB_BASE+'/search/movie?api_key='+TMDB_API_KEY+'&query='+q+'&year='+yr+'&language=en-US');
       const d = await r.json();
-      if (d.results?.length) {
-        const target = parseInt(yr);
-        hit = d.results.reduce((best, r) => {
-          const ry = parseInt(r.release_date?.substring(0,4)||'0');
-          const by = parseInt(best.release_date?.substring(0,4)||'0');
-          return Math.abs(ry-target) < Math.abs(by-target) ? r : best;
-        });
-      }
+      results = d.results || [];
     }
-    // Fallback: without year
-    if (!hit) {
+    // Fara an, sau daca cautarea cu an n-a dat nimic
+    if (!results.length) {
       const r1 = await fetch(TMDB_BASE+'/search/movie?api_key='+TMDB_API_KEY+'&query='+q+'&language=en-US');
       const d1 = await r1.json();
-      hit = d1.results?.[0];
+      results = d1.results || [];
     }
+
+    const hit = pickBestTmdbMatch(results, m.title, yr);
     if (!hit) return;
+
     const r2 = await fetch(`${TMDB_BASE}/movie/${hit.id}?api_key=${TMDB_API_KEY}&append_to_response=credits&language=en-US`);
     const d2 = await r2.json();
     const tmdb = {
-      tmdbId:       hit.id,
+      tmdbId:        hit.id,
       tmdbPosterUrl: hit.poster_path ? TMDB_IMG+hit.poster_path : '',
       year:          (hit.release_date||'').slice(0,4),
       runtime:       d2.runtime||0,
@@ -702,7 +755,7 @@ async function enrichWithTmdb(id) {
       directors:     (d2.credits?.crew||[]).filter(c=>c.job==='Director').map(c=>c.name).slice(0,2),
     };
     S.movies[id] = await dbSaveTmdb(id, tmdb);
-  } catch(e) { console.warn('TMDB error',m.title,e); }
+  } catch(e) { console.warn('TMDB error', m.title, e); }
 }
 
 function openRefetchModal(id) {
@@ -710,10 +763,15 @@ function openRefetchModal(id) {
   openModal(
     '🔄 Re-fetch TMDB',
     '<p class="modal__subtitle">' + esc(m.title) + '</p>' +
-    '<p style="font-size:13px;color:var(--text-2);margin-bottom:14px">' +
-    'Introdu anul de producție pentru matching precis (ex: 1989 pentru Cold Light of Day).</p>' +
-    '<div class="field"><label>Anul filmului</label>' +
-    '<input type="number" id="refetch-year" value="' + (m.year||'') + '" min="1900" max="2030" placeholder="ex: 1989">' +
+    '<div class="field"><label>Anul filmului (ajută la matching)</label>' +
+    '<input type="number" id="refetch-year" value="' + (m.year||'') + '" min="1900" max="2030" placeholder="ex: 1997">' +
+    '</div>' +
+    '<div class="field"><label>SAU TMDB ID direct (garantat corect)</label>' +
+    '<input type="number" id="refetch-tmdbid" placeholder="ex: 1949" value="">' +
+    '<p style="font-size:12px;color:var(--text-2);margin-top:6px;line-height:1.5">' +
+    'Caută filmul pe themoviedb.org — ID-ul e numărul din URL:<br>' +
+    '<code style="color:var(--accent)">themoviedb.org/movie/<strong>1949</strong>-the-game</code><br>' +
+    'Dacă completezi acest câmp, anul e ignorat și se ia exact filmul cerut.</p>' +
     '</div>',
     '<button class="btn btn--ghost" onclick="closeModal()">Anulează</button>' +
     '<button class="btn btn--accent" onclick="doRefetchTmdb(&quot;' + id + '&quot;)">✓ Caută</button>'
@@ -721,12 +779,12 @@ function openRefetchModal(id) {
 }
 
 async function doRefetchTmdb(id) {
-  // Read value BEFORE closeModal removes the DOM
-  const year = ($('#refetch-year')?.value || '').trim();
+  // Citeste valorile INAINTE de closeModal (care sterge DOM-ul)
+  const year   = ($('#refetch-year')?.value || '').trim();
+  const tmdbId = ($('#refetch-tmdbid')?.value || '').trim();
   closeModal();
   showToast('Se caută pe TMDB…');
   try {
-    // Save year first so enrichWithTmdb uses it
     const upd = { tmdbId: firebase.firestore.FieldValue.delete(),
                   tmdbPosterUrl: firebase.firestore.FieldValue.delete(),
                   overview: firebase.firestore.FieldValue.delete(),
@@ -737,10 +795,42 @@ async function doRefetchTmdb(id) {
     await _db.collection('movies').doc(id).update(upd);
     const doc = await _db.collection('movies').doc(id).get();
     S.movies[id] = doc.data();
-    await enrichWithTmdb(id);
+
+    if (tmdbId) {
+      // Fetch DIRECT dupa ID — fara cautare, fara ambiguitate
+      await fetchTmdbById(id, tmdbId);
+    } else {
+      await enrichWithTmdb(id);
+    }
     render();
-    showToast('TMDB actualizat ✓', 'success');
+    showToast(S.movies[id].tmdbId ? 'TMDB actualizat ✓' : 'Film negăsit — încearcă cu TMDB ID', 
+              S.movies[id].tmdbId ? 'success' : 'error');
   } catch(e) { showToast('Eroare: ' + e.message, 'error'); }
+}
+
+/**
+ * Preia datele TMDB direct dupa ID, ocolind complet cautarea dupa titlu.
+ * Solutia definitiva pentru filme cu titluri ambigue (ex. "The Game" vs
+ * "The Imitation Game", remake-uri cu acelasi nume).
+ */
+async function fetchTmdbById(id, tmdbId) {
+  if (!TMDB_API_KEY) { showToast('TMDB API key lipsește din config.js','error'); return; }
+  try {
+    const r = await fetch(TMDB_BASE+'/movie/'+tmdbId+'?api_key='+TMDB_API_KEY+'&append_to_response=credits&language=en-US');
+    if (!r.ok) { showToast('TMDB ID invalid ('+r.status+')','error'); return; }
+    const d = await r.json();
+    const tmdb = {
+      tmdbId:        d.id,
+      tmdbPosterUrl: d.poster_path ? TMDB_IMG+d.poster_path : '',
+      year:          (d.release_date||'').slice(0,4),
+      runtime:       d.runtime||0,
+      overview:      d.overview||'',
+      voteAverage:   Math.round((d.vote_average||0)*10)/10,
+      directors:     (d.credits?.crew||[]).filter(c=>c.job==='Director').map(c=>c.name).slice(0,2),
+    };
+    S.movies[id] = await dbSaveTmdb(id, tmdb);
+    logAction('🔗', S.movies[id].title, 'TMDB setat manual (ID '+tmdbId+' → '+d.title+')', null);
+  } catch(e) { showToast('Eroare TMDB: '+e.message,'error'); }
 }
 
 // Legacy alias
