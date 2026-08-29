@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-08-24T06:45:29.916338Z",
+  "lastUpdated": "2026-08-29T15:48:07.751268Z",
   "movies": [
     {
       "title": "Alien",
@@ -476,6 +476,17 @@
       "userComment": ""
     },
     {
+      "title": "The Exorcist",
+      "year": "",
+      "blurayComId": "19298",
+      "posterUrl": "https://images.static-bluray.com/products/20/1363_2_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Fighter",
       "year": "",
       "blurayComId": "27804",
@@ -916,6 +927,17 @@
       "userComment": ""
     },
     {
+      "title": "Locke",
+      "year": "",
+      "blurayComId": "290105",
+      "posterUrl": "https://images.static-bluray.com/products/20/25935_1_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
       "title": "The Long Goodbye",
       "year": "",
       "blurayComId": "137492",
@@ -1139,6 +1161,17 @@
       "year": "",
       "blurayComId": "28471",
       "posterUrl": "https://images.static-bluray.com/products/20/4988_3_small.jpg",
+      "watchDates": [],
+      "watchedCount": 0,
+      "hasFeatures": false,
+      "featuresWatched": false,
+      "userComment": ""
+    },
+    {
+      "title": "The Prestige",
+      "year": "",
+      "blurayComId": "18162",
+      "posterUrl": "https://images.static-bluray.com/products/20/227_1_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,

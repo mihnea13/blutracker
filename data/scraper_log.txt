@@ -1,4 +1,4 @@
-═══ BluTracker Scraper Run — 2026-08-24T06:44:26.760533Z ═══
+═══ BluTracker Scraper Run — 2026-08-29T15:46:46.385362Z ═══
 
 1. Login...
   ✓ Login reusit
@@ -8,18 +8,18 @@
   B: +9 filme
   C: +8 filme
   D: +6 filme
-  E: +2 filme
+  E: +3 filme
   F: +3 filme
   G: +8 filme
   H: +12 filme
   I: +8 filme
   J: +1 filme
   K: +2 filme
-  L: +5 filme
+  L: +6 filme
   M: +9 filme
   N: +3 filme
   O: +5 filme
-  P: +3 filme
+  P: +4 filme
   R: +3 filme
   S: +18 filme
   T: +10 filme
@@ -28,8 +28,8 @@
   Y: +1 filme
   Z: +1 filme
 
-   Total filme retinute: 139
-   Total link-uri /Titlu/ID/ vazute in HTML: 288
+   Total filme retinute: 142
+   Total link-uri /Titlu/ID/ vazute in HTML: 294
 
    Filtrate ca seriale TV (10):
      - Code Geass: Lelouch of the Rebellion
@@ -48,20 +48,21 @@
 
 3. Watch dates + comments...
 
-  Fetch watch dates pentru 139 filme...
-    20/139 procesate (8 cu date)...
-    40/139 procesate (17 cu date)...
-    60/139 procesate (22 cu date)...
-    80/139 procesate (28 cu date)...
-    100/139 procesate (34 cu date)...
-    120/139 procesate (44 cu date)...
-  Done: 52/139 filme cu watch dates
+  Fetch watch dates pentru 142 filme...
+    20/142 procesate (8 cu date)...
+    40/142 procesate (17 cu date)...
+    60/142 procesate (22 cu date)...
+    80/142 procesate (28 cu date)...
+    100/142 procesate (33 cu date)...
+    120/142 procesate (41 cu date)...
+    140/142 procesate (51 cu date)...
+  Done: 52/142 filme cu watch dates
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
-  139 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 63.2s
+  142 filme  |  52 cu watch dates  |  2 cu features tags
+  Durata rulare: 81.4s
 
-── LISTA COMPLETA FILME (139) ──
+── LISTA COMPLETA FILME (142) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
   A Most Violent Year  id=330845
   Alien  id=19887
@@ -124,6 +125,7 @@
   Lady Vengeance  id=29002
   Lawrence of Arabia  id=18109
   Light Sleeper  id=333407 [watched: 2026-03-01]
+  Locke  id=290105
   Mad Max  id=21989
   Mad Max 2: The Road Warrior  id=18304
   Mad Max Beyond Thunderdome  id=107716
@@ -168,6 +170,7 @@
   The Conversation  id=31742 [watched: 2025-10-03]
   The Deer Hunter  id=22860
   The Departed  id=18247 [watched: 2025-09-28]
+  The Exorcist  id=19298
   The Fighter  id=27804 [watched: 2026-01-17]
   The Game  id=22224
   The Girl with the Dragon Tattoo  id=59480 [watched: 2026-02-01]
@@ -179,6 +182,7 @@
   The Long Goodbye  id=137492
   The Outlaw Josey Wales  id=27638
   The Pianist  id=28471
+  The Prestige  id=18162
   The Sacred Spirit  id=1566660 [watched: 2025-05-19]
   The Sacrifice  id=33044
   The Shining  id=18398 [watched: 2025-06-28]
