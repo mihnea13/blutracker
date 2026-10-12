@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-05T13:22:51.848607Z",
+  "lastUpdated": "2026-10-12T14:12:34.448647Z",
   "movies": [
     {
       "title": "Alien",
@@ -395,17 +395,6 @@
       "userComment": ""
     },
     {
-      "title": "The Deer Hunter",
-      "year": "",
-      "blurayComId": "22860",
-      "posterUrl": "https://images.static-bluray.com/products/20/4307_1_small.jpg",
-      "watchDates": [],
-      "watchedCount": 0,
-      "hasFeatures": false,
-      "featuresWatched": false,
-      "userComment": ""
-    },
-    {
       "title": "The Departed",
       "year": "",
       "blurayComId": "18247",
@@ -458,17 +447,6 @@
       "year": "",
       "blurayComId": "128498",
       "posterUrl": "https://images.static-bluray.com/products/20/12177_1_small.jpg",
-      "watchDates": [],
-      "watchedCount": 0,
-      "hasFeatures": false,
-      "featuresWatched": false,
-      "userComment": ""
-    },
-    {
-      "title": "Enter the Void",
-      "year": "",
-      "blurayComId": "27509",
-      "posterUrl": "https://images.static-bluray.com/products/20/4761_1_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,
@@ -986,17 +964,6 @@
       "year": "",
       "blurayComId": "234155",
       "posterUrl": "https://images.static-bluray.com/products/20/21313_5_small.jpg",
-      "watchDates": [],
-      "watchedCount": 0,
-      "hasFeatures": false,
-      "featuresWatched": false,
-      "userComment": ""
-    },
-    {
-      "title": "Making",
-      "year": "",
-      "blurayComId": "2094466",
-      "posterUrl": "https://images.static-bluray.com/products/20/180024_1_small.jpg",
       "watchDates": [],
       "watchedCount": 0,
       "hasFeatures": false,

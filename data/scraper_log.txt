@@ -1,4 +1,4 @@
-═══ BluTracker Scraper Run — 2026-10-05T13:21:33.444918Z ═══
+═══ BluTracker Scraper Run — 2026-10-12T14:11:14.005680Z ═══
 
 1. Login...
   ✓ Login reusit
@@ -7,8 +7,8 @@
   A: +15 filme
   B: +9 filme
   C: +8 filme
-  D: +6 filme
-  E: +3 filme
+  D: +5 filme
+  E: +2 filme
   F: +3 filme
   G: +8 filme
   H: +12 filme
@@ -16,7 +16,7 @@
   J: +1 filme
   K: +2 filme
   L: +6 filme
-  M: +9 filme
+  M: +8 filme
   N: +3 filme
   O: +5 filme
   P: +4 filme
@@ -28,8 +28,8 @@
   Y: +1 filme
   Z: +1 filme
 
-   Total filme retinute: 142
-   Total link-uri /Titlu/ID/ vazute in HTML: 294
+   Total filme retinute: 139
+   Total link-uri /Titlu/ID/ vazute in HTML: 288
 
    Filtrate ca seriale TV (10):
      - Code Geass: Lelouch of the Rebellion
@@ -48,21 +48,20 @@
 
 3. Watch dates + comments...
 
-  Fetch watch dates pentru 142 filme...
-    20/142 procesate (8 cu date)...
-    40/142 procesate (17 cu date)...
-    60/142 procesate (22 cu date)...
-    80/142 procesate (28 cu date)...
-    100/142 procesate (33 cu date)...
-    120/142 procesate (41 cu date)...
-    140/142 procesate (51 cu date)...
-  Done: 52/142 filme cu watch dates
+  Fetch watch dates pentru 139 filme...
+    20/139 procesate (8 cu date)...
+    40/139 procesate (18 cu date)...
+    60/139 procesate (22 cu date)...
+    80/139 procesate (28 cu date)...
+    100/139 procesate (34 cu date)...
+    120/139 procesate (44 cu date)...
+  Done: 52/139 filme cu watch dates
 
 ✓ Salvat: /home/runner/work/blutracker/blutracker/data/collection.json
-  142 filme  |  52 cu watch dates  |  2 cu features tags
-  Durata rulare: 78.4s
+  139 filme  |  52 cu watch dates  |  2 cu features tags
+  Durata rulare: 80.4s
 
-── LISTA COMPLETA FILME (142) ──
+── LISTA COMPLETA FILME (139) ──
   A Clockwork Orange  id=18400 [watched: 2026-02-08]
   A Most Violent Year  id=330845
   Alien  id=19887
@@ -94,7 +93,6 @@
   Don't Torture a Duckling  id=95022
   Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb  id=22260
   End of Watch  id=128498
-  Enter the Void  id=27509
   Frost/Nixon  id=19689
   Furiosa: A Mad Max Saga  id=1431191
   Gattaca  id=18059 [watched: 2025-04-05]
@@ -130,7 +128,6 @@
   Mad Max 2: The Road Warrior  id=18304
   Mad Max Beyond Thunderdome  id=107716
   Mad Max: Fury Road  id=234155
-  Making  id=2094466
   Mean Streets  id=27157
   Memento  id=18043 [watched: 2025-11-02]
   Memories of Murder  id=28415
@@ -168,7 +165,6 @@
   The Bridge on the River Kwai  id=17942
   The Coffee Table  id=1801182
   The Conversation  id=31742 [watched: 2025-10-03]
-  The Deer Hunter  id=22860
   The Departed  id=18247 [watched: 2025-09-28]
   The Exorcist  id=19298
   The Fighter  id=27804 [watched: 2026-01-17]
